@@ -473,6 +473,59 @@ async function init() {
     if (e.key === 'Escape' && moreSheet && !moreSheet.classList.contains('hidden')) closeMore();
   });
 
+  // FAZ 15.4 Ek: Swipe-down (aşağı kaydırma) ile menüyü kapatma
+  const moreSheetPanel = moreSheet?.querySelector('.more-sheet-panel');
+  if (moreSheetPanel) {
+    let startY = 0;
+    let currentY = 0;
+    
+    moreSheetPanel.addEventListener('touchstart', (e) => {
+      // Eğer kullanıcının tıkladığı yer içeriklerin scroll edildiği bir div ise 
+      // (örneğin listenin ortası) ve liste en üstte değilse kaydırma iptal edilebilir.
+      // Ancak basit kullanım için panel tutamacına (handle) veya tüm panele genel bir algılayıcı ekliyoruz:
+      if (moreSheetPanel.scrollTop === 0) {
+        startY = e.touches[0].clientY;
+      } else {
+        startY = 0; // Scroll içindeyken kapatmayı devre dışı bırak
+      }
+    }, { passive: true });
+
+    moreSheetPanel.addEventListener('touchmove', (e) => {
+      if (!startY) return;
+      currentY = e.touches[0].clientY;
+      const deltaY = currentY - startY;
+      // Aşağı doğru çekiliyorsa paneli hareket ettir (görsel feedback)
+      if (deltaY > 0) {
+        moreSheetPanel.style.transform = `translateY(${deltaY}px)`;
+        moreSheetPanel.style.transition = 'none';
+      }
+    }, { passive: true });
+
+    moreSheetPanel.addEventListener('touchend', () => {
+      if (!startY) return;
+      const deltaY = currentY - startY;
+      moreSheetPanel.style.transition = 'transform 0.22s ease-out';
+      
+      if (deltaY > 50) {
+        // Yeterince aşağı çekildiyse kapat
+        closeMore();
+      } else {
+        // Yeterli değilse eski konumuna geri dön
+        moreSheetPanel.style.transform = '';
+      }
+      
+      startY = 0;
+      currentY = 0;
+      
+      // Menü her açıldığında transform sıfırlanmalıdır, bu yüzden closeMore içine temizlik koymak iyidir.
+      setTimeout(() => {
+        if (moreSheet?.classList.contains('hidden')) {
+           moreSheetPanel.style.transform = '';
+        }
+      }, 300);
+    });
+  }
+
   // FAZ 15.10: Tema toggle butonu + global klavye kısayolları
   applyTheme(getSettings().theme);   // ikon/başlığı kesin senkronla (buton render edildi)
   document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);

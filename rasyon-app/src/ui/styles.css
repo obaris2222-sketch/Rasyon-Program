@@ -2715,7 +2715,8 @@ details.acc-panel table.diag-table {
   }
 
   .chart-inner {
-    min-width: 550px;
+    width: 600px;
+    height: 100%;
   }
 
   /* Tablolar: display:block + overflow-x:auto ile yatay scroll.
@@ -2727,11 +2728,11 @@ details.acc-panel table.diag-table {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Tablolarda fazla beyaz boşluk yerine normal kelime kaydırma */
+  /* Tablolarda fazla beyaz boşluk yerine normal kelime kaydırma iptal: 
+     Yatay scroll'un çalışması için metinlerin tek satırda kalması gerekir. */
   .results-grid table th,
   .results-grid table td {
-    white-space: normal;
-    word-break: break-word;
+    white-space: nowrap;
   }
 
   /* Sayısal sütunlar nowrap kalsın (hizalanmış görünüm için) */
