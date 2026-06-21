@@ -1,0 +1,197 @@
+/**
+ * Excel Export — SheetJS (xlsx)
+ * Çok-sheet'li rasyon raporu
+ * FAZ 22.3: dil-tutarlı export — aktif dile (TR/EN) göre etiketler + yem adları
+ * (karışık-dil riski olmadan). Dil-nötr kısaltmalar (NEL/NDF/Ca/DCAD…) korunur.
+ */
+
+import * as XLSX from 'xlsx';
+import { getSettings } from '../data/settings.js';
+
+const STAGE_LABELS = {
+  tr: { early: 'Erken Laktasyon', mid: 'Orta Laktasyon', late: 'Geç Laktasyon', far_off: 'Kuru — Far-off', close_up: 'Yakın Kuru — Close-up (Anyonik)' },
+  en: { early: 'Early Lactation', mid: 'Mid Lactation', late: 'Late Lactation', far_off: 'Dry — Far-off', close_up: 'Close-up (Anionic)' },
+};
+
+const STATUS_LABELS = {
+  tr: { ok: 'Tamam', below: 'Düşük', above: 'Yüksek', optimal: 'Optimal', marginal: 'Marjinal', deficient: 'Eksik', excess: 'Fazla', below_target: 'Hedef Altı' },
+  en: { ok: 'OK', below: 'Low', above: 'High', optimal: 'Optimal', marginal: 'Marginal', deficient: 'Deficient', excess: 'Excess', below_target: 'Below Target' },
+};
+
+// FAZ 22.3 denetim: yem kategorisi de dil-tutarlı (eskiden ham 'roughage' anahtarı görünüyordu).
+const CATEGORY_LABELS = {
+  tr: { roughage: 'Kaba Yem', grain: 'Tahıl/Konsantre', protein: 'Protein', byproduct: 'Yan Ürün', fat: 'Yağ', mineral: 'Mineral/Katkı' },
+  en: { roughage: 'Forage', grain: 'Grain/Concentrate', protein: 'Protein', byproduct: 'By-product', fat: 'Fat', mineral: 'Mineral/Additive' },
+};
+
+/**
+ * Rasyon sonucundan çok-sheet'li Excel workbook üretir.
+ * @returns {XLSX.WorkBook}
+ */
+export function generateRationExcel({ animal, result }) {
+  const lang = getSettings().language === 'en' ? 'en' : 'tr';
+  const L = (tr, en) => (lang === 'en' ? en : tr);
+  const feedName = (it) => (lang === 'en' && it.nameEn ? it.nameEn : it.name) || '';
+  const stageLabel = STAGE_LABELS[lang][animal.lactationStage] || STAGE_LABELS[lang].early;
+  const statusLabel = (s) => STATUS_LABELS[lang][s] || s;
+  const catLabel = (c) => CATEGORY_LABELS[lang][c] || c;
+
+  const wb = XLSX.utils.book_new();
+
+  // ─── Sheet 1: Özet ─────────────────────────────────────────────────────────
+  const summaryData = [
+    [L('SÜT SIĞIRI RASYON RAPORU', 'DAIRY CATTLE RATION REPORT')],
+    [L('Tarih', 'Date'), new Date().toLocaleString(lang === 'en' ? 'en-GB' : 'tr-TR')],
+    [L('Kaynak', 'Source'), 'NRC 2001 / NASEM 2021 / CNCPS v6.5'],
+    [],
+    [L('HAYVAN PROFİLİ', 'ANIMAL PROFILE')],
+    [L('Canlı Ağırlık (kg)', 'Body Weight (kg)'),  animal.bw],
+    [L('Süt Verimi (kg/gün)', 'Milk Yield (kg/d)'), animal.milkYield],
+    [L('Süt Yağı (%)', 'Milk Fat (%)'),        animal.milkFat],
+    [L('Süt Proteini (%)', 'Milk Protein (%)'),    animal.milkProtein],
+    [L('Parite', 'Parity'),              animal.parity],
+    [L('Laktasyon Günü (DIM)', 'Days in Milk (DIM)'), animal.dim],
+    ['BCS',                 animal.bcs],
+    [L('Dönem', 'Stage'),               stageLabel],
+    [L('Gebe mi?', 'Pregnant?'),            animal.pregnant ? L(`Evet (${animal.pregnancyMonth}. ay)`, `Yes (month ${animal.pregnancyMonth})`) : L('Hayır', 'No')],
+    ['THI',                 animal.thi ?? L('Belirtilmedi', 'Not specified')],
+    [],
+    [L('SONUÇ DURUMU', 'RESULT STATUS')],
+    [L('Fizibil mi?', 'Feasible?'),         result.feasible ? L('EVET', 'YES') : L('HAYIR', 'NO')],
+    ['LP Status',           result.statusName],
+    [],
+    [L('ÖZET METRİKLER', 'SUMMARY METRICS')],
+    [L('KM (kg/gün)', 'DM (kg/d)'),         result.dmi.achieved_kg],
+    [L('Hedef KMT (kg/gün)', 'Target DMI (kg/d)'),  result.dmi.target_kg],
+    [L('KMT Yöntemi', 'DMI Method'),         result.dmi.method],
+    [L('NEL (Mcal/gün)', 'NEL (Mcal/d)'),      result.composition.nel_mcal],
+    [L('HP (%KM)', 'CP (%DM)'),            result.composition.cp_pct],
+    [L('NDF (%KM)', 'NDF (%DM)'),           result.composition.ndf_pct],
+    [L('Maliyet (₺/gün)', 'Cost (₺/d)'),     result.totalCost],
+  ];
+  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+  wsSummary['!cols'] = [{ wch: 28 }, { wch: 30 }];
+  XLSX.utils.book_append_sheet(wb, wsSummary, L('Özet', 'Summary'));
+
+  // ─── Sheet 2: Rasyon Bileşenleri ───────────────────────────────────────────
+  const itemsHeader = [L('Yem', 'Feed'), L('Kategori', 'Category'), L('KM (kg/gün)', 'DM (kg/d)'), L('Yaş (kg/gün)', 'As-fed (kg/d)'), L('% KM', '% DM'), '₺/' + L('gün', 'd')];
+  const itemsRows = result.items.map(it => [
+    feedName(it), catLabel(it.category), it.dmKg, it.asFedKg, it.pctDm, it.costPerDay,
+  ]);
+  const totalDm = result.items.reduce((s, i) => s + i.dmKg, 0);
+  const totalAsFed = result.items.reduce((s, i) => s + i.asFedKg, 0);
+  const totalCost = result.items.reduce((s, i) => s + i.costPerDay, 0);
+  itemsRows.push([L('TOPLAM', 'TOTAL'), '', totalDm, totalAsFed, 100, totalCost]);
+  const wsItems = XLSX.utils.aoa_to_sheet([itemsHeader, ...itemsRows]);
+  wsItems['!cols'] = [{ wch: 35 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, wsItems, L('Rasyon', 'Ration'));
+
+  // ─── Sheet 3: Diagnostik ───────────────────────────────────────────────────
+  const diagHeader = [L('Kısıt', 'Constraint'), L('Değer', 'Value'), 'Min', L('Maks', 'Max'), L('Durum', 'Status')];
+  const diagRows = result.diagnostics.map(d => [
+    d.name, d.value,
+    d.min ?? '—',
+    d.max ?? '—',
+    statusLabel(d.status),
+  ]);
+  const wsDiag = XLSX.utils.aoa_to_sheet([diagHeader, ...diagRows]);
+  wsDiag['!cols'] = [{ wch: 25 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, wsDiag, L('Diagnostik', 'Diagnostics'));
+
+  // ─── Sheet 4: Tam Besin Profili ────────────────────────────────────────────
+  const c = result.composition;
+  const UDM = L('% KM', '% DM'); const UGD = L('g/gün', 'g/d');
+  const profile = [
+    [L('Besin Maddesi', 'Nutrient'), L('Değer', 'Value'), L('Birim', 'Unit')],
+    ['NEL',          c.nel_mcal,   L('Mcal/gün', 'Mcal/d')],
+    [L('HP', 'CP'),  c.cp_g,       UGD],
+    [L('HP', 'CP'),  c.cp_pct,     UDM],
+    ['RUP',          c.rup_g,      UGD],
+    ['RDP',          c.rdp_g,      UGD],
+    ['NDF',          c.ndf_pct,    UDM],
+    ['ADF',          c.adf_pct,    UDM],
+    ['aNDF',         c.aNDF_pct,   UDM],
+    ['NFC',          c.nfc_pct,    UDM],
+    [L('Nişasta', 'Starch'),  c.starch_pct, UDM],
+    [L('Şeker', 'Sugar'),     c.sugar_pct,  UDM],
+    [L('Yağ', 'Fat'),         c.fat_pct,    UDM],
+    [L('Kül', 'Ash'),         c.ash_pct,    UDM],
+    ['peNDF',        c.peNDF_pct,  UDM],
+    [L('Kaba yem', 'Forage'), c.forage_pct, UDM],
+    ['DCAD',         c.dcad_meq,   L('mEq/100g KM', 'mEq/100g DM')],
+    ['Ca',           c.ca_g,       UGD],
+    ['P',            c.p_g,        UGD],
+    ['Mg',           c.mg_g,       UGD],
+    ['K',            c.k_g,        UGD],
+    ['Na',           c.na_g,       UGD],
+    ['S',            c.s_g,        UGD],
+    ['Cl',           c.cl_g,       UGD],
+  ];
+  const wsProfile = XLSX.utils.aoa_to_sheet(profile);
+  wsProfile['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 14 }];
+  XLSX.utils.book_append_sheet(wb, wsProfile, L('Besin Profili', 'Nutrient Profile'));
+
+  // ─── Sheet 5: AA Paneli ────────────────────────────────────────────────────
+  if (result.aminoAcids) {
+    const aa = result.aminoAcids;
+    // Tam EAA: 10 AA tablosu (Lys/Met/His sınırlayıcı + 7 EAA gösterim)
+    const AA_XL = [
+      ['lys', L('Lizin (Lys)', 'Lysine (Lys)')], ['met', L('Metiyonin (Met)', 'Methionine (Met)')], ['his', L('Histidin (His)', 'Histidine (His)')],
+      ['arg', L('Arginin (Arg)', 'Arginine (Arg)')], ['thr', L('Treonin (Thr)', 'Threonine (Thr)')], ['ile', L('İzolösin (Ile)', 'Isoleucine (Ile)')],
+      ['leu', L('Lösin (Leu)', 'Leucine (Leu)')], ['val', L('Valin (Val)', 'Valine (Val)')], ['phe', L('Fenilalanin (Phe)', 'Phenylalanine (Phe)')], ['trp', L('Triptofan (Trp)', 'Tryptophan (Trp)')],
+    ];
+    const aaTableRows = [];
+    for (const [k, name] of AA_XL) {
+      const st = aa.assessment[k];
+      if (!st) continue;
+      const sup = aa.supply[k];
+      aaTableRows.push([name, sup.total_g, st.required_g ?? '—', sup.pctMP, st.targetPctMP,
+        statusLabel(st.status)]);
+    }
+    const fl = aa.assessment.firstLimiting;
+    const aaData = [
+      [L('AMİNO ASİT DENGESİ', 'AMINO ACID BALANCE')],
+      [],
+      [L('Genel Skor', 'Overall Score'), aa.assessment.overallScore, '/ 100'],
+      [L('Lys : Met Oranı', 'Lys : Met Ratio'), aa.assessment.ratio.actual ?? '—', L(`Hedef ≥ ${aa.assessment.ratio.target}`, `Target ≥ ${aa.assessment.ratio.target}`)],
+      fl ? [L('İlk sınırlayıcı AA', 'First-limiting AA'), (fl.aa || '').toUpperCase(), L(`%${fl.pctOfTarget} hedef`, `${fl.pctOfTarget}% of target`)] : [],
+      [],
+      ['AA', L('Tedarik (g/gün)', 'Supply (g/d)'), L('Gereksinim (g/gün)', 'Requirement (g/d)'), L('% MP', '% MP'), L('Hedef % MP', 'Target % MP'), L('Durum', 'Status')],
+      ...aaTableRows,
+      [],
+      [L('DETAYLI TEDARİK KIRILIMI (Lys/Met/His)', 'DETAILED SUPPLY BREAKDOWN (Lys/Met/His)')],
+      [L('Lys mikrobiyal (g)', 'Lys microbial (g)'), aa.supply.lys.fromMCP_g],
+      [L('Lys RUP (g)', 'Lys RUP (g)'),        aa.supply.lys.fromRUP_g],
+      [L('Met mikrobiyal (g)', 'Met microbial (g)'), aa.supply.met.fromMCP_g],
+      [L('Met RUP (g)', 'Met RUP (g)'),        aa.supply.met.fromRUP_g],
+      [L('His mikrobiyal (g)', 'His microbial (g)'), aa.supply.his?.fromMCP_g ?? '—'],
+      [L('His RUP (g)', 'His RUP (g)'),        aa.supply.his?.fromRUP_g ?? '—'],
+      [L('RUP profili Lys %', 'RUP profile Lys %'),  aa.rupProfile.lysPct],
+      [L('RUP profili Met %', 'RUP profile Met %'),  aa.rupProfile.metPct],
+      [],
+      [L('Not', 'Note'), L('Arg/Thr/Ile/Leu/Val/Phe/Trp gösterim amaçlıdır (nadiren sınırlayıcı); formülasyon Lys/Met/His ile yönetilir. EAA değerleri başlıca türlerde NRC 2001 Tablo 15-1 tip-profili.', 'Arg/Thr/Ile/Leu/Val/Phe/Trp are display-only (rarely limiting); formulation is driven by Lys/Met/His. EAA values are NRC 2001 Table 15-1 type-profiles for major species.')],
+    ];
+
+    if (aa.recommendations.length > 0) {
+      aaData.push([], [L('ÖNERİLER', 'RECOMMENDATIONS')]);
+      for (const rec of aa.recommendations) {
+        aaData.push([rec.name, L(`Eksik: ${rec.deficitG} g/gün`, `Deficit: ${rec.deficitG} g/d`), rec.note]);
+      }
+    }
+
+    const wsAA = XLSX.utils.aoa_to_sheet(aaData);
+    wsAA['!cols'] = [{ wch: 28 }, { wch: 18 }, { wch: 25 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, wsAA, L('AA Paneli', 'AA Panel'));
+  }
+
+  return wb;
+}
+
+/**
+ * Tarayıcıda Excel dosyasını indirir.
+ */
+export function downloadRationExcel({ animal, result, filename }) {
+  const wb = generateRationExcel({ animal, result });
+  const name = filename || `rasyon_${new Date().toISOString().slice(0, 10)}.xlsx`;
+  XLSX.writeFile(wb, name);
+}

@@ -1,0 +1,535 @@
+/**
+ * Ana Uygulama — Durum yönetimi, tab routing, başlatma
+ */
+
+// FAZ 21 (Veri Terminali arayüzü) — self-host fontlar + Tabler ikon webfontu.
+// Offline PWA olduğundan CDN yerine bundle edilir (Vite woff2'leri precache eder).
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+import '@tabler/icons-webfont/dist/tabler-icons.min.css';
+
+import { seedFeedLibrary } from '../data/feedService.js';
+import feedLibraryJSON from '../data/feedLibrary.json';
+import feedLibraryExtJSON from '../data/feedLibraryExt.json';
+import feedLibraryExt2JSON from '../data/feedLibraryExt2.json';
+import feedLibraryExt3JSON from '../data/feedLibraryExt3.json';
+import feedLibraryExt4JSON from '../data/feedLibraryExt4.json';  // FAZ 16.5: kaba yem + tahıl
+import feedLibraryExt5JSON from '../data/feedLibraryExt5.json';  // FAZ 16.5: protein + yağ
+import feedLibraryExt6JSON from '../data/feedLibraryExt6.json';  // FAZ 16.5: yan ürünler
+import feedLibraryExt7JSON from '../data/feedLibraryExt7.json';  // FAZ 16.5: mineral + katkı + TR
+import { optimizeViaWorker } from '../solver/glpkWorker.js';
+import { renderDashboardPanel } from './components/dashboardPanel.js';
+import { renderAnimalForm } from './components/animalForm.js';
+import { renderFeedDatabase } from './components/feedDatabase.js';
+import { renderRationBuilder } from './components/rationBuilder.js';
+import { renderResultsPanel } from './components/resultsPanel.js';
+import { setChartTheme } from './charts.js';
+import { renderHerdBatchPanel } from './components/herdBatchPanel.js';
+import { renderPriceManager } from './components/priceManager.js';
+import { renderObservationsPanel } from './components/observationsPanel.js';
+import { renderSettingsPanel } from './components/settingsPanel.js';
+import { shouldShowOnboarding, showOnboarding } from './components/onboarding.js';
+import { getSettings, saveSettings, migrateDmiMethodToAuto } from '../data/settings.js';
+import { ensureDefaultFarm, farmGetById, farmPut, getActiveFarm, setActiveFarmId, backfillFarmId } from '../data/db.js';
+import { openAuthModal } from './components/authPanel.js';
+import { initFarmSwitcher, refreshFarmButton } from './components/farmSwitcher.js';
+import { startSync, stopSync, onSyncStatus } from '../data/sync/syncManager.js';
+import { onAuthChange, isCloudConfigured } from '../data/auth.js';
+import { showToast, showLoading } from './utils.js';
+import { validateForm, summarizeErrors } from './validation.js';
+import { initI18n, t } from './i18n.js';
+
+// FAZ 15.9 — Optimize öncesi state.animal'da kontrol edilecek alanlar (FIELD_RULES anahtarları)
+const ANIMAL_VALIDATE_FIELDS = [
+  'bw','milkYield','milkFat','milkProtein','milkLactose','targetADG',
+  'dim','bcs','ambientTemp','humidity','urinePH','pregnancyMonth','parity',
+];
+
+// ─── Global Uygulama Durumu ──────────────────────────────────────────────────
+
+export const state = {
+  animal: {
+    lactationStage: 'early',
+    bw: 650,
+    milkYield: 35,
+    milkFat: 3.5,
+    milkProtein: 3.1,
+    parity: 2,
+    dim: 90,
+    pregnant: false,
+    pregnancyMonth: 0,
+    bcs: 3.0,
+    milkLactose: null,
+    thi: null,
+    ambientTemp: null,
+    humidity: null,
+    urinePH: null,
+    gestDays: 0,
+    breed: 'Holstein',
+  },
+  economics: {
+    milkPrice_tl: 18,     // ₺/litre (Türkiye 2026 ortalama)
+    herdSize: 1,
+  },
+  selectedFeeds: [],   // { id, name, category, minKg, maxKg }
+  rationResult: null,
+  lastOptimizedAt: null,
+  lastOptimizedAnimal: null,   // FAZ 15.1: Dashboard "Son Rasyon" kartı için snapshot
+};
+
+// ─── Tab Routing ─────────────────────────────────────────────────────────────
+
+const TABS = ['dashboard', 'animal', 'feeds', 'ration', 'results', 'herd', 'prices', 'observations', 'settings'];
+// FAZ 15.4: mobil alt barda doğrudan gösterilen çekirdek sekmeler (kalanlar "Daha Fazla"da)
+const BOTTOM_NAV_TABS = ['dashboard', 'animal', 'ration', 'results'];
+let activeTab = 'dashboard';
+
+async function switchTab(tab) {
+  if (!TABS.includes(tab)) return;
+  activeTab = tab;
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  // FAZ 15.4: mobil alt navigasyon senkronizasyonu — sekme alt barda yoksa
+  // "Daha Fazla" düğmesi aktif görünür
+  document.querySelectorAll('.bottom-nav-btn').forEach(btn => {
+    if (btn.id === 'bn-more') btn.classList.toggle('active', !BOTTOM_NAV_TABS.includes(tab));
+    else btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === `tab-${tab}`);
+  });
+
+  updatePageTitle(tab);   // FAZ 21: üst-bar sayfa başlığı
+  await renderTab(tab);
+}
+
+async function renderTab(tab) {
+  const panel = document.getElementById(`tab-${tab}`);
+  switch (tab) {
+    case 'dashboard': await renderDashboardPanel(panel, state, { onNavigate: switchTab }); break;
+    case 'animal':  renderAnimalForm(panel, state); break;
+    case 'feeds':   await renderFeedDatabase(panel, state); break;
+    case 'ration':  await renderRationBuilder(panel, state, { onOptimize: handleOptimize }); break;
+    case 'results': renderResultsPanel(panel, state); break;
+    case 'herd':    await renderHerdBatchPanel(panel, state); break;
+    case 'prices':  await renderPriceManager(panel, state); break;
+    case 'observations': await renderObservationsPanel(panel, state); break;
+    case 'settings': renderSettingsPanel(panel, state, { onSettingsChange: handleSettingsChange }); break;
+  }
+}
+
+/** i18n etiketinden baştaki olası emoji+boşluğu ayıklar (FAZ 21: ikonlar artık statik SVG). */
+function stripLeadingIcon(s) {
+  return String(s).replace(/^\s*[\p{Extended_Pictographic}☀-➿️‍]+\s*/u, '').trim() || String(s);
+}
+
+/** Üst-bardaki aktif sayfa başlığını günceller (kenar menü sekme adından). */
+function updatePageTitle(tab = activeTab) {
+  const el = document.querySelector('.page-title');
+  if (!el) return;
+  const key = `tabs.${tab}`;
+  if (t(key) !== key) el.textContent = stripLeadingIcon(t(key));
+}
+
+function updateAppUIStrings() {
+  // Kenar menü nav etiketleri — ikonlar statik SVG, yalnız .tab-label metnini güncelle
+  document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+    const tab = btn.dataset.tab;
+    const label = btn.querySelector('.tab-label');
+    const key = `tabs.${tab}`;
+    if (label && t(key) !== key) label.textContent = stripLeadingIcon(t(key));
+  });
+
+  // Mobil "Daha Fazla" sayfası etiketleri (.mi-label)
+  document.querySelectorAll('.more-item[data-tab]').forEach(btn => {
+    const tab = btn.dataset.tab;
+    const label = btn.querySelector('.mi-label');
+    const key = `tabs.${tab}`;
+    if (label && t(key) !== key) label.textContent = stripLeadingIcon(t(key));
+  });
+
+  // Mobil alt navigasyon kısa etiketleri (bottomNav.* anahtarları)
+  document.querySelectorAll('.bottom-nav-btn[data-tab]').forEach(btn => {
+    const tab = btn.dataset.tab;
+    const label = btn.querySelector('.bn-label');
+    if (tab && label && t(`bottomNav.${tab}`) !== `bottomNav.${tab}`) {
+      label.textContent = t(`bottomNav.${tab}`);
+    }
+  });
+  const moreLabel = document.querySelector('#bn-more .bn-label');
+  if (moreLabel && t('bottomNav.more') !== 'bottomNav.more') moreLabel.textContent = t('bottomNav.more');
+
+  updatePageTitle();
+}
+
+window.addEventListener('language-changed', async () => {
+  updateAppUIStrings();
+  // Re-render active tab
+  await renderTab(activeTab);
+});
+
+// ─── Ayarlar Değişikliği ────────────────────────────────────────────────────────
+
+/**
+ * Ayarlar kaydedilince global state'i tazeler (FAZ 15.2).
+ * Süt fiyatı global olduğundan hemen uygulanır; hayvan varsayılanları (parite/BCS/
+ * sıcaklık) mevcut çalışan formu bozmamak için yalnızca init'te uygulanır.
+ */
+function handleSettingsChange(settings) {
+  if (Number.isFinite(settings?.defaults?.milkPrice_tl)) {
+    state.economics.milkPrice_tl = settings.defaults.milkPrice_tl;
+  }
+  // FAZ 15.10: Ayarlar panelinden tema değişince anında uygula
+  if (settings?.theme) applyTheme(settings.theme);
+}
+
+/** Açılışta ayarların varsayılan değerlerini başlangıç state'ine uygular. */
+function applySettingsToState() {
+  const s = getSettings();
+  const d = s.defaults || {};
+  if (Number.isFinite(d.parity))       state.animal.parity = d.parity;
+  if (Number.isFinite(d.bcs))          state.animal.bcs = d.bcs;
+  if (Number.isFinite(d.ambientTemp))  state.animal.ambientTemp = d.ambientTemp;
+  if (Number.isFinite(d.humidity))     state.animal.humidity = d.humidity;
+  if (Number.isFinite(d.milkPrice_tl)) state.economics.milkPrice_tl = d.milkPrice_tl;
+}
+
+/**
+ * FAZ 16.10/16.11 — Aktif çiftliği hazırlar. Ayarlardaki activeFarmId hâlâ
+ * geçerliyse kullanır; değilse "Varsayılan Çiftlik" oluşturur ve kaydeder.
+ * İlk kurulumda (veya v2→v3 göçü sonrası) çiftliksiz kayıtları aktif çiftliğe
+ * bağlar (tek seferlik backfill — flag ile tekrar taranmaz).
+ */
+async function initActiveFarm() {
+  try {
+    const settings = getSettings();
+    let farm = settings.activeFarmId ? await farmGetById(settings.activeFarmId) : null;
+    if (!farm) {
+      // FAZ 16.11/2.3: varsayılan çiftliği kullanıcının genel çiftlik adıyla tohumla
+      farm = await ensureDefaultFarm(settings.farm?.name);
+      saveSettings({ activeFarmId: farm.id });
+    }
+    setActiveFarmId(farm.id);
+
+    if (!settings.cloud?.farmBackfillDone) {
+      await backfillFarmId(farm.id);
+      saveSettings({ cloud: { farmBackfillDone: true } });
+    }
+
+    // FAZ 16.11/2.3: eski genel çiftlik profilini (ad/adres/danışman) aktif çiftliğe bir kez taşı
+    if (!settings.cloud?.farmProfileMigrated) {
+      const gf = settings.farm || {};
+      if (gf.address || gf.advisor || gf.name) {
+        await farmPut({
+          ...farm,
+          name: (farm.name && farm.name !== 'Varsayılan Çiftlik') ? farm.name : (gf.name || farm.name),
+          address: farm.address || gf.address || '',
+          advisor: farm.advisor || gf.advisor || '',
+        });
+      }
+      saveSettings({ cloud: { farmProfileMigrated: true } });
+    }
+  } catch (err) {
+    console.warn('Aktif çiftlik hazırlama hatası:', err);
+  }
+}
+
+// ─── Bulut / Hesap (FAZ 16.10) ───────────────────────────────────────────────
+
+const CLOUD_ICON = { idle: 'ti-cloud', syncing: 'ti-refresh', synced: 'ti-cloud-check', pending: 'ti-clock', offline: 'ti-cloud-off', error: 'ti-alert-triangle' };
+
+/** Header bulut butonunu senkron durumuna göre günceller (FAZ 21: SVG ikon). */
+function updateCloudButton(state) {
+  const btn = document.getElementById('cloud-btn');
+  if (!btn) return;
+  btn.innerHTML = `<i class="ti ${CLOUD_ICON[state.status] || 'ti-cloud'}"></i>`;
+  btn.classList.toggle('spin', state.status === 'syncing');
+  btn.title = `${t('cloud.header_title')}${state.user?.email ? ' — ' + state.user.email : ''}`;
+  btn.classList.toggle('cloud-active', !!state.user);
+  // Senkron sonrası çiftlik adı değişmiş olabilir (pull/uzlaştırma) → header'ı tazele
+  if (state.status === 'synced') refreshFarmButton();
+}
+
+/**
+ * Bulut/hesap altyapısını başlatır. Bulut yapılandırılmamışsa (`.env` yok)
+ * butonu gizler → program girişsiz tam yerel çalışır.
+ */
+async function initCloud() {
+  const btn = document.getElementById('cloud-btn');
+  if (!isCloudConfigured()) {
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  if (btn) btn.addEventListener('click', () => openAuthModal());
+  onSyncStatus(updateCloudButton);
+  // Oturum değişimi → senkronu başlat/durdur (INITIAL_SESSION ile açılışta da çalışır)
+  await onAuthChange((event, session) => {
+    if (session?.user) startSync(session.user);
+    else if (event === 'SIGNED_OUT') stopSync();
+  });
+}
+
+// ─── Optimize Handler ─────────────────────────────────────────────────────────
+
+async function handleOptimize(optimizeInput) {
+  // FAZ 15.9: Optimize öncesi hayvan profili validasyonu —
+  // form'da hatalı veri varsa kullanıcıyı uyar ve animal sekmesine yönlendir.
+  // #11 düzeltmesi: kuru dönemde (far_off/close_up) süt alanları kilitli/0 olduğundan
+  // süt yağ/protein/laktoz validasyonu atlanır (aksi halde "geçersiz süt yağı: 0" ile
+  // kuru inek optimizasyonu yanlışlıkla bloklanıyordu).
+  const isDry = ['far_off', 'close_up'].includes(optimizeInput.animal?.lactationStage);
+  const validateFields = isDry
+    ? ANIMAL_VALIDATE_FIELDS.filter(f => !['milkFat', 'milkProtein', 'milkLactose'].includes(f))
+    : ANIMAL_VALIDATE_FIELDS;
+  const v = validateForm(optimizeInput.animal || {}, validateFields);
+  if (!v.ok) {
+    showToast(summarizeErrors(v.errors), 'warn');
+    await switchTab('animal');
+    return;
+  }
+  // FAZ 15.5: tek rasyon — belirsiz spinner + mesaj (LP atomik, yüzde yok);
+  // mesaj/progress reset ederek sürü modundan kalan ilerleme çubuğunu temizler
+  showLoading(true, { message: 'Rasyon optimize ediliyor...' });
+  try {
+    // FAZ 15.2: Bilim sistemi (NRC2001/NASEM2021) Ayarlar'dan gelir; rasyon kurucu
+    // açıkça geçmediyse kullanıcının seçtiği varsayılan sistem uygulanır
+    // (rationOptimizer system'i requirements pipeline'ına aktarır → NEL/MP/mineral farkı).
+    // FAZ 16.11/2.3: bilim sistemi önceliği — açık seçim > aktif çiftlik override > genel ayar
+    if (!optimizeInput.system) {
+      const farm = await getActiveFarm();
+      optimizeInput.system = farm?.science || getSettings().science.system;
+    }
+    // FAZ 18.4: tüketim-düzeyi enerji iskontosu (Ayarlar; varsayılan açık) — solver'da opt-in.
+    if (optimizeInput.autoEnergyDiscount === undefined) {
+      optimizeInput.autoEnergyDiscount = getSettings().science.autoEnergyDiscount !== false;
+    }
+    // FAZ 19.1: hesap modu (Ayarlar; varsayılan 'nrc' tek-geçiş) — 'cncps' iteratif motor.
+    if (optimizeInput.calcMode === undefined) {
+      optimizeInput.calcMode = getSettings().science.calcMode || 'nrc';
+    }
+    // FAZ 20.3: çözülmüş input'u sakla → Sonuçlar'da senaryo karşılaştırma temel alır.
+    state.lastOptimizeInput = optimizeInput;
+    // FAZ 14.1: Web Worker üzerinden optimize et (Worker yoksa main thread fallback).
+    const result = await optimizeViaWorker(optimizeInput);
+    state.rationResult = result;
+    state.lastOptimizedAt = new Date();
+    // FAZ 15.1: Dashboard'ın "Son Rasyon" kartı optimize anındaki hayvan
+    // bilgisini (breed/BW/dönem/süt) sonuçla tutarlı göstersin diye snapshot al
+    // (form sonradan değişse bile sonuç bu profil için hesaplanmıştı).
+    state.lastOptimizedAnimal = { ...optimizeInput.animal };
+
+    const badge = document.getElementById('results-badge');
+    if (badge) badge.style.display = result.feasible ? 'inline-flex' : 'none';
+
+    showToast(
+      result.feasible
+        ? 'Rasyon başarıyla optimize edildi!'
+        : `Optimizasyon tamamlandı (${result.statusName})`,
+      result.feasible ? 'success' : 'error'
+    );
+
+    await switchTab('results');
+  } catch (err) {
+    console.error('Optimizasyon hatası:', err);
+    showToast('Hata: ' + err.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ─── Tema (FAZ 15.10) ───────────────────────────────────────────────────────
+
+/** Temayı <html data-theme> üzerine uygular ve toggle ikonunu günceller. */
+function applyTheme(theme) {
+  const dark = theme === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  const btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.innerHTML = dark ? '<i class="ti ti-sun"></i>' : '<i class="ti ti-moon"></i>';
+    btn.title = dark ? 'Açık temaya geç (Alt+T)' : 'Koyu temaya geç (Alt+T)';
+  }
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', dark ? '#0a1322' : '#0f2747');
+  setChartTheme(dark ? 'dark' : 'light');   // Chart.js global metin/ızgara rengi
+}
+
+/** Açık/koyu tema arasında geçiş yapar ve ayarı kalıcı kaydeder. */
+function toggleTheme() {
+  const next = (getSettings().theme === 'dark') ? 'light' : 'dark';
+  applyTheme(next);
+  saveSettings({ theme: next });
+}
+
+// Modül yüklenir yüklenmez temayı uygula (deferred module → documentElement hazır;
+// ilk boyamadan önce çalışır, açık-tema parlaması olmaz).
+applyTheme(getSettings().theme);
+
+// ─── Dokunmatik bilgi tooltip'leri (denetim #23) ─────────────────────────────
+// Mobilde `title` tooltip'i hover olmadığından açılmaz; ℹ️ simgesine tıklayınca/
+// dokununca metni toast olarak gösterir (masaüstünde de çalışır; delegated →
+// dinamik render edilen içerikte de geçerli).
+function initInfoTooltips() {
+  document.addEventListener('click', (e) => {
+    const icon = e.target.closest('.info-icon');
+    if (!icon) return;
+    const msg = icon.getAttribute('title') || icon.dataset.tip;
+    if (msg) showToast(msg, 'info', 6000);
+  });
+}
+
+// ─── Klavye Kısayolları (FAZ 15.10) ──────────────────────────────────────────
+
+function initKeyboardShortcuts() {
+  // Not: tüm kısayollar modifier'lı (Alt/Ctrl/Cmd) → input içinde yazarken de
+  // güvenli (bilinçli global davranış; tek tuş kısayolu yok).
+  document.addEventListener('keydown', (e) => {
+    // Alt+T → tema değiştir
+    if (e.altKey && (e.key === 't' || e.key === 'T')) {
+      e.preventDefault();
+      toggleTheme();
+      return;
+    }
+    // Alt+1..9 → sekme geçişi (TABS sırası)
+    if (e.altKey && !e.ctrlKey && !e.metaKey && e.key >= '1' && e.key <= '9') {
+      const idx = Number(e.key) - 1;
+      if (idx < TABS.length) {
+        e.preventDefault();
+        switchTab(TABS[idx]);
+      }
+      return;
+    }
+    // Ctrl/Cmd+Enter → rasyonu optimize et (her sekmeden çalışır → önce ration'a geç)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      triggerOptimizeShortcut();
+      return;
+    }
+    // Ctrl/Cmd+S → hayvan profilini kaydet; tarayıcının "sayfayı kaydet" dialogunu
+    // her sekmede engelle (uygulamada anlamsız), kaydetme yalnız animal sekmesinde
+    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      if (activeTab === 'animal') document.getElementById('profile-save')?.click();
+      return;
+    }
+  });
+}
+
+/** Ctrl+Enter: ration sekmesindeyse optimize butonuna tıklar, değilse sekmeye geçer. */
+async function triggerOptimizeShortcut() {
+  if (activeTab !== 'ration') {
+    await switchTab('ration');
+    // render sonrası buton hazır olunca tıkla
+    requestAnimationFrame(() => document.getElementById('optimize-btn')?.click());
+    return;
+  }
+  document.getElementById('optimize-btn')?.click();
+}
+
+// ─── Başlatma ─────────────────────────────────────────────────────────────────
+
+async function init() {
+  // Initialize i18n
+  await initI18n();
+  updateAppUIStrings();
+
+  // FAZ 17.3: Tek seferlik KMT göçü — eski 'NRC2001' default → 'auto' (bilim
+  // sistemiyle tutarlı). Sessiz değil: değişiklik olduysa kullanıcı bilgilendirilir.
+  try {
+    const { migrated } = migrateDmiMethodToAuto();
+    if (migrated) showToast(t('settings.dmi_migrated_toast'), 'info', 8000);
+  } catch { /* göç best-effort; başarısızsa sessiz geç */ }
+
+  // FAZ 15.2: Kullanıcı varsayılanlarını (parite/BCS/sıcaklık/nem/süt fiyatı) uygula
+  applySettingsToState();
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  // FAZ 15.4: mobil alt navigasyon + "Daha Fazla" alt sayfası
+  const moreSheet = document.getElementById('more-sheet');
+  const openMore = () => {
+    // Açık sekmeyi sheet'te vurgula (kullanıcı nerede olduğunu görsün)
+    moreSheet?.querySelectorAll('.more-item').forEach(it =>
+      it.classList.toggle('active', it.dataset.tab === activeTab));
+    moreSheet?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';   // arka plan scroll-lock
+  };
+  const closeMore = () => {
+    moreSheet?.classList.add('hidden');
+    document.body.style.overflow = '';
+  };
+  document.querySelectorAll('.bottom-nav-btn[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+  document.getElementById('bn-more')?.addEventListener('click', openMore);
+  document.getElementById('more-sheet-backdrop')?.addEventListener('click', closeMore);
+  document.querySelectorAll('.more-item').forEach(btn => {
+    btn.addEventListener('click', () => { switchTab(btn.dataset.tab); closeMore(); });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && moreSheet && !moreSheet.classList.contains('hidden')) closeMore();
+  });
+
+  // FAZ 15.10: Tema toggle butonu + global klavye kısayolları
+  applyTheme(getSettings().theme);   // ikon/başlığı kesin senkronla (buton render edildi)
+  document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+  initKeyboardShortcuts();
+  initInfoTooltips();   // denetim #23: dokunmatik tooltip
+
+  try {
+    // Dört kütüphaneyi birleştir; sürüm farklı → yeniden seed
+    // FAZ 16.5: 8 dosya birleştirilir; ID çakışmasında sonraki dosya kazanır (feedBulkPut upsert).
+    const allFeeds = [
+      ...feedLibraryJSON.feeds,
+      ...feedLibraryExtJSON.feeds,
+      ...feedLibraryExt2JSON.feeds,
+      ...feedLibraryExt3JSON.feeds,
+      ...feedLibraryExt4JSON.feeds,
+      ...feedLibraryExt5JSON.feeds,
+      ...feedLibraryExt6JSON.feeds,
+      ...feedLibraryExt7JSON.feeds,
+    ];
+    // version yem SAYISINDAN türetilir → her yem eklemesinde otomatik değişir →
+    // mevcut kullanıcılarda reseed tetiklenir (yoksa sabit version'da yeni yemler yüklenmez).
+    const merged = {
+      version: `1.x-merged-${allFeeds.length}`,
+      source: [
+        feedLibraryJSON.source,
+        feedLibraryExtJSON.source,
+        feedLibraryExt2JSON.source,
+        feedLibraryExt3JSON.source,
+        feedLibraryExt4JSON.source,
+        feedLibraryExt5JSON.source,
+        feedLibraryExt6JSON.source,
+        feedLibraryExt7JSON.source,
+      ].join(' + '),
+      updatedAt: feedLibraryExt7JSON.updatedAt,
+      feeds: allFeeds,
+    };
+    await seedFeedLibrary(merged);
+  } catch (err) {
+    console.warn('Feed seed hatası:', err);
+  }
+
+  // FAZ 16.10/16.11: Aktif çiftliği hazırla (yoksa "Varsayılan Çiftlik" oluştur)
+  // + mevcut/göç edilmiş kayıtları bir kereye mahsus çiftliğe bağla (backfill).
+  await initActiveFarm();
+
+  // FAZ 16.11: Çiftlik seçici (header) — geçişte aktif sekmeyi tazeler
+  initFarmSwitcher(() => renderTab(activeTab));
+
+  await renderTab(activeTab);
+
+  // FAZ 16.10: Bulut/hesap (tembel — supabase yalnız yapılandırılmışsa yüklenir).
+  // Fire-and-forget: UI'ı bloklamaz; oturum varsa arka planda senkron başlar.
+  initCloud();
+
+  if (shouldShowOnboarding()) {
+    showOnboarding();
+  }
+}
+
+init();

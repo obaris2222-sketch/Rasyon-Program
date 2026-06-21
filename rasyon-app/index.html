@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Süt Sığırı Rasyon Programı</title>
+
+  <!-- FAZ 15.3 — PWA meta (manifest link + SW register vite-plugin-pwa tarafından enjekte edilir) -->
+  <meta name="description" content="NRC 2001 / NASEM 2021 / CNCPS v6.5 tabanlı süt sığırı rasyon optimizasyonu" />
+  <meta name="theme-color" content="#2d7d46" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Rasyon" />
+
+  <link rel="stylesheet" href="/src/ui/styles.css" />
+</head>
+
+<body>
+  <div id="app">
+    <!-- FAZ 21: Sol kenar menü (Veri Terminali) — masaüstü ana navigasyon -->
+    <aside class="app-sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon"><i class="ti ti-leaf"></i></span>
+        <span class="brand-text">Rasyon<small>NRC · NASEM · CNCPS v6.5</small></span>
+      </div>
+      <nav class="sidebar-nav" aria-label="Ana navigasyon">
+        <button class="tab-btn active" data-tab="dashboard"><i class="ti ti-layout-dashboard tab-icon"></i><span
+            class="tab-label">Ana Sayfa</span></button>
+        <button class="tab-btn" data-tab="animal"><i class="ti ti-clipboard-list tab-icon"></i><span
+            class="tab-label">Hayvan Profili</span></button>
+        <button class="tab-btn" data-tab="feeds"><i class="ti ti-leaf tab-icon"></i><span class="tab-label">Yem
+            Veritabanı</span></button>
+        <button class="tab-btn" data-tab="ration"><i class="ti ti-scale tab-icon"></i><span class="tab-label">Rasyon
+            Kurucu</span></button>
+        <button class="tab-btn" data-tab="results"><i class="ti ti-chart-bar tab-icon"></i><span
+            class="tab-label">Sonuçlar</span><span class="results-badge" id="results-badge" style="display:none"><i
+              class="ti ti-check"></i></span></button>
+        <button class="tab-btn" data-tab="herd"><i class="ti ti-users tab-icon"></i><span class="tab-label">Toplu
+            Sürü</span></button>
+        <button class="tab-btn" data-tab="prices"><i class="ti ti-coins tab-icon"></i><span class="tab-label">Fiyat
+            Yöneticisi</span></button>
+        <button class="tab-btn" data-tab="observations"><i class="ti ti-report-analytics tab-icon"></i><span
+            class="tab-label">Saha Gözlem</span></button>
+        <button class="tab-btn" data-tab="settings"><i class="ti ti-settings tab-icon"></i><span
+            class="tab-label">Ayarlar</span></button>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="app-version">NRC 2001 · NASEM 2021 · CNCPS v6.5</span>
+      </div>
+    </aside>
+
+    <div class="app-body">
+      <header class="app-header">
+        <div class="header-content">
+          <h1 class="app-title"><span class="page-title">Ana Sayfa</span></h1>
+          <div class="topbar-actions">
+            <button class="farm-btn" id="farm-btn" type="button" title="Çiftlik" aria-label="Aktif çiftlik">
+              <span class="farm-btn-icon"><i class="ti ti-building-warehouse"></i></span>
+              <span class="farm-btn-label"></span>
+              <span class="farm-btn-caret"><i class="ti ti-chevron-down"></i></span>
+            </button>
+            <button class="cloud-btn" id="cloud-btn" type="button" title="Hesap & Bulut"
+              aria-label="Hesap ve bulut senkronizasyonu"><i class="ti ti-cloud"></i></button>
+            <button class="theme-toggle" id="theme-toggle" type="button" title="Koyu / açık tema (Alt+T)"
+              aria-label="Tema değiştir"><i class="ti ti-moon"></i></button>
+          </div>
+        </div>
+      </header>
+
+      <main class="tab-content">
+        <div id="tab-dashboard" class="tab-panel active"></div>
+        <div id="tab-animal" class="tab-panel"></div>
+        <div id="tab-feeds" class="tab-panel"></div>
+        <div id="tab-ration" class="tab-panel"></div>
+        <div id="tab-results" class="tab-panel"></div>
+        <div id="tab-herd" class="tab-panel"></div>
+        <div id="tab-prices" class="tab-panel"></div>
+        <div id="tab-observations" class="tab-panel"></div>
+        <div id="tab-settings" class="tab-panel"></div>
+      </main>
+    </div><!-- /.app-body -->
+
+    <!-- FAZ 15.4 Aşama 2: Mobil alt navigasyon (4 çekirdek sekme + Daha Fazla) -->
+    <nav class="bottom-nav" aria-label="Mobil navigasyon">
+      <button class="bottom-nav-btn active" data-tab="dashboard"><span class="bn-icon"><i
+            class="ti ti-layout-dashboard"></i></span><span class="bn-label">Ana</span></button>
+      <button class="bottom-nav-btn" data-tab="animal"><span class="bn-icon"><i
+            class="ti ti-clipboard-list"></i></span><span class="bn-label">Hayvan</span></button>
+      <button class="bottom-nav-btn" data-tab="ration"><span class="bn-icon"><i class="ti ti-scale"></i></span><span
+          class="bn-label">Rasyon</span></button>
+      <button class="bottom-nav-btn" data-tab="results"><span class="bn-icon"><i
+            class="ti ti-chart-bar"></i></span><span class="bn-label">Sonuç</span></button>
+      <button class="bottom-nav-btn" id="bn-more"><span class="bn-icon"><i class="ti ti-menu-2"></i></span><span
+          class="bn-label">Menü</span></button>
+    </nav>
+
+    <!-- "Daha Fazla" alt sayfası (kalan sekmeler) -->
+    <div class="more-sheet hidden" id="more-sheet">
+      <div class="more-sheet-backdrop" id="more-sheet-backdrop"></div>
+      <div class="more-sheet-panel">
+        <div class="more-sheet-handle"></div>
+        <div class="more-sheet-title">Tüm Sekmeler</div>
+        <button class="more-item" data-tab="dashboard"><i class="ti ti-layout-dashboard mi-icon"></i><span
+            class="mi-label">Ana Sayfa</span></button>
+        <button class="more-item" data-tab="animal"><i class="ti ti-clipboard-list mi-icon"></i><span
+            class="mi-label">Hayvan Profili</span></button>
+        <button class="more-item" data-tab="feeds"><i class="ti ti-leaf mi-icon"></i><span class="mi-label">Yem
+            Veritabanı</span></button>
+        <button class="more-item" data-tab="ration"><i class="ti ti-scale mi-icon"></i><span class="mi-label">Rasyon
+            Kurucu</span></button>
+        <button class="more-item" data-tab="results"><i class="ti ti-chart-bar mi-icon"></i><span
+            class="mi-label">Sonuçlar</span></button>
+        <button class="more-item" data-tab="herd"><i class="ti ti-users mi-icon"></i><span class="mi-label">Toplu
+            Sürü</span></button>
+        <button class="more-item" data-tab="prices"><i class="ti ti-coins mi-icon"></i><span class="mi-label">Fiyat
+            Yöneticisi</span></button>
+        <button class="more-item" data-tab="observations"><i class="ti ti-report-analytics mi-icon"></i><span
+            class="mi-label">Saha Gözlem</span></button>
+        <button class="more-item" data-tab="settings"><i class="ti ti-settings mi-icon"></i><span
+            class="mi-label">Ayarlar</span></button>
+      </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <div id="loading-overlay" class="loading-overlay hidden">
+      <div class="loading-spinner"></div>
+      <p id="loading-message">Rasyon optimize ediliyor...</p>
+      <div class="loading-progress-wrap hidden" id="loading-progress-wrap">
+        <div class="loading-progress-bar" id="loading-progress-bar"></div>
+      </div>
+      <p class="loading-sub hidden" id="loading-sub"></p>
+    </div>
+  </div>
+
+  <script type="module" src="/src/ui/app.js"></script>
+</body>
+
+</html>

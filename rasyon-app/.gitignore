@@ -1,0 +1,16 @@
+# Bağımlılıklar
+node_modules/
+
+# Build çıktısı
+dist/
+dev-dist/
+
+# Ortam değişkenleri (GİZLİ — Supabase anahtarları vb.) — .env.example commit edilebilir
+.env
+.env.local
+.env.*.local
+
+# Editör / OS
+.DS_Store
+*.log
+.vite/
