@@ -1139,22 +1139,47 @@ details.acc-panel table.diag-table { margin-bottom: 0; }
   /* Toast: tam genişlik + bottom-nav'ın ÜSTÜNDE (çakışmasın) */
   #toast-container { left: 0.75rem; right: 0.75rem; bottom: calc(4.25rem + env(safe-area-inset-bottom, 0)); }
 
-  /* ── Sonuçlar sekmesi mobil düzeltmeleri (denetim) ──────────────────────── */
-  /* Rapor çubuğu: durum + butonlar dikey yığılır; 5 aksiyon butonu satıra sarar
-     (eskiden space-between + tek satır → küçük ekranda butonlar taşıyordu). */
+  /* ── Sonuçlar sekmesi mobil düzeltmeleri ─────────────────────────────────── */
+  /* Rapor çubuğu: durum + butonlar dikey yığılır; aksiyon butonları iki satıra
+     kadar sararlar → küçük ekranda buton taşması yaşanmaz. */
   .report-bar { flex-direction: column; align-items: stretch; gap: 0.55rem; }
   .report-bar > div:last-child { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-  .report-bar .btn-sm { flex: 1 1 auto; min-width: 0; white-space: nowrap; }
+  .report-bar .btn-sm { flex: 1 1 calc(33% - 0.4rem); min-width: 0; white-space: nowrap; text-align: center; justify-content: center; }
 
-  /* Özet kartlar: telefonda 2 sütun ızgara (flex yerine) → düzgün hizalı,
-     taşmasız; çok dar ekranda bile okunur. */
+  /* Özet kartlar: 3 sütun ızgara → tüm ekran boyutlarında dengeli */
   .summary-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
   .summary-card { min-width: 0; padding: 0.55rem 0.4rem; }
-  .summary-card .val { font-size: 1.2rem; }
+  .summary-card .val { font-size: 1.15rem; }
+  .summary-card .lbl { font-size: 0.62rem; }
 
-  /* Sonuç kartlarındaki geniş tablolar zaten yatay kaydırılır (.tab-content table);
-     diag/composition/AA/mineral tabloları ek olarak küçük yazı + sıkı padding. */
-  .results-grid .diag-table, .results-grid .ration-items-table { font-size: 0.8rem; }
+  /* Grafik sarmalayıcıları: masaüstündeki sabit 280px/340px mobilde çok yer kaplar.
+     Küçük ekranda daha sıkıştırılmış ama okunabilir bir yüksekliğe indir. */
+  .chart-wrap { height: 210px; }
+  .chart-wrap-tall { height: 250px; }
+
+  /* Tablolar yatay kaydırılabilir kapsayıcı içinde olmalı; `white-space:nowrap`
+     mobilde sütunların taşmasını önler, touch-scroll aktif. */
+  .tab-content table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Tablo sarmalayıcılar da touch-scroll desteğine sahip olsun */
+  .feed-table-wrap,
+  .results-grid .card > div[style*="overflow-x"] {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Kısıt diagnostiği ve rasyon bileşen tablosu: hücre yazı boyutu küçüt,
+     padding sıkıştır → daha fazla satır ekranda görünsün. */
+  .results-grid .diag-table,
+  .results-grid .ration-items-table { font-size: 0.78rem; }
+  .results-grid .diag-table th,
+  .results-grid .diag-table td,
+  .results-grid .ration-items-table th,
+  .results-grid .ration-items-table td { padding: 0.3rem 0.45rem; }
 }
 
 /* ── Telefon (≤480px) ──────────────────────────────────────────────────────── */
@@ -1177,6 +1202,13 @@ details.acc-panel table.diag-table { margin-bottom: 0; }
 
   /* Özet bar (results/herd) ve sürü stat'ları daraltılmış grid */
   .summary-bar { grid-template-columns: 1fr 1fr !important; }
+
+  /* Çok küçük ekranlar için grafik yüksekliğini daha da kıs */
+  .chart-wrap { height: 180px; }
+  .chart-wrap-tall { height: 210px; }
+
+  /* Rapor butonları tam genişlik iki blok */
+  .report-bar .btn-sm { flex: 1 1 calc(50% - 0.4rem); }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
