@@ -12,7 +12,7 @@ export default defineConfig({
       includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Süt Sığırı Rasyon Programı',
-        short_name: 'Rasyon',
+        short_name: 'Rasyon Programı',
         description: 'NRC 2001 / NASEM 2021 / CNCPS v6.5 tabanlı süt sığırı rasyon optimizasyonu',
         lang: 'tr',
         dir: 'ltr',

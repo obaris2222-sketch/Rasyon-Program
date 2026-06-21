@@ -613,8 +613,9 @@ body {
 .obj-weight-row input[type="range"] { width: 100%; }
 .obj-weight-val { text-align: right; font-weight: 700; color: var(--primary); }
 
-.chart-wrap { position: relative; height: 280px; }
-.chart-wrap-tall { position: relative; height: 340px; }
+.chart-wrap { position: relative; height: 280px; width: 100%; max-width: 100%; overflow: hidden; }
+.chart-wrap-tall { position: relative; height: 340px; width: 100%; max-width: 100%; overflow: hidden; }
+.chart-wrap canvas, .chart-wrap-tall canvas { max-width: 100% !important; }
 
 .summary-bar {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
@@ -1260,28 +1261,33 @@ details.acc-panel table.diag-table { margin-bottom: 0; }
   }
   .bottom-nav-btn {
     flex: 1 1 0;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    padding: 0.5rem 0.15rem 0.45rem;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    /* Sabit yükseklik — aktif/pasif tüm butonlar aynı boyutta kalır */
+    height: 3.5rem;
+    padding: 0 0.15rem;
     border: none; background: none; cursor: pointer;
     color: var(--sidebar-text);
     transition: color 0.14s;
-    min-width: 0;
-    /* Aktif/pasif durumda yükseklik sabit kalır — hizalama bozulmasın */
-    min-height: 3.5rem;
+    min-width: 0; overflow: hidden;
   }
   .bn-icon {
     font-size: 1.25rem; line-height: 1;
     display: inline-flex; align-items: center; justify-content: center;
-    width: 2.4rem; height: 1.55rem; border-radius: 14px;
+    /* Sabit genişlik + yükseklik: pill arka planı layout'u kaydırmaz */
+    width: 2.4rem; height: 1.55rem; flex-shrink: 0;
+    border-radius: 14px;
     transition: background 0.16s ease, color 0.16s ease;
-    /* Sabit boyut: aktif pill arka planı diğer butonların yerini kaydırmasın */
-    flex-shrink: 0;
+  }
+  .bn-label {
+    font-size: 0.62rem; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 100%; line-height: 1.2;
+    margin-top: 2px;
   }
   .bottom-nav-btn.active { color: #fff; }
   .bottom-nav-btn.active .bn-icon { background: rgba(59,130,246,0.26); color: #fff; }
   .bottom-nav-btn.active .bn-label { color: #fff; }
   .bottom-nav-btn:active .bn-icon { background: rgba(255,255,255,0.12); }
-  .bn-label { font-size: 0.62rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
