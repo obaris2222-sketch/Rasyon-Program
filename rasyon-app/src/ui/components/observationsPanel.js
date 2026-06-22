@@ -456,7 +456,7 @@ function renderAnalysis(a, validations = {}, state, profile) {
   const dirText = (tr) => tr?.direction === 'up' ? t('obs.dir_up') : tr?.direction === 'down' ? t('obs.dir_down') : t('obs.dir_stable');
 
   return `
-    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:1rem; margin-bottom:1rem">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:1rem; margin-bottom:1rem">
       <div class="summary-card" style="background:var(--primary-light)">
         <div class="val" style="color:${grade.color}; font-size:2rem">${grade.grade}</div>
         <div class="lbl">${grade.label}</div>
