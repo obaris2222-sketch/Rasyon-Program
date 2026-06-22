@@ -17,7 +17,7 @@ export function renderRationItemsTable(items, dmi) {
 
   return `
     <div class="table-scroll-wrap">
-      <table class="ration-items-table">
+      <table class="ration-items-table" style="min-width: 600px;">
         <thead>
           <tr>
             <th>${t('results.ti_feed')}</th>
@@ -62,7 +62,7 @@ export function renderDiagnostics(diagnostics, requirements) {
 
   return `
     <div class="table-scroll-wrap">
-      <table class="diag-table">
+      <table class="diag-table" style="min-width: 600px;">
         <thead>
           <tr>
             <th>${t('results.diag_constraint')}</th>

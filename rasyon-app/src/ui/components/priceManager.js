@@ -538,7 +538,7 @@ function renderTable(container) {
 
   let html = `
     <div style="overflow-x:auto">
-    <table class="data-table" style="width:100%">
+    <table class="data-table" style="width:100%; min-width:800px">
       <thead>
         <tr>
           <th style="text-align:left;min-width:200px">${t('pm.col_name')}</th>

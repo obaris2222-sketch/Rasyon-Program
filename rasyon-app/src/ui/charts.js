@@ -7,8 +7,26 @@ Chart.register(...registerables);
 
 const chartInstances = {};
 
-/** Mobil ekran tespiti (Legend için) */
+/** Mobil ekran tespiti */
 const isMobile = () => window.innerWidth <= 768;
+
+/**
+ * Brute-Force Mobil Ayırıcı: Mobildeyken grafiğe kesin piksel boyutları atar.
+ * Masaüstündeyken müdahale etmez (responsive: true ile çalışır).
+ */
+function setCanvasSize(canvas, mobileWidth = 600, mobileHeight = 220) {
+  if (isMobile()) {
+    canvas.width  = mobileWidth;
+    canvas.height = mobileHeight;
+    canvas.style.width  = mobileWidth  + 'px';
+    canvas.style.height = mobileHeight + 'px';
+  } else {
+    canvas.removeAttribute('width');
+    canvas.removeAttribute('height');
+    canvas.style.width  = '';
+    canvas.style.height = '';
+  }
+}
 
 /**
  * FAZ 15.10: Chart.js global varsayılan renklerini temaya göre ayarlar.
@@ -49,6 +67,8 @@ export function renderRumenPHChart(rumenSim) {
   const dangerLine = rumenSim.hours.map(() => 5.5);  // akut asidoz eşiği
   const saraLine   = rumenSim.hours.map(() => 5.8);  // SARA eşiği
   const safeLine   = rumenSim.hours.map(() => 6.2);  // güvenli eşik
+
+  setCanvasSize(canvas, 600, 220);
 
   chartInstances['rumen-ph'] = new Chart(canvas, {
     type: 'line',
@@ -98,7 +118,7 @@ export function renderRumenPHChart(rumenSim) {
       ],
     },
     options: {
-      responsive: true,
+      responsive: !isMobile(),
       maintainAspectRatio: false,
       plugins: {
         legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 14, padding: 8 } },
@@ -130,6 +150,7 @@ function renderNutrientBar(result) {
   const canvas = document.getElementById('chart-nutrients');
   if (!canvas) return;
   destroyChart('nutrients');
+  setCanvasSize(canvas, 600, 220);
 
   const { composition, requirements } = result;
   const req = requirements.compositionTargets;
@@ -195,7 +216,7 @@ function renderNutrientBar(result) {
       ],
     },
     options: {
-      responsive: true,
+      responsive: !isMobile(),
       maintainAspectRatio: false,
       plugins: { legend: { display: true, position: 'bottom', labels: { font: { size: 11 } } } },
       scales: {
@@ -212,6 +233,7 @@ function renderMineralBar(result) {
   const canvas = document.getElementById('chart-minerals');
   if (!canvas) return;
   destroyChart('minerals');
+  setCanvasSize(canvas, 600, 220);
 
   const { composition, requirements } = result;
   const mins = requirements.minerals;
@@ -256,7 +278,7 @@ function renderMineralBar(result) {
       ],
     },
     options: {
-      responsive: true,
+      responsive: !isMobile(),
       maintainAspectRatio: false,
       plugins: { legend: { display: true, position: 'bottom', labels: { font: { size: 11 } } } },
       scales: {
@@ -273,6 +295,7 @@ function renderPieChart(result) {
   const canvas = document.getElementById('chart-pie');
   if (!canvas) return;
   destroyChart('pie');
+  setCanvasSize(canvas, 600, 240);
 
   const { items } = result;
   if (!items || items.length === 0) return;
@@ -295,7 +318,7 @@ function renderPieChart(result) {
       }],
     },
     options: {
-      responsive: true,
+      responsive: !isMobile(),
       maintainAspectRatio: false,
       plugins: {
         legend: {
