@@ -104,6 +104,9 @@ async function switchTab(tab) {
   // CSS hook: body class ile aktif sekmeyi işaretle (body:has() alternatifi)
   document.body.setAttribute('data-active-tab', tab);
 
+  // Sekme değişince sonuçlar zum'unu sıfırla
+  if (tab !== 'results') resetResultsZoom();
+
   updatePageTitle(tab);   // FAZ 21: üst-bar sayfa başlığı
   await renderTab(tab);
 
@@ -378,6 +381,80 @@ function toggleTheme() {
 // ilk boyamadan önce çalışır, açık-tema parlaması olmaz).
 applyTheme(getSettings().theme);
 
+// ─── Sonuçlar Sekmesi Parmak Zum (FAZ 22.1) ──────────────────────────────────
+// transform:scale() yalnızca #tab-results'a uygulanır → position:fixed olan
+// bottom-nav tamamen bağımsız kalır ve hiç etkilenmez.
+
+let _resultsZoomScale = 1;
+
+function resetResultsZoom() {
+  const panel = document.getElementById('tab-results');
+  if (!panel) return;
+  _resultsZoomScale = 1;
+  panel.style.transform = '';
+  panel.style.transformOrigin = '';
+}
+
+function initResultsPinchZoom() {
+  if (!('ontouchstart' in window)) return;   // Masaüstünde devre dışı
+
+  let lastPinchDist = 0;
+  let startScale   = 1;
+  let lastTapTime  = 0;
+  let isPinching   = false;
+
+  /** İki parmak arası mesafe */
+  const pinchDist = (touches) =>
+    Math.hypot(touches[1].clientX - touches[0].clientX,
+               touches[1].clientY - touches[0].clientY);
+
+  /** Scale'i sınırla ve uygula */
+  function applyScale(s) {
+    const panel = document.getElementById('tab-results');
+    if (!panel) return;
+    _resultsZoomScale = Math.min(3, Math.max(0.25, s));
+    panel.style.transformOrigin = '0 0';   // sol-üst köşeden ölçekle
+    panel.style.transform = _resultsZoomScale === 1
+      ? ''
+      : `scale(${_resultsZoomScale.toFixed(3)})`;
+  }
+
+  /** Sonuçlar sekmesi aktif mi? */
+  const onResults = () => document.body.getAttribute('data-active-tab') === 'results';
+
+  document.addEventListener('touchstart', (e) => {
+    if (!onResults()) return;
+
+    if (e.touches.length === 2) {
+      // Kıstırma başlıyor
+      isPinching   = true;
+      lastPinchDist = pinchDist(e.touches);
+      startScale   = _resultsZoomScale;
+    } else if (e.touches.length === 1) {
+      // Çift dokunuş → zum sıfırla
+      const now = Date.now();
+      if (now - lastTapTime < 300) applyScale(1);
+      lastTapTime = now;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!onResults() || e.touches.length !== 2) return;
+    isPinching = true;
+    const dist = pinchDist(e.touches);
+    if (lastPinchDist > 0) {
+      applyScale(startScale * (dist / lastPinchDist));
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+      isPinching    = false;
+      lastPinchDist = 0;
+    }
+  }, { passive: true });
+}
+
 // ─── Dokunmatik bilgi tooltip'leri (denetim #23) ─────────────────────────────
 // Mobilde `title` tooltip'i hover olmadığından açılmaz; ℹ️ simgesine tıklayınca/
 // dokununca metni toast olarak gösterir (masaüstünde de çalışır; delegated →
@@ -548,6 +625,7 @@ async function init() {
   document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
   initKeyboardShortcuts();
   initInfoTooltips();   // denetim #23: dokunmatik tooltip
+  initResultsPinchZoom();  // FAZ 22.1: Sonuçlar sekmesi parmak zum
 
   try {
     // Dört kütüphaneyi birleştir; sürüm farklı → yeniden seed
