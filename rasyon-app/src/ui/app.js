@@ -412,7 +412,12 @@ function initResultsPinchZoom() {
   function applyScale(s) {
     const panel = document.getElementById('tab-results');
     if (!panel) return;
-    _resultsZoomScale = Math.min(3, Math.max(0.25, s));
+    
+    // Masaüstü çözünürlüğünde minimum uzaklaştırma sınırı (örn: ekran 400px, sayfa 1100px -> min 0.36)
+    // Sayfanın kenarlarından daha fazla uzaklaştırmayı önler
+    const minZoom = Math.min(1, window.innerWidth / 1100);
+    _resultsZoomScale = Math.min(3, Math.max(minZoom, s));
+    
     panel.style.transformOrigin = '0 0';   // sol-üst köşeden ölçekle
     panel.style.transform = _resultsZoomScale === 1
       ? ''
@@ -430,11 +435,6 @@ function initResultsPinchZoom() {
       isPinching   = true;
       lastPinchDist = pinchDist(e.touches);
       startScale   = _resultsZoomScale;
-    } else if (e.touches.length === 1) {
-      // Çift dokunuş → zum sıfırla
-      const now = Date.now();
-      if (now - lastTapTime < 300) applyScale(1);
-      lastTapTime = now;
     }
   }, { passive: true });
 

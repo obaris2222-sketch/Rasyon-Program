@@ -3283,11 +3283,35 @@ details.acc-panel table.diag-table {
     grid-template-columns: 1fr 1fr !important;
   }
 
-  /* ── Özet kartları: otomatik tek satır ── */
+  /* ── Özet kartları: otomatik tek satır (masaüstü davranışı) ── */
   #tab-results .summary-bar {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)) !important;
-    overflow-x: unset !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: visible !important;
+  }
+
+  #tab-results .summary-card {
+    flex: 1 1 0% !important;
+    min-width: 100px !important;
+  }
+
+  /* ── Uyarı Kutuları (warn-box, info-box vb) tam genişlik ── */
+  #tab-results .warn-box,
+  #tab-results .info-box {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── Grafikler: Masaüstü boyutu ── */
+  #tab-results .chart-wrap {
+    height: 280px !important;
+  }
+  #tab-results .chart-wrap-tall {
+    height: 340px !important;
+  }
+  #tab-results .chart-inner {
+    width: auto !important;
+    min-width: 0 !important;
   }
 
   /* ── Tablolar: doğal genişlik (display:table, auto width) ──
