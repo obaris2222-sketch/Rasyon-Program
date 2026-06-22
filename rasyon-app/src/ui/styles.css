@@ -3314,14 +3314,12 @@ details.acc-panel table.diag-table {
     min-width: 0 !important;
   }
 
-  /* ── Tablolar: doğal genişlik (display:table, auto width) ──
-     width:100% ve white-space:normal KULLANILMIYOR; bunlar sütun hizalamasını bozar.
-     Tablolar table-scroll-wrap içinde kendi genişliklerine göre scroll eder. */
+  /* ── Tablolar: Masaüstü görünümü (%100 genişlik ve text wrap) ──
+     Önceden konan mobil zorlaması kaldırıldı. Tablolar içeriğine göre 
+     veya sütun dağılımına göre %100 yayılacak. */
   #tab-results table {
-    display: table !important;
-    width: auto !important;
-    white-space: nowrap !important;
-    overflow-x: visible !important;
+    width: 100% !important;
+    white-space: normal !important;
   }
 
   /* ── Tablo sarmalayıcılar yatay scroll yapar ── */
@@ -3330,12 +3328,19 @@ details.acc-panel table.diag-table {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* ── Report bar: butonlar yatay (masaüstü gibi) ── */
+  /* ── Report bar: butonlar masaüstü gibi yan yana ── */
   #tab-results .report-bar {
     flex-direction: row !important;
-    flex-wrap: wrap !important;
+    flex-wrap: nowrap !important; /* wrap iptal, yan yana kalacaklar */
     align-items: center !important;
     gap: 0.4rem !important;
+    overflow-x: auto; /* sığmazsa yatay scroll */
+  }
+
+  /* Rapor butonları 2'li grid zorlamasından masaüstü auto genişliğine geçiyor */
+  #tab-results .report-bar .btn-sm {
+    flex: 0 0 auto !important; 
+    min-width: fit-content;
   }
 
   /* ── Fiyat yöneticisi sekmesi aynı mantıkla ── */

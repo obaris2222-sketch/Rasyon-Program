@@ -419,9 +419,25 @@ function initResultsPinchZoom() {
     _resultsZoomScale = Math.min(3, Math.max(minZoom, s));
     
     panel.style.transformOrigin = '0 0';   // sol-üst köşeden ölçekle
-    panel.style.transform = _resultsZoomScale === 1
-      ? ''
-      : `scale(${_resultsZoomScale.toFixed(3)})`;
+    
+    if (_resultsZoomScale === 1) {
+      panel.style.transform = '';
+      panel.style.marginRight = '';
+      panel.style.marginBottom = '';
+    } else {
+      panel.style.transform = `scale(${_resultsZoomScale.toFixed(3)})`;
+      
+      // Ölçeklendirmeden dolayı element fiziksel olarak aynı kalırken 
+      // görsel olarak küçüldüğü için sağda ve altta beyaz boşluk kalır.
+      // Bunu önlemek için boşluk kadar negatif margin uygulayıp çerçeveyi daraltıyoruz:
+      const w = panel.offsetWidth;
+      const h = panel.offsetHeight;
+      const emptyW = w - (w * _resultsZoomScale);
+      const emptyH = h - (h * _resultsZoomScale);
+      
+      panel.style.marginRight = `-${emptyW}px`;
+      panel.style.marginBottom = `-${emptyH}px`;
+    }
   }
 
   /** Sonuçlar sekmesi aktif mi? */
