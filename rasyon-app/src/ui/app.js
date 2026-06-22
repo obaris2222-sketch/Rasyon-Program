@@ -413,9 +413,16 @@ function initResultsPinchZoom() {
     const panel = document.getElementById('tab-results');
     if (!panel) return;
     
-    // Masaüstü çözünürlüğünde minimum uzaklaştırma sınırı (örn: ekran 400px, sayfa 1100px -> min 0.36)
-    // Sayfanın kenarlarından daha fazla uzaklaştırmayı önler
-    const minZoom = Math.min(1, window.innerWidth / 1100);
+    // Panelin o anki içeriğinin gerçek fiziksel boyutları
+    // Padding ve taşan tablolar vs. her şeyi kapsar
+    const w = panel.scrollWidth || 1100;
+    const h = panel.scrollHeight || panel.offsetHeight;
+    
+    // Ekranın tam genişliğini al (scrollbar hariç net görünür alan)
+    const viewW = document.documentElement.clientWidth;
+    
+    // Sayfanın hiçbir şekilde ekran sınırlarından daha fazla küçülmemesi için minimum zoom oranı
+    const minZoom = Math.min(1, viewW / w);
     _resultsZoomScale = Math.min(3, Math.max(minZoom, s));
     
     panel.style.transformOrigin = '0 0';   // sol-üst köşeden ölçekle
@@ -427,11 +434,9 @@ function initResultsPinchZoom() {
     } else {
       panel.style.transform = `scale(${_resultsZoomScale.toFixed(3)})`;
       
-      // Ölçeklendirmeden dolayı element fiziksel olarak aynı kalırken 
-      // görsel olarak küçüldüğü için sağda ve altta beyaz boşluk kalır.
-      // Bunu önlemek için boşluk kadar negatif margin uygulayıp çerçeveyi daraltıyoruz:
-      const w = panel.offsetWidth;
-      const h = panel.offsetHeight;
+      // Transform, HTML elementinin render edilen görselini küçültürken
+      // DOM üzerindeki kapladığı fiziksel çerçeveyi (bounding box) daraltmaz.
+      // Bu yüzden sağda ve altta kalan 'hayalet' alanı negatif margin ile yok ediyoruz.
       const emptyW = w - (w * _resultsZoomScale);
       const emptyH = h - (h * _resultsZoomScale);
       
