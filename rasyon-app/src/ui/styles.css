@@ -2701,13 +2701,15 @@ details.acc-panel table.diag-table {
     overflow-x: auto;
     white-space: nowrap;
     max-width: 100%;
-    width: 100%;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Hayvan profili sekmesindeki tablolar uzun metinleri alt satıra atarak ekrana tam sığsın (scroll olmasın) */
-  #tab-animal table {
-    white-space: normal !important;
+  /* Sarmalanmış tablolar kendi scroll'una sahip, display:table kalmalı! */
+  .feed-table-wrap table {
+    display: table !important;
+    width: 100% !important;
+    white-space: nowrap !important;
+    max-width: none !important;
   }
 
   /* Modal: tam ekrana yakın (küçük ekranda kullanışlı) */

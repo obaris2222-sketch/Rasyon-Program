@@ -419,7 +419,8 @@ async function renderHerdValidation(container, profiles) {
     el.innerHTML = `
       <div class="info-box box-info text-small">${t('obs.herd_val_intro')}</div>
       ${enough ? `
-        <table class="diag-table">
+        <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table">
           <thead><tr><th>${t('obs.val_metric')}</th><th class="num">${t('obs.val_value')}</th></tr></thead>
           <tbody>
             <tr><td>${t('obs.herd_val_profiles')}</td><td class="num">${v.profiles}</td></tr>
@@ -429,6 +430,7 @@ async function renderHerdValidation(container, profiles) {
             <tr><td>MAE</td><td class="num">${v.mae} kg</td></tr>
           </tbody>
         </table>
+</div>
       ` : `
         <div class="info-box mt-1">${t('obs.herd_val_insufficient', { have: v.profiles, need: VALIDATION_MIN_SAMPLES })}</div>
       `}
@@ -489,7 +491,8 @@ function renderAnalysis(a, validations = {}, state, profile) {
       <div class="obs-chart-wrap obs-chart-sm"><canvas id="obs-compare-chart"></canvas></div>
 
       <div class="section-title mt-2">${t('obs.pred_vs_actual')}</div>
-      <table class="diag-table">
+      <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table">
         <thead><tr><th>${t('obs.col_metric')}</th><th class="num">${t('obs.col_pred')}</th><th class="num">${t('obs.col_actual')}</th><th class="num">${t('obs.col_diff')}</th><th>${t('obs.col_status')}</th></tr></thead>
         <tbody>
           ${a.myDelta ? `<tr class="status-row-${Math.abs(a.myDelta.pct) <= 10 ? 'ok' : 'above'}">
@@ -508,11 +511,13 @@ function renderAnalysis(a, validations = {}, state, profile) {
           </tr>` : ''}
         </tbody>
       </table>
+</div>
     ` : ''}
 
     ${a.trend?.my || a.trend?.bcs || a.trend?.dmi ? `
       <div class="section-title mt-2">${t('obs.trends_title')}</div>
-      <table class="diag-table">
+      <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table">
         <thead><tr><th>${t('obs.col_param')}</th><th class="num">${t('obs.col_mean')}</th><th class="num">${t('obs.col_minmax')}</th><th class="num">${t('obs.col_slope')}</th><th>${t('obs.col_dir')}</th></tr></thead>
         <tbody>
           ${a.trend.my ? `<tr>
@@ -538,13 +543,15 @@ function renderAnalysis(a, validations = {}, state, profile) {
           </tr>` : ''}
         </tbody>
       </table>
+</div>
     ` : ''}
 
     ${validations.dmi && validations.dmi.n > 0 ? `
       <div class="section-title mt-2">${t('obs.validation_title')}<span class="badge badge-display">${t('results.display_badge')}</span></div>
       <div class="info-box box-info text-small">${t('obs.validation_intro')}</div>
       ${validations.dmi.sufficient ? `
-        <table class="diag-table">
+        <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table">
           <thead><tr><th>${t('obs.val_metric')}</th><th class="num">${t('obs.val_value')}</th></tr></thead>
           <tbody>
             <tr><td>${t('obs.val_n')}</td><td class="num">${validations.dmi.n}</td></tr>
@@ -554,6 +561,7 @@ function renderAnalysis(a, validations = {}, state, profile) {
             <tr><td>CV(RMSE)</td><td class="num">${validations.dmi.cvRmse != null ? validations.dmi.cvRmse + '%' : '—'}</td></tr>
           </tbody>
         </table>
+</div>
         <div class="text-small text-muted mt-1">${t(validations.dmi.bias > 0 ? 'obs.val_bias_over' : validations.dmi.bias < 0 ? 'obs.val_bias_under' : 'obs.val_bias_neutral')}</div>
       ` : `
         <div class="info-box mt-1">${t('obs.validation_insufficient', { have: validations.dmi.n, need: VALIDATION_MIN_SAMPLES })}</div>
@@ -564,7 +572,8 @@ function renderAnalysis(a, validations = {}, state, profile) {
     ${validations.milkFat && validations.milkFat.n > 0 ? `
       <div class="section-title mt-2">${t('obs.val_title_fat')}<span class="badge badge-display">${t('results.display_badge')}</span></div>
       ${validations.milkFat.sufficient ? `
-        <table class="diag-table">
+        <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table">
           <thead><tr><th>${t('obs.val_metric')}</th><th class="num">${t('obs.val_value')}</th></tr></thead>
           <tbody>
             <tr><td>${t('obs.val_n')}</td><td class="num">${validations.milkFat.n}</td></tr>
@@ -574,6 +583,7 @@ function renderAnalysis(a, validations = {}, state, profile) {
             <tr><td>CV(RMSE)</td><td class="num">${validations.milkFat.cvRmse != null ? validations.milkFat.cvRmse + '%' : '—'}</td></tr>
           </tbody>
         </table>
+</div>
       ` : `
         <div class="info-box mt-1">${t('obs.validation_insufficient', { have: validations.milkFat.n, need: VALIDATION_MIN_SAMPLES })}</div>
       `}
@@ -583,7 +593,8 @@ function renderAnalysis(a, validations = {}, state, profile) {
     ${validations.methane && validations.methane.n > 0 ? `
       <div class="section-title mt-2">${t('obs.val_title_methane')}<span class="badge badge-display">${t('results.display_badge')}</span></div>
       ${validations.methane.sufficient ? `
-        <table class="diag-table">
+        <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table">
           <thead><tr><th>${t('obs.val_metric')}</th><th class="num">${t('obs.val_value')}</th></tr></thead>
           <tbody>
             <tr><td>${t('obs.val_n')}</td><td class="num">${validations.methane.n}</td></tr>
@@ -593,6 +604,7 @@ function renderAnalysis(a, validations = {}, state, profile) {
             <tr><td>CV(RMSE)</td><td class="num">${validations.methane.cvRmse != null ? validations.methane.cvRmse + '%' : '—'}</td></tr>
           </tbody>
         </table>
+</div>
       ` : `
         <div class="info-box mt-1">${t('obs.validation_insufficient', { have: validations.methane.n, need: VALIDATION_MIN_SAMPLES })}</div>
       `}
@@ -602,7 +614,8 @@ function renderAnalysis(a, validations = {}, state, profile) {
     ${validations.rumenPh && validations.rumenPh.n > 0 ? `
       <div class="section-title mt-2">${t('obs.val_title_ph')}<span class="badge badge-display">${t('results.display_badge')}</span></div>
       ${validations.rumenPh.sufficient ? `
-        <table class="diag-table">
+        <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table">
           <thead><tr><th>${t('obs.val_metric')}</th><th class="num">${t('obs.val_value')}</th></tr></thead>
           <tbody>
             <tr><td>${t('obs.val_n')}</td><td class="num">${validations.rumenPh.n}</td></tr>
@@ -612,6 +625,7 @@ function renderAnalysis(a, validations = {}, state, profile) {
             <tr><td>CV(RMSE)</td><td class="num">${validations.rumenPh.cvRmse != null ? validations.rumenPh.cvRmse + '%' : '—'}</td></tr>
           </tbody>
         </table>
+</div>
       ` : `
         <div class="info-box mt-1">${t('obs.validation_insufficient', { have: validations.rumenPh.n, need: VALIDATION_MIN_SAMPLES })}</div>
       `}
@@ -639,7 +653,8 @@ function renderHistory(observations) {
     return `<div class="empty-state"><p class="text-muted">${t('obs.hist_empty')}</p></div>`;
   }
   return `
-    <table class="diag-table" style="font-size:0.85rem">
+    <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table" style="font-size:0.85rem">
       <thead>
         <tr>
           <th>${t('obs.col_date')}</th>
@@ -669,6 +684,7 @@ function renderHistory(observations) {
         </tr>`).join('')}
       </tbody>
     </table>
+</div>
     <p class="text-small text-muted mt-1">${t('obs.total_records', { n: observations.length })}</p>
   `;
 }

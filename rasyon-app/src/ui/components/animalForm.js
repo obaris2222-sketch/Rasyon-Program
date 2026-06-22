@@ -435,7 +435,8 @@ function renderHerdManager(panel, parentContainer, state, groups) {
   panel.innerHTML = `
     <hr class="divider" />
     <div class="section-title">${t('acalc.herd_groups')}</div>
-    <table class="diag-table">
+    <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table">
       <thead>
         <tr><th>${t('acalc.g_name')}</th><th>${t('acalc.g_desc')}</th><th class="num">${t('acalc.g_animals')}</th><th>${t('acalc.g_action')}</th></tr>
       </thead>
@@ -451,6 +452,7 @@ function renderHerdManager(panel, parentContainer, state, groups) {
               </tr>`).join('')}
       </tbody>
     </table>
+</div>
 
     <div class="form-grid mt-2">
       <div class="form-group">
@@ -735,7 +737,8 @@ function updateCalc(form, state, container) {
       <!-- ⚡ ENERJİ DETAYI -->
       <details class="acc-panel" style="margin-top:0.75rem">
         <summary><strong>${t('acalc.energy_detail')}</strong></summary>
-        <table class="diag-table" style="font-size:0.85rem; margin-top:0.5rem">
+        <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table" style="font-size:0.85rem; margin-top:0.5rem">
           <tbody>
             <tr><td>${t('acalc.nel_maint')}${nel.heatAdjusted ? t('acalc.heat_adj_sfx') : ''}</td><td class="num">${n2(nel.maintenance)} Mcal</td></tr>
             <tr><td>${t('acalc.nel_milk')}</td><td class="num">${n2(nel.lactation)} Mcal</td></tr>
@@ -750,12 +753,14 @@ function updateCalc(form, state, container) {
             <tr><td colspan="2" class="text-small text-muted">${t('acalc.dmi_fill_hint')}</td></tr>
           </tbody>
         </table>
+</div>
       </details>
 
       <!-- 🥩 PROTEİN DETAYI -->
       <details class="acc-panel" style="margin-top:0.5rem">
         <summary><strong>${t('acalc.protein_detail')}</strong></summary>
-        <table class="diag-table" style="font-size:0.85rem; margin-top:0.5rem">
+        <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table" style="font-size:0.85rem; margin-top:0.5rem">
           <tbody>
             <tr><td>${t('acalc.mp_maint')}</td><td class="num">${n0(mp.maintenance)} g</td></tr>
             <tr><td>${t('acalc.mp_milk')}</td><td class="num">${n0(mp.lactation)} g</td></tr>
@@ -768,12 +773,14 @@ function updateCalc(form, state, container) {
             <tr><td>${t('acalc.lysmet_ratio')}</td><td class="num">${aaTargets.lysMet_ratio.ideal} (${t('acalc.ratio_min')} ${aaTargets.lysMet_ratio.min})</td></tr>
           </tbody>
         </table>
+</div>
       </details>
 
       <!-- 🧪 MİNERAL DETAYI -->
       <details class="acc-panel" style="margin-top:0.5rem">
         <summary><strong>${t('acalc.min_detail')}</strong></summary>
-        <table class="diag-table" style="font-size:0.82rem; margin-top:0.5rem">
+        <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table" style="font-size:0.82rem; margin-top:0.5rem">
           <thead><tr><th>${t('acalc.col_mineral')}</th><th class="num">${t('acalc.col_min')}</th><th class="num">${t('acalc.col_max')}</th><th>${t('acalc.col_note')}</th></tr></thead>
           <tbody>
             <tr><td>Ca (g/gün)</td><td class="num">${n1(min.ca.dietary)}</td><td class="num">—</td><td class="text-small text-muted">${min.ca.note || ''}</td></tr>
@@ -793,12 +800,14 @@ function updateCalc(form, state, container) {
             <tr><td>I</td><td class="num">${n2(tm.i?.minMg)}</td><td class="num">${n2(tm.i?.maxMg)}</td><td></td></tr>
           </tbody>
         </table>
+</div>
       </details>
 
       <!-- 💊 VİTAMİN DETAYI -->
       <details class="acc-panel" style="margin-top:0.5rem">
         <summary><strong>${t('acalc.vit_detail')}</strong></summary>
-        <table class="diag-table" style="font-size:0.85rem; margin-top:0.5rem">
+        <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table" style="font-size:0.85rem; margin-top:0.5rem">
           <tbody>
             <tr><td>Vitamin A</td><td class="num">${n0(vit.vitA?.recommendedIU)} IU/gün</td></tr>
             <tr><td>Vitamin D</td><td class="num">${n0(vit.vitD?.recommendedIU)} IU/gün</td></tr>
@@ -812,12 +821,14 @@ function updateCalc(form, state, container) {
             <tr><td colspan="2" class="text-muted" style="font-size:0.78rem">${t('acalc.bgroup_note')}</td></tr>
           </tbody>
         </table>
+</div>
       </details>
 
       <!-- 🌡️ ÇEVRE & DCAD -->
       <details class="acc-panel" style="margin-top:0.5rem">
         <summary><strong>${t('acalc.env_dcad')}</strong></summary>
-        <table class="diag-table" style="font-size:0.85rem; margin-top:0.5rem">
+        <div class="feed-table-wrap" style="width:100%; overflow-x:auto;">
+<table class="diag-table" style="font-size:0.85rem; margin-top:0.5rem">
           <tbody>
             <tr><td>THI</td><td class="num">${thiBadge || `<span class="text-muted">${t('acalc.not_entered')}</span>`}</td></tr>
             <tr><td>${t('acalc.dmi_heat_adj')}</td><td class="num">${dmi.heatAdjusted ? t('acalc.applied') : '—'}</td></tr>
@@ -834,6 +845,7 @@ function updateCalc(form, state, container) {
             <tr><td>${t('acalc.forage_label')} ${t('acalc.unit_dm')}</td><td class="num">${compRanges('forage_pct')}</td></tr>
           </tbody>
         </table>
+</div>
         ${heatRecs ? `<div class="info-box" style="margin-top:0.5rem">
           <strong>${t('acalc.heat_mgmt')}</strong>
           <ul style="margin:0.3rem 0 0 1rem; font-size:0.85rem">
