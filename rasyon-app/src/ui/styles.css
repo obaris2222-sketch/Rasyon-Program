@@ -2715,115 +2715,6 @@ details.acc-panel table.diag-table {
     bottom: calc(4.25rem + env(safe-area-inset-bottom, 0));
   }
 
-  /* ── Sonuçlar sekmesi mobil düzeltmeleri ─────────────────────────────────── */
-  /* Rapor çubuğu: durum + butonlar dikey yığılır; aksiyon butonları iki satıra
-     kadar sararlar → küçük ekranda buton taşması yaşanmaz. */
-  .report-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.55rem;
-  }
-
-  .report-bar>div:last-child {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-  }
-
-  .report-bar .btn-sm {
-    flex: 1 1 calc(33% - 0.4rem);
-    min-width: 0;
-    white-space: nowrap;
-    text-align: center;
-    justify-content: center;
-  }
-
-  /* Özet kartlar: masaüstündeki gibi yan yana dizilir, scrollbar çıkmaz (sayfa scrolluna uyar) */
-  .summary-bar {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: hidden;
-    gap: 0.5rem;
-    padding-bottom: 0.5rem;
-  }
-
-  .summary-card {
-    flex: 0 0 150px;
-    padding: 0.55rem 0.4rem;
-  }
-
-  .summary-card .val {
-    font-size: 1.15rem;
-  }
-
-  .summary-card .lbl {
-    font-size: 0.62rem;
-  }
-
-  /* Tablolar: display:block + overflow-x:auto ile yatay scroll.
-     white-space normal bırakılır; taşan tablo div sarmalayıcısı scroll eder. */
-  .tab-content table {
-    display: block;
-    overflow-x: auto;
-    overflow-y: hidden;
-    max-width: 100%;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Tablolarda fazla beyaz boşluk yerine normal kelime kaydırma iptal: 
-     Yatay scroll'un çalışması için metinlerin tek satırda kalması gerekir. (Fiyat yöneticisi dahil) */
-  .tab-content table th,
-  .tab-content table td {
-    white-space: nowrap;
-  }
-
-  /* Sayısal sütunlar nowrap kalsın (hizalanmış görünüm için) */
-  .tab-content table td.num,
-  .tab-content table th.num {
-    white-space: nowrap;
-  }
-
-  /* Tablo sarmalayıcılar touch-scroll desteğine sahip */
-  .feed-table-wrap,
-  #pm-table-wrap,
-  .table-scroll-wrap {
-    -webkit-overflow-scrolling: touch !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-  }
-
-  /* Kısıt diagnostiği ve rasyon bileşen tablosu: küçük yazı + sıkı padding */
-  .diag-table,
-  .ration-items-table,
-  .data-table {
-    font-size: 0.78rem;
-  }
-
-  .diag-table th,
-  .diag-table td,
-  .ration-items-table th,
-  .ration-items-table td,
-  .data-table th,
-  .data-table td {
-    padding: 0.3rem 0.45rem;
-  }
-
-  /* ── Responsive grid yardımcı sınıfları — mobilde yatay kaydırma ──────────
-     Kullanıcı isteği: Sağ-sola kaydırmalı (carousel) görünüm. Kartlar alt alta geçmez. */
-  .res-grid-4,
-  .res-grid-3,
-  .res-grid-2 {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    gap: 0.6rem;
-    padding-bottom: 0.5rem;
-    /* Kaydırma çubuğu payı */
-  }
-
-  .res-grid-4>*,
-  .res-grid-3>*,
   .res-grid-2>* {
     flex: 0 0 150px;
     /* Sabit genişlik ile kaydırma alanını doldur */
@@ -3358,11 +3249,11 @@ details.acc-panel table.diag-table {
 /* KULLANICI İSTEĞİ: Mobilde sonuçlar sayfası masaüstü gibi kalsın ve tüm sayfa kaydırılsın */
 @media (max-width: 768px) {
   #tab-results {
-    min-width: 1000px;
+    min-width: 1100px;
     padding-bottom: 3rem;
   }
   #tab-prices {
-    min-width: 1000px;
+    min-width: 1100px;
     padding-bottom: 3rem;
   }
   .tab-content {
