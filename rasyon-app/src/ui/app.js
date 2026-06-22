@@ -413,13 +413,9 @@ function initResultsPinchZoom() {
     const panel = document.getElementById('tab-results');
     if (!panel) return;
     
-    // Gerçek boyutları kusursuz ölçmek için anlık olarak eski transform ve marjları temizle
-    // (Tarayıcı boyamadan önce geri uygulayacağımız için ekranda titreme olmaz)
-    panel.style.transform = '';
-    panel.style.marginRight = '';
-    panel.style.marginBottom = '';
-    
     // Panelin o anki içeriğinin gerçek fiziksel boyutları
+    // CSS transform (scale) offsetWidth ve scrollWidth değerlerini etkilemez, her zaman orijinal (unscaled) boyutu verir.
+    // Saniyede 60 kez çalışan touchmove içinde transform'u sıfırlamak performansı (ve alt navigasyonu) bozar, o yüzden doğrudan ölçüyoruz.
     const w = panel.scrollWidth || 1100;
     const h = panel.scrollHeight || panel.offsetHeight;
     
@@ -433,6 +429,8 @@ function initResultsPinchZoom() {
     panel.style.transformOrigin = '0 0';   // sol-üst köşeden ölçekle
     
     if (_resultsZoomScale === 1) {
+      panel.style.transform = '';
+      panel.style.marginRight = '';
       // Alt navigasyon (bottom-nav) yüksekliğini kurtarmak için 75px boşluk
       panel.style.marginBottom = '75px';
     } else {
