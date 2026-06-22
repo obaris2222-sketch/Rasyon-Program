@@ -134,7 +134,6 @@ function renderNutrientBar(result) {
   const canvas = document.getElementById('chart-nutrients');
   if (!canvas) return;
   destroyChart('nutrients');
-  setCanvasSize(canvas, 600, 220);
 
   const { composition, requirements } = result;
   const req = requirements.compositionTargets;
@@ -217,7 +216,6 @@ function renderMineralBar(result) {
   const canvas = document.getElementById('chart-minerals');
   if (!canvas) return;
   destroyChart('minerals');
-  setCanvasSize(canvas, 600, 220);
 
   const { composition, requirements } = result;
   const mins = requirements.minerals;
@@ -279,7 +277,6 @@ function renderPieChart(result) {
   const canvas = document.getElementById('chart-pie');
   if (!canvas) return;
   destroyChart('pie');
-  setCanvasSize(canvas, 600, 240);
 
   const { items } = result;
   if (!items || items.length === 0) return;
