@@ -1297,6 +1297,7 @@ body {
 
 .ration-items-table {
   width: 100%;
+  min-width: 600px;
   border-collapse: collapse;
   font-size: 0.83rem;
 }
@@ -1330,6 +1331,7 @@ body {
 
 .diag-table {
   width: 100%;
+  min-width: 600px;
   border-collapse: collapse;
   font-size: 0.82rem;
 }

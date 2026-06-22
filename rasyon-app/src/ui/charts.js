@@ -7,6 +7,9 @@ Chart.register(...registerables);
 
 const chartInstances = {};
 
+/** Mobil ekran tespiti */
+const isMobile = () => window.innerWidth <= 768;
+
 
 
 /**
