@@ -2273,7 +2273,9 @@ details.acc-panel table.diag-table {
   color: var(--text-muted);
   border: 1px solid var(--border);
   font-weight: 600;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.3;
 }
 
 .mb-1 {
