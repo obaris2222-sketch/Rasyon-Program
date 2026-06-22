@@ -1503,6 +1503,7 @@ body {
    wrap eklenir; bu sınıf yatay scroll sağlar. */
 .table-scroll-wrap {
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   max-width: 100%;
 }
@@ -2735,19 +2736,23 @@ details.acc-panel table.diag-table {
   }
 
   /* Grafik: .chart-inner sabit genişlikte → .chart-wrap scroll eder.
-     responsive:false ile çizilen canvas bu genişliğe uyar. */
+     responsive:true bile olsa bu zorunlu genişliğe uyar. */
   .chart-wrap {
     height: 210px;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
   }
 
   .chart-wrap-tall {
     height: 250px;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
   }
 
   /* Mobilde chart-inner sabit min-width → scroll tetiklenir */
   .chart-inner {
-    width: 520px;    /* charts.js'de setCanvasSize mobileWidth ile aynı olmalı */
-    min-width: 520px;
+    width: 600px !important;
+    min-width: 600px !important;
     height: 100%;
   }
 
@@ -2756,6 +2761,7 @@ details.acc-panel table.diag-table {
   .tab-content table {
     display: block;
     overflow-x: auto;
+    overflow-y: hidden;
     max-width: 100%;
     -webkit-overflow-scrolling: touch;
   }
@@ -2775,9 +2781,11 @@ details.acc-panel table.diag-table {
 
   /* Tablo sarmalayıcılar touch-scroll desteğine sahip */
   .feed-table-wrap,
-  #pm-table-wrap {
-    -webkit-overflow-scrolling: touch;
-    overflow-x: auto;
+  #pm-table-wrap,
+  .table-scroll-wrap {
+    -webkit-overflow-scrolling: touch !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
   }
 
   /* Kısıt diagnostiği ve rasyon bileşen tablosu: küçük yazı + sıkı padding */

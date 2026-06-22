@@ -1,11 +1,5 @@
 /**
  * Chart.js grafikleri — Besin dengesi, mineral, pasta grafiği
- *
- * MOBİL SCROLL ÇÖZÜMÜ:
- * Chart.js responsive:true (default) ile canvas'ı her zaman parent boyutuna sığdırır.
- * Bu, .chart-inner'a sabit genişlik verilse bile Chart.js onu küçültür → scroll çalışmaz.
- * Çözüm: responsive:false + mobilde canvas'a sabit piksel genişliği atamak.
- * CSS tarafında .chart-wrap overflow-x:auto, .chart-inner min-width:500px olarak ayarlandı.
  */
 
 import { Chart, registerables } from 'chart.js';
@@ -13,30 +7,8 @@ Chart.register(...registerables);
 
 const chartInstances = {};
 
-/** Mobil ekran tespiti */
+/** Mobil ekran tespiti (Legend için) */
 const isMobile = () => window.innerWidth <= 768;
-
-/**
- * Mobilde canvas'a sabit piksel boyutu ata ve chart'ı responsive:false ile çiz.
- * Bu sayede .chart-wrap (overflow-x:auto) gerçekten scroll edebilir.
- * @param {HTMLCanvasElement} canvas
- * @param {number} mobileWidth  - mobilde piksel genişliği
- * @param {number} mobileHeight - mobilde piksel yüksekliği
- */
-function setCanvasSize(canvas, mobileWidth = 520, mobileHeight = 200) {
-  if (isMobile()) {
-    canvas.width  = mobileWidth;
-    canvas.height = mobileHeight;
-    canvas.style.width  = mobileWidth  + 'px';
-    canvas.style.height = mobileHeight + 'px';
-  } else {
-    // Masaüstünde boyutları temizle — responsive davranışa bırak
-    canvas.removeAttribute('width');
-    canvas.removeAttribute('height');
-    canvas.style.width  = '';
-    canvas.style.height = '';
-  }
-}
 
 /**
  * FAZ 15.10: Chart.js global varsayılan renklerini temaya göre ayarlar.
@@ -77,8 +49,6 @@ export function renderRumenPHChart(rumenSim) {
   const dangerLine = rumenSim.hours.map(() => 5.5);  // akut asidoz eşiği
   const saraLine   = rumenSim.hours.map(() => 5.8);  // SARA eşiği
   const safeLine   = rumenSim.hours.map(() => 6.2);  // güvenli eşik
-
-  setCanvasSize(canvas, 560, 220);
 
   chartInstances['rumen-ph'] = new Chart(canvas, {
     type: 'line',
@@ -128,7 +98,7 @@ export function renderRumenPHChart(rumenSim) {
       ],
     },
     options: {
-      responsive: false,
+      responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 14, padding: 8 } },
@@ -160,7 +130,6 @@ function renderNutrientBar(result) {
   const canvas = document.getElementById('chart-nutrients');
   if (!canvas) return;
   destroyChart('nutrients');
-  setCanvasSize(canvas, 520, 200);
 
   const { composition, requirements } = result;
   const req = requirements.compositionTargets;
@@ -226,7 +195,7 @@ function renderNutrientBar(result) {
       ],
     },
     options: {
-      responsive: false,
+      responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: true, position: 'bottom', labels: { font: { size: 11 } } } },
       scales: {
@@ -243,7 +212,6 @@ function renderMineralBar(result) {
   const canvas = document.getElementById('chart-minerals');
   if (!canvas) return;
   destroyChart('minerals');
-  setCanvasSize(canvas, 480, 200);
 
   const { composition, requirements } = result;
   const mins = requirements.minerals;
@@ -288,7 +256,7 @@ function renderMineralBar(result) {
       ],
     },
     options: {
-      responsive: false,
+      responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: true, position: 'bottom', labels: { font: { size: 11 } } } },
       scales: {
@@ -305,8 +273,6 @@ function renderPieChart(result) {
   const canvas = document.getElementById('chart-pie');
   if (!canvas) return;
   destroyChart('pie');
-  // Pasta grafiği mobilde biraz daha geniş — legend sağda olduğu için
-  setCanvasSize(canvas, 480, 220);
 
   const { items } = result;
   if (!items || items.length === 0) return;
@@ -329,7 +295,7 @@ function renderPieChart(result) {
       }],
     },
     options: {
-      responsive: false,
+      responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
