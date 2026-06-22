@@ -1472,7 +1472,8 @@ body {
   height: 280px;
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;          /* masaüstünde zaten sığar, mobilde scroll aktif */
+  overflow-x: auto;
+  /* masaüstünde zaten sığar, mobilde scroll aktif */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -1487,14 +1488,16 @@ body {
 
 .chart-wrap canvas,
 .chart-wrap-tall canvas {
-  max-width: none;           /* Canvas hiçbir zaman sıkıştırılmasın */
+  max-width: none;
+  /* Canvas hiçbir zaman sıkıştırılmasın */
   display: block;
 }
 
 .chart-inner {
   position: relative;
   height: 100%;
-  width: 100%;               /* Masaüstünde %100 */
+  width: 100%;
+  /* Masaüstünde %100 */
   min-width: 0;
 }
 
@@ -1516,12 +1519,14 @@ body {
   gap: 1rem;
   margin-bottom: 1rem;
 }
+
 .res-grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
   margin-bottom: 1rem;
 }
+
 .res-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -2719,7 +2724,8 @@ details.acc-panel table.diag-table {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     gap: 0.5rem;
-    padding-bottom: 0.5rem; /* Kaydırma çubuğu payı */
+    padding-bottom: 0.5rem;
+    /* Kaydırma çubuğu payı */
   }
 
   .summary-card {
@@ -2733,27 +2739,6 @@ details.acc-panel table.diag-table {
 
   .summary-card .lbl {
     font-size: 0.62rem;
-  }
-
-  /* Grafik: .chart-inner sabit genişlikte → .chart-wrap scroll eder.
-     responsive:true bile olsa bu zorunlu genişliğe uyar. */
-  .chart-wrap {
-    height: 210px;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-  }
-
-  .chart-wrap-tall {
-    height: 250px;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-  }
-
-  /* Mobilde chart-inner sabit min-width → scroll tetiklenir */
-  .chart-inner {
-    width: 600px !important;
-    min-width: 600px !important;
-    height: 100%;
   }
 
   /* Tablolar: display:block + overflow-x:auto ile yatay scroll.
@@ -2814,13 +2799,15 @@ details.acc-panel table.diag-table {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     gap: 0.6rem;
-    padding-bottom: 0.5rem; /* Kaydırma çubuğu payı */
+    padding-bottom: 0.5rem;
+    /* Kaydırma çubuğu payı */
   }
 
-  .res-grid-4 > *,
-  .res-grid-3 > *,
-  .res-grid-2 > * {
-    flex: 0 0 150px; /* Sabit genişlik ile kaydırma alanını doldur */
+  .res-grid-4>*,
+  .res-grid-3>*,
+  .res-grid-2>* {
+    flex: 0 0 150px;
+    /* Sabit genişlik ile kaydırma alanını doldur */
     min-width: 150px;
   }
 }
@@ -2896,11 +2883,12 @@ details.acc-panel table.diag-table {
     flex: 1 1 calc(50% - 0.4rem);
   }
 
-  .res-grid-4 > *,
-  .res-grid-3 > *,
-  .res-grid-2 > *,
+  .res-grid-4>*,
+  .res-grid-3>*,
+  .res-grid-2>*,
   .summary-card {
-    flex: 0 0 135px; /* Çok dar ekranlarda kartları hafif daralt ama yine scroll yap */
+    flex: 0 0 135px;
+    /* Çok dar ekranlarda kartları hafif daralt ama yine scroll yap */
     min-width: 135px;
   }
 }
@@ -3345,5 +3333,25 @@ details.acc-panel table.diag-table {
   .thi-weather-btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* FAZ 22: Tüm Sayfa Kaydırma (Desktop View on Mobile) */
+@media (max-width: 768px) {
+  #tab-results {
+    min-width: 1000px;
+    padding-bottom: 3rem;
+  }
+  #tab-prices {
+    min-width: 1000px;
+    padding-bottom: 3rem;
+  }
+  .tab-content {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  #tab-results .results-grid {
+    grid-template-columns: 1fr 1fr !important;
   }
 }

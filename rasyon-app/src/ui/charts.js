@@ -7,26 +7,7 @@ Chart.register(...registerables);
 
 const chartInstances = {};
 
-/** Mobil ekran tespiti */
-const isMobile = () => window.innerWidth <= 768;
 
-/**
- * Brute-Force Mobil Ayırıcı: Mobildeyken grafiğe kesin piksel boyutları atar.
- * Masaüstündeyken müdahale etmez (responsive: true ile çalışır).
- */
-function setCanvasSize(canvas, mobileWidth = 600, mobileHeight = 220) {
-  if (isMobile()) {
-    canvas.width  = mobileWidth;
-    canvas.height = mobileHeight;
-    canvas.style.width  = mobileWidth  + 'px';
-    canvas.style.height = mobileHeight + 'px';
-  } else {
-    canvas.removeAttribute('width');
-    canvas.removeAttribute('height');
-    canvas.style.width  = '';
-    canvas.style.height = '';
-  }
-}
 
 /**
  * FAZ 15.10: Chart.js global varsayılan renklerini temaya göre ayarlar.
@@ -61,14 +42,14 @@ export function renderRumenPHChart(rumenSim) {
   if (!canvas) return;
   destroyChart('rumen-ph');
 
-  const labels = rumenSim.hours.map(h => `${String(h).padStart(2,'0')}:00`);
+  const labels = rumenSim.hours.map(h => `${String(h).padStart(2, '0')}:00`);
 
   // Tehlike bantları (background fill)
   const dangerLine = rumenSim.hours.map(() => 5.5);  // akut asidoz eşiği
-  const saraLine   = rumenSim.hours.map(() => 5.8);  // SARA eşiği
-  const safeLine   = rumenSim.hours.map(() => 6.2);  // güvenli eşik
+  const saraLine = rumenSim.hours.map(() => 5.8);  // SARA eşiği
+  const safeLine = rumenSim.hours.map(() => 6.2);  // güvenli eşik
 
-  setCanvasSize(canvas, 600, 220);
+
 
   chartInstances['rumen-ph'] = new Chart(canvas, {
     type: 'line',
@@ -301,9 +282,9 @@ function renderPieChart(result) {
   if (!items || items.length === 0) return;
 
   const COLORS = [
-    '#1d4ed8','#0d9488','#d97706','#dc2626','#7c3aed',
-    '#17a2b8','#e67e22','#27ae60','#e91e63','#795548',
-    '#607d8b','#ff5722','#009688','#673ab7','#cddc39',
+    '#1d4ed8', '#0d9488', '#d97706', '#dc2626', '#7c3aed',
+    '#17a2b8', '#e67e22', '#27ae60', '#e91e63', '#795548',
+    '#607d8b', '#ff5722', '#009688', '#673ab7', '#cddc39',
   ];
 
   chartInstances['pie'] = new Chart(canvas, {
