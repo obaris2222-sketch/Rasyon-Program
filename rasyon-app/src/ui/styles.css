@@ -2717,15 +2717,13 @@ details.acc-panel table.diag-table {
     justify-content: center;
   }
 
-  /* Özet kartlar: 3 sütun ızgara → tüm ekran boyutlarında dengeli */
+  /* Özet kartlar: ekran sığmadığında alt satıra geçer, kaydırma çubuğu çıkmaz */
   .summary-bar {
     display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 0.5rem;
     padding-bottom: 0.5rem;
-    /* Kaydırma çubuğu payı */
   }
 
   .summary-card {
@@ -3336,22 +3334,19 @@ details.acc-panel table.diag-table {
   }
 }
 
-/* FAZ 22: Tüm Sayfa Kaydırma (Desktop View on Mobile) */
+/* KULLANICI İSTEĞİ: Mobilde ilk 6 modülü masaüstü gibi yan yana 2'li zorla */
 @media (max-width: 768px) {
-  #tab-results {
-    min-width: 1000px;
-    padding-bottom: 3rem;
-  }
-  #tab-prices {
-    min-width: 1000px;
-    padding-bottom: 3rem;
-  }
-  .tab-content {
-    overflow-x: auto !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
   #tab-results .results-grid {
     grid-template-columns: 1fr 1fr !important;
+  }
+  
+  /* Daralan 2'li sütunlarda tabloların eksik/hatalı görünmemesi için ultra sıkıştırma */
+  #tab-results .results-grid .ration-items-table th,
+  #tab-results .results-grid .ration-items-table td,
+  #tab-results .results-grid .diag-table th,
+  #tab-results .results-grid .diag-table td {
+    padding: 0.15rem 0.2rem;
+    font-size: 0.6rem;
+    white-space: normal; /* Metinlerin taşmaması için alt satıra inmesine izin ver */
   }
 }
