@@ -3277,7 +3277,7 @@ details.acc-panel table.diag-table {
   }
 
   /* ── Sonuçlar paneli: masaüstü genişliğine sabit ── */
-  #tab-results {
+  #tab-results.active {
     display: inline-flex;
     flex-direction: column;
     min-width: 1100px;
