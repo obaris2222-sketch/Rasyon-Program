@@ -19,9 +19,16 @@ import {
   SYNC_STORES, getDirtyRecords, markRecordsSynced, applyRemoteRecord,
 } from '../db.js';
 
-/** Senkronlanan tüm store'lar: kullanıcı verisi + çiftlikler + kullanıcı yemleri.
- *  'userFeeds' sanal store (fiziksel 'feeds' içindeki user_ önekli yemler). */
-export const SYNCABLE_STORES = [...SYNC_STORES, 'farms', 'userFeeds'];
+/** Senkronlanan tüm store'lar (Hiyerarşik sıralı: önce bağımsızlar, sonra bağımlılar) */
+export const SYNCABLE_STORES = [
+  'farms',             // Hiçbir şeye bağımlı değil
+  'userFeeds',         // Hiçbir şeye bağımlı değil
+  'rations',           // farms'a bağımlı
+  'animalProfiles',    // farms'a bağımlı
+  'herdGroups',        // farms ve rations'a bağımlı
+  'fieldObservations', // farms ve animalProfiles'a bağımlı
+  'feedPriceHistory'   // farms ve userFeeds'e bağımlı
+];
 
 // ─── lastPull durumu (store başına son çekilen zaman damgası) ─────────────────
 

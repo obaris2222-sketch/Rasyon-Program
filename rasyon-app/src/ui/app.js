@@ -461,6 +461,14 @@ function initResultsPinchZoom() {
     }
   }
 
+  // Buluttan yeni veri indiğinde aktif ekranı sessizce tazele
+  window.addEventListener('rasyon:cloud-synced', () => {
+    // Kullanıcı o an bir forma yazı yazıyorsa ekranı yenileme ki yazısı silinmesin
+    if (document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+    renderTab(activeTab);
+    showToast('Bulut verileri başarıyla indirildi ve ekrana yansıtıldı.', 'success');
+  });
+
   /** Sonuçlar sekmesi aktif mi ve gözlem ekranı kapalı mı? */
   const onResults = () => {
     // Geçmiş rasyon gözlem ekranı açıkken uzaklaştırmayı (pinch-zoom) kapat
