@@ -28,20 +28,7 @@ const _state = {
 };
 const _listeners = new Set();
 let _adapter = null;
-let _timer = null;
 let _syncing = false;
-let _boundOnline = null;
-let _boundVisible = null;
-let _boundChange = null;
-let _debounceTimer = null;
-const DEBOUNCE_MS = 4000;   // yerel yazma sonrası push gecikmesi (ardışık yazmaları toplar)
-
-/** Yerel değişiklik sonrası debounce'lu senkron planla (anlık his). */
-function scheduleSync() {
-  if (!_adapter) return;
-  if (_debounceTimer) clearTimeout(_debounceTimer);
-  _debounceTimer = setTimeout(() => { if (typeof navigator === 'undefined' || navigator.onLine) syncNow(); }, DEBOUNCE_MS);
-}
 
 // ─── Durum yayını ─────────────────────────────────────────────────────────────
 
@@ -95,30 +82,10 @@ export async function startSync(user) {
   // İlk tam senkron + aktif çiftlik uzlaştırma
   await syncNow();
   await reconcileActiveFarm();
-
-  // Tetikleyiciler
-  _boundOnline = () => { if (navigator.onLine) syncNow(); };
-  _boundVisible = () => { if (document.visibilityState === 'visible' && navigator.onLine) syncNow(); };
-  window.addEventListener('online', _boundOnline);
-  document.addEventListener('visibilitychange', _boundVisible);
-  if (_timer) clearInterval(_timer);
-  // Periyodik: çevrimiçiyken her zaman senkronla (pull uzak değişiklikleri getirir +
-  // push yereli gönderir). NOT: `_state.pending` koşulu KULLANILMAZ — yerel yazma
-  // sonrası bayat kalır (yazma→syncManager kancası yok) ve uzak çekimi de engellerdi.
-  _timer = setInterval(() => { if (navigator.onLine) syncNow(); }, PERIODIC_MS);
-  // Yerel yazma → debounce'lu push (db.js 'rasyon:local-change' olayını yayar)
-  _boundChange = () => scheduleSync();
-  window.addEventListener('rasyon:local-change', _boundChange);
 }
 
 /** Senkronu durdur (çıkışta). Yerel veri KORUNUR. */
 export function stopSync() {
-  if (_timer) { clearInterval(_timer); _timer = null; }
-  if (_boundOnline) window.removeEventListener('online', _boundOnline);
-  if (_boundVisible) document.removeEventListener('visibilitychange', _boundVisible);
-  if (_boundChange) window.removeEventListener('rasyon:local-change', _boundChange);
-  _boundOnline = _boundVisible = _boundChange = null;
-  if (_debounceTimer) { clearTimeout(_debounceTimer); _debounceTimer = null; }
   _adapter = null;
   _state.user = null;
   _state.pending = 0;

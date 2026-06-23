@@ -8,7 +8,7 @@
  */
 
 import {
-  signIn, signUp, signOut, resetPassword, getCurrentUser, isCloudConfigured, deleteAccount,
+  signIn, signUp, signOut, resetPassword, getCurrentUser, isCloudConfigured, deleteAccount, clearCloudData
 } from '../../data/auth.js';
 import { syncNow, getSyncState, onSyncStatus } from '../../data/sync/syncManager.js';
 import { showToast, escHtml } from '../utils.js';
@@ -85,13 +85,16 @@ function renderAccountView(body, user) {
         </div>
         ${state.lastSyncAt ? `<div class="text-small text-muted">${t('cloud.last_sync')}: ${new Date(state.lastSyncAt).toLocaleString()}</div>` : ''}
         <div class="flex gap-1 mt-1" style="flex-wrap:wrap">
-          <button class="btn btn-primary" id="auth-sync-now" ${state.status === 'syncing' ? 'disabled' : ''}>${t('cloud.sync_now')}</button>
-          <button class="btn btn-danger" id="auth-logout">${t('cloud.logout')}</button>
+          <button class="btn btn-primary" id="auth-sync-now" ${state.status === 'syncing' ? 'disabled' : ''} style="width: 100%;"><i class="ti ti-cloud-upload"></i> Bulutla Kaydet / Eşitle</button>
         </div>
         <div class="flex gap-1 mt-1" style="flex-wrap:wrap">
-          <button class="btn btn-danger btn-sm" id="auth-delete-account" style="opacity: 0.8;">${t('cloud.delete_account')}</button>
+          <button class="btn btn-danger" id="auth-logout">${t('cloud.logout')}</button>
+          <button class="btn btn-danger" id="auth-clear-cloud" style="opacity: 0.9;">Bulut Verilerini Temizle</button>
         </div>
-        <div class="text-small text-muted mt-1">${t('cloud.account_hint')}</div>
+        <div class="flex gap-1 mt-1" style="flex-wrap:wrap">
+          <button class="btn-link" id="auth-delete-account" style="opacity: 0.8; font-size: 0.85em;">${t('cloud.delete_account')}</button>
+        </div>
+        <div class="text-small text-muted mt-1">Verileriniz otomatik olarak kaydedilmez. Değişiklik yaptığınızda "Bulutla Kaydet / Eşitle" butonuna basmayı unutmayın.</div>
       </div>
     `;
     body.querySelector('#auth-sync-now').addEventListener('click', () => syncNow());
@@ -109,6 +112,21 @@ function renderAccountView(body, user) {
         btn.disabled = false;
         btn.innerHTML = t('cloud.logout');
         showToast(t('cloud.err_generic') + err.message, 'error');
+      }
+    });
+    body.querySelector('#auth-clear-cloud').addEventListener('click', async (e) => {
+      if (!confirm('DİKKAT: Buluttaki TÜM verileriniz kalıcı olarak silinecektir! (Cihazınızdaki mevcut veriler silinmez). Onaylıyor musunuz?')) return;
+      const btn = e.target;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader-2 ti-spin"></i> Temizleniyor...`;
+      try {
+        await clearCloudData();
+        showToast('Bulut verileri başarıyla temizlendi.', 'success');
+      } catch (err) {
+        showToast(t('cloud.err_generic') + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Bulut Verilerini Temizle';
       }
     });
     body.querySelector('#auth-delete-account').addEventListener('click', async () => {

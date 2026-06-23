@@ -58,6 +58,29 @@ export async function deleteAccount() {
   await client.auth.signOut();
 }
 
+/** Kullanıcıya ait tüm verileri buluttan siler (Hesap silinmez). */
+export async function clearCloudData() {
+  const client = await getSupabaseClient();
+  if (!client) throw new Error('Bulut yapılandırılmamış.');
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) throw new Error('Oturum bulunamadı.');
+
+  // Silinecek tablolar
+  const tables = [
+    'animal_profiles', 'rations', 'herd_groups', 'feed_price_history', 
+    'field_observations', 'farms', 'user_feeds'
+  ];
+
+  // RLS (Row Level Security) kuralları gereği, kendi 'owner_id' olanları silebilir.
+  for (const table of tables) {
+    try {
+      await client.from(table).delete().eq('owner_id', user.id);
+    } catch (err) {
+      console.warn(`[cloud] ${table} tablosu silinirken hata:`, err);
+    }
+  }
+}
+
 /** Şifre sıfırlama e-postası gönder. */
 export async function resetPassword(email) {
   const client = await getSupabaseClient();
