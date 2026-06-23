@@ -8,6 +8,18 @@ import { showToast, escHtml } from '../../utils.js';
 import { t, feedDisplayName } from '../../i18n.js';
 import { renderCompositionTable, renderDiagnostics } from './tables.js';   // denetim #15: detayda tam tablo
 
+function _lockZoom() {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+}
+
+function _restoreZoom() {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (meta && document.body.getAttribute('data-active-tab') === 'results') {
+    meta.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+  }
+}
+
 // PDF/Excel modülleri dinamik yüklenir — ana bundle küçük kalsın
 export function attachReportHandlers(container, state) {
   const result = state.rationResult;
@@ -76,6 +88,7 @@ export function attachReportHandlers(container, state) {
 
   // Geçmiş rasyonları göster
   container.querySelector('#btn-history')?.addEventListener('click', async () => {
+    _lockZoom();
     const modal = container.querySelector('#history-modal');
     const content = container.querySelector('#history-content');
     if (!modal || !content) return;
@@ -91,9 +104,21 @@ export function attachReportHandlers(container, state) {
   });
 
   container.querySelector('#btn-close-history')?.addEventListener('click', () => {
+    _restoreZoom();
     const modal = container.querySelector('#history-modal');
     if (modal) modal.style.display = 'none';
   });
+
+  // Modal dışına tıklanarak kapatma
+  const historyModal = container.querySelector('#history-modal');
+  if (historyModal) {
+    historyModal.addEventListener('mousedown', (e) => {
+      if (e.target === historyModal) {
+        _restoreZoom();
+        historyModal.style.display = 'none';
+      }
+    });
+  }
 }
 
 /**
@@ -102,6 +127,7 @@ export function attachReportHandlers(container, state) {
  * @returns {Promise<string|null>} girilen ad (boş/iptal → null)
  */
 function promptModal(title, defaultValue = '') {
+  _lockZoom();
   return new Promise(resolve => {
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; display:flex; align-items:center; justify-content:center; padding:1rem';
@@ -117,7 +143,7 @@ function promptModal(title, defaultValue = '') {
       </div>`;
     document.body.appendChild(overlay);
     const input = overlay.querySelector('#__prompt-input');
-    const done = (val) => { overlay.remove(); resolve(val); };
+    const done = (val) => { overlay.remove(); _restoreZoom(); resolve(val); };
     setTimeout(() => { input.focus(); input.select(); }, 30);
     overlay.querySelector('#__prompt-ok').addEventListener('click', () => done(input.value.trim() || null));
     overlay.querySelector('#__prompt-cancel').addEventListener('click', () => done(null));
