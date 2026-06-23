@@ -15,6 +15,7 @@ import { exportAllData, importAllData, clearAllData } from '../../data/db.js';
 import { resetOnboarding, showOnboarding } from './onboarding.js';
 import { openAuthModal } from './authPanel.js';
 import { getSyncState, onSyncStatus } from '../../data/sync/syncManager.js';
+import { resetSyncState } from '../../data/sync/syncEngine.js';
 import { reverseGeocode } from '../../core/weatherApi.js';   // denetim #19: koordinat → yer adı
 import { isCloudConfigured } from '../../data/auth.js';
 import { showToast, escHtml } from '../utils.js';
@@ -401,6 +402,7 @@ export function renderSettingsPanel(container, state, options = {}) {
     if (!confirm('Emin misiniz? Son uyarı — yedeğiniz yoksa veriler kalıcı olarak kaybolur.')) return;
     try {
       await clearAllData();
+      resetSyncState(); // Senkron imleçlerini de sıfırla ki buluttan veriler tekrar inebilsin
       showToast('Tüm veriler temizlendi. Sayfa yenileniyor...', 'success');
       setTimeout(() => window.location.reload(), 1200);
     } catch (err) {
