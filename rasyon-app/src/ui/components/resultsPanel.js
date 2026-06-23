@@ -69,6 +69,24 @@ export function renderResultsPanel(container, state) {
 
   if (!result) {
     container.innerHTML = `
+      <div class="flex-between report-bar" style="margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem">
+        <div></div>
+        <div class="flex gap-1 no-print" style="flex-wrap: wrap; justify-content: flex-end; position: relative; z-index: 10;">
+          <button class="btn btn-secondary btn-sm" id="btn-history" title="${t('results.btn_history_title')}"><i class="ti ti-history"></i> ${t('results.btn_history')}</button>
+        </div>
+      </div>
+
+      <!-- Geçmiş Rasyonlar Modal (gizli, butonla açılır) -->
+      <div id="history-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center">
+        <div class="card" style="max-width:900px; max-height:80vh; overflow:auto; margin:1rem; width:100%">
+          <div class="flex-between">
+            <div class="card-title" style="margin:0">${t('results.history_modal')}</div>
+            <button class="btn btn-sm btn-secondary" id="btn-close-history">${t('results.close')}</button>
+          </div>
+          <div id="history-content" style="margin-top:1rem"></div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="empty-state" style="padding:3rem">
           <div class="icon"><i class="ti ti-chart-bar"></i></div>
@@ -76,6 +94,8 @@ export function renderResultsPanel(container, state) {
           <p class="mt-1">${t('results.go_optimize')}</p>
         </div>
       </div>`;
+      
+    attachReportHandlers(container, state);
     return;
   }
 

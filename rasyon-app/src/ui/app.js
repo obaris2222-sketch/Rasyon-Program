@@ -404,6 +404,7 @@ function resetResultsZoom() {
   panel.style.transform = '';
   panel.style.transformOrigin = '';
 }
+window.resetResultsZoom = resetResultsZoom;
 
 function initResultsPinchZoom() {
   if (!('ontouchstart' in window)) return;   // Masaüstünde devre dışı

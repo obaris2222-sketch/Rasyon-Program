@@ -9,6 +9,7 @@ import { t, feedDisplayName } from '../../i18n.js';
 import { renderCompositionTable, renderDiagnostics } from './tables.js';   // denetim #15: detayda tam tablo
 
 function _lockZoom() {
+  if (window.resetResultsZoom) window.resetResultsZoom();
   const meta = document.querySelector('meta[name="viewport"]');
   if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
 }
@@ -23,7 +24,6 @@ function _restoreZoom() {
 // PDF/Excel modülleri dinamik yüklenir — ana bundle küçük kalsın
 export function attachReportHandlers(container, state) {
   const result = state.rationResult;
-  if (!result) return;
 
   container.querySelector('#btn-pdf')?.addEventListener('click', async () => {
     try {
