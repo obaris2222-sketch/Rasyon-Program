@@ -108,7 +108,7 @@ export function renderResultsPanel(container, state) {
         ${!feasible && !relaxed ? `<span class="text-muted text-small" style="margin-left:0.5rem">(${statusLabel})</span>` : ''}
         <span class="text-muted text-small" style="margin-left:0.75rem">${optTime}</span>
       </div>
-      <div class="flex gap-1 no-print">
+      <div class="flex gap-1 no-print" style="flex-wrap: wrap; justify-content: flex-end; position: relative; z-index: 10;">
         <button class="btn btn-secondary btn-sm" id="btn-save-ration" title="${t('results.btn_save_title')}"><i class="ti ti-device-floppy"></i> ${t('results.btn_save')}</button>
         <button class="btn btn-secondary btn-sm" id="btn-history"     title="${t('results.btn_history_title')}"><i class="ti ti-history"></i> ${t('results.btn_history')}</button>
         <button class="btn btn-secondary btn-sm" id="btn-pdf"   title="${t('results.btn_pdf_title')}"><i class="ti ti-file-type-pdf"></i> ${t('results.btn_pdf')}</button>

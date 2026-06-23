@@ -392,6 +392,10 @@ async function refreshAnalysis(container, profile, state) {
         await refreshAnalysis(container, profile, state);
       });
     });
+    
+    // Yeni gözlem eklendiğinde/silindiğinde Sürü Geneli Validasyonu'nu anında güncelle
+    const allProfiles = await animalProfileGetAll();
+    await renderHerdValidation(container, allProfiles);
   } catch (err) {
     analysisEl.innerHTML = `<div class="warn-box">${t('obs.err')}${escHtml(err.message)}</div>`;
   }

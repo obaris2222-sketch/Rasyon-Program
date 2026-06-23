@@ -83,6 +83,7 @@ export async function renderHerdBatchPanel(container, state) {
         <div class="info-box text-small">${t('herd.hw_info')}</div>
         ${(state.selectedFeeds && state.selectedFeeds.length) ? `
           <div class="text-small text-muted" style="margin:0.4rem 0">${t('herd.hw_stock_hint')}</div>
+          <div class="feed-table-wrap">
           <table class="diag-table" style="font-size:0.85rem; max-width:520px">
             <thead><tr><th>${t('herd.hw_feed')}</th><th class="num">${t('herd.hw_stock')}</th></tr></thead>
             <tbody>
@@ -93,6 +94,7 @@ export async function renderHerdBatchPanel(container, state) {
                 </tr>`).join('')}
             </tbody>
           </table>
+          </div>
           <div class="form-grid" style="margin:0.6rem 0; max-width:520px">
             <div class="form-group">
               <label>${t('herd.hw_budget')}</label>
@@ -101,7 +103,7 @@ export async function renderHerdBatchPanel(container, state) {
             </div>
             <div class="form-group">
               <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; font-weight:600">
-                <input type="checkbox" id="herd-include-micros" /> ${t('herd.hw_include_micros')}
+                <input type="checkbox" id="herd-include-micros" style="width: 1.2rem; height: 1.2rem; min-width: auto; margin: 0; padding: 0;" /> ${t('herd.hw_include_micros')}
               </label>
               <span class="hint">${t('herd.hw_micros_hint')}</span>
             </div>
@@ -222,16 +224,16 @@ function renderHerdResults(el, res) {
     </div>
     ${microWarn}
     <div class="section-title mt-2">${t('herd.hw_group_table')}</div>
-    <table class="diag-table">
+    <div class="feed-table-wrap"><table class="diag-table">
       <thead><tr><th>${t('herd.hw_group')}</th><th class="num">${t('herd.hw_size')}</th><th class="num">${t('herd.hw_dmi')}</th><th class="num">${t('herd.hw_cost_animal')}</th><th class="num">${t('herd.hw_cost_group')}</th></tr></thead>
       <tbody>${groupRows}</tbody>
-    </table>
+    </table></div>
     ${stockRows ? `
       <div class="section-title mt-2">${t('herd.hw_stock_usage')}</div>
-      <table class="diag-table">
+      <div class="feed-table-wrap"><table class="diag-table">
         <thead><tr><th>${t('herd.hw_feed')}</th><th class="num">${t('herd.hw_used')}</th><th class="num">${t('herd.hw_limit')}</th><th class="num">${t('herd.hw_util')}</th></tr></thead>
         <tbody>${stockRows}</tbody>
-      </table>` : `<div class="info-box mt-2 text-small">${t('herd.hw_no_stock_set')}</div>`}
+      </table></div>` : `<div class="info-box mt-2 text-small">${t('herd.hw_no_stock_set')}</div>`}
     <div class="text-small text-muted mt-2">${t('herd.hw_note')}</div>
   `;
 }
@@ -386,6 +388,7 @@ function renderBatchResults(el, results, milkPrice) {
     </div>
 
     <!-- Karşılaştırma tablosu -->
+    <div class="feed-table-wrap">
     <table class="diag-table" style="font-size:0.8rem">
       <thead>
         <tr>
@@ -407,6 +410,7 @@ function renderBatchResults(el, results, milkPrice) {
         ${results.map(r => renderRow(r)).join('')}
       </tbody>
     </table>
+    </div>
 
     <div class="text-small text-muted mt-1">
       ${t('herd.annual_iofc')}
