@@ -246,7 +246,7 @@ function renderHistoryContent(rations, currentResult) {
               <div class="text-small" style="margin:0.3rem 0 0.5rem"><b>${t('history.detail_feeds')}:</b> ${feedsLine}</div>
               <div class="card" style="margin-bottom: 1rem">
                 <div class="section-title">${t('results.card_items')}</div>
-                ${r.result?.items ? renderRationItemsTable(r.result.items, r.result.requirements?.dmi_kg || 0) : `<p class="text-muted">${t('history.no_detail')}</p>`}
+                ${r.result?.items ? renderRationItemsTable(r.result.items, { target_kg: r.result?.dmi?.target_kg || r.result?.requirements?.dmi_kg || 0, method: r.result?.dmi?.method || '' }) : `<p class="text-muted">${t('history.no_detail')}</p>`}
               </div>
               <div class="results-grid">
                 <div>
