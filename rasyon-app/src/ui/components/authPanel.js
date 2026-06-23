@@ -100,11 +100,8 @@ function renderAccountView(body, user) {
       btn.disabled = true;
       btn.innerHTML = `<i class="ti ti-loader-2 ti-spin"></i> Lütfen bekleyin...`;
       try {
-        const state = getSyncState();
-        if (state.pending > 0 || state.status === 'syncing') {
-          showToast('Kalan veriler buluta yükleniyor...', 'info');
-          await syncNow(); // Çıkış yapmadan önce bekleyen yerel verileri zorla buluta gönder
-        }
+        showToast('Kalan veriler buluta yükleniyor...', 'info');
+        await syncNow(); // Çıkış yapmadan önce her zaman son bir kez bulutla eşitle (pending durumu anlık güncellenmemiş olabilir)
         await signOut();
         showToast(t('cloud.logout_done'), 'info');
         closeAuthModal();
