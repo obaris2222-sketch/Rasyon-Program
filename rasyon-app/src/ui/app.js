@@ -403,6 +403,8 @@ function resetResultsZoom() {
   _resultsZoomScale = 1;
   panel.style.transform = '';
   panel.style.transformOrigin = '';
+  panel.style.marginRight = '';
+  panel.style.marginBottom = '75px';
 }
 window.resetResultsZoom = resetResultsZoom;
 
@@ -459,8 +461,12 @@ function initResultsPinchZoom() {
     }
   }
 
-  /** Sonuçlar sekmesi aktif mi? */
-  const onResults = () => document.body.getAttribute('data-active-tab') === 'results';
+  /** Sonuçlar sekmesi aktif mi ve gözlem ekranı kapalı mı? */
+  const onResults = () => {
+    // Geçmiş rasyon gözlem ekranı açıkken uzaklaştırmayı (pinch-zoom) kapat
+    if (document.getElementById('history-modal')?.style.display === 'flex') return false;
+    return document.body.getAttribute('data-active-tab') === 'results';
+  };
 
   document.addEventListener('touchstart', (e) => {
     if (!onResults()) return;
