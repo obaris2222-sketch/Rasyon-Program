@@ -487,9 +487,13 @@ async function runScenarioCompare(container, state) {
     const milkPrice = state.economics?.milkPrice_tl ?? 0;
     el.innerHTML = `
       <div class="card mt-2">
-        <div class="card-title">${t('scen.title')}</div>
+        <div class="flex-between">
+          <div class="card-title" style="margin:0">${t('scen.title')}</div>
+          <button class="btn btn-sm btn-secondary" id="btn-close-scenario" title="${t('results.close')}"><i class="ti ti-x"></i></button>
+        </div>
         ${renderScenarioComparison(scenarios, { milkYield: base.animal.milkYield, milkPrice })}
       </div>`;
+    el.querySelector('#btn-close-scenario')?.addEventListener('click', () => { el.innerHTML = ''; });
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   } catch (err) {
     el.innerHTML = `<div class="warn-box">${t('scen.error')}: ${escHtml(err.message)}</div>`;
