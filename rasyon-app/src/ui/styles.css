@@ -200,10 +200,6 @@ body {
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
-  height: 100vh;
   z-index: 100;
 }
 
