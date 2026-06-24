@@ -220,6 +220,20 @@ let _filterSearch = '';
 export async function renderPriceManager(container, state = null) {
   _state = state;   // FAZ 15.7: flagship yem önerisini Rasyon Kurucu'ya eklemek için
   container.innerHTML = `
+    <!-- 📖 Sekme Yardımı -->
+    <details class="tab-help-accordion" style="margin-bottom:0.75rem">
+      <summary style="cursor:pointer; font-weight:600; color:var(--primary); display:flex; align-items:center; gap:0.4rem">
+        <i class="ti ti-info-circle"></i> Bu sekme ne işe yarar? <span style="font-size:0.75rem; font-weight:400; color:var(--text-muted); margin-left:auto">▾</span>
+      </summary>
+      <div class="info-box" style="margin-top:0.5rem; font-size:0.85rem; line-height:1.7">
+        <b>💰 Fiyat Yöneticisi</b> — Sistemdeki tüm yemlerin güncel piyasa fiyatlarını (TL/ton, yaş ağırlık) buradan tanımlayın.<br>
+        • <b>Fiyat Girme:</b> Sağdaki kutulara fiyat yazıp "Kaydet"e basarak rasyon maliyetlerini anında güncelleyebilirsiniz.<br>
+        • <b>Bölge ve Referans Fiyatlar:</b> Bölgenizi seçerek o bölgenin ortalama fiyat çarpanını uygulayabilir veya "TR Referans Yükle" ile hazır piyasa ortalamalarını getirebilirsiniz.<br>
+        • <b>Öne Çıkan Yemler:</b> Bölgenize has, sık kullanılan uygun fiyatlı yemleri doğrudan rasyonunuza ekleme kısayolları mevcuttur.<br>
+        • <b>Geçmiş (Snapshot):</b> Ayda bir "Şu anki fiyatları kaydet" (Snapshot) butonuna basarak fiyat değişim trendini (enflasyon vs.) takip edebilirsiniz.
+      </div>
+    </details>
+
     <div class="card">
       <div class="card-title">${t('pm.title')}</div>
       <p class="text-muted" style="margin:0 0 12px">

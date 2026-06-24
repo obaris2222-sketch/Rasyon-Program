@@ -45,6 +45,20 @@ export async function renderAnimalForm(container, state) {
   ]);
 
   container.innerHTML = `
+    <!-- 📖 Sekme Yardımı -->
+    <details class="tab-help-accordion" style="margin-bottom:0.75rem">
+      <summary style="cursor:pointer; font-weight:600; color:var(--primary); display:flex; align-items:center; gap:0.4rem">
+        <i class="ti ti-info-circle"></i> Bu sekme ne işe yarar? <span style="font-size:0.75rem; font-weight:400; color:var(--text-muted); margin-left:auto">▾</span>
+      </summary>
+      <div class="info-box" style="margin-top:0.5rem; font-size:0.85rem; line-height:1.7">
+        <b>🐄 Hayvan Profili</b> — Rasyonun hesaplanacağı ineğin/grubun temel bilgilerini buraya girin.<br>
+        • <b>Canlı ağırlık, süt verimi, yağ/protein %</b> ve <b>laktasyon dönemi</b> zorunludur; diğer alanlar enerji/mineral hesabını iyileştirir.<br>
+        • <b>Profil Yönetimi</b> kartından farklı hayvan grupları için birden fazla profil kaydedip yükleyebilirsiniz.<br>
+        • Alt bölümdeki <b>Hesaplanan Değerler</b> (NEL, MP, Ca, P…) doldurduğunuz verilere göre anlık güncellenir — rasyon oluşturmadan önce doğrulamak için kullanın.<br>
+        • Profili bitirince <b>Rasyon Kurucuya Git</b> butonuna tıklayın veya üst menüden <b>Rasyon Kurucu</b> sekmesine geçin.
+      </div>
+    </details>
+
     <!-- Profil & Sürü Yönetimi Kartı -->
     <div class="card">
       <div class="card-title">${t('animal.profile_mgmt')}</div>

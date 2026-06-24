@@ -160,6 +160,23 @@ export async function renderRationBuilder(container, state, { onOptimize }) {
   container.innerHTML = `
     <div class="ration-layout">
 
+      <!-- 📖 Sekme Yardımı (tam genişlik, sadece ilk kart) -->
+      <div style="grid-column: 1 / -1; margin-bottom:0.25rem">
+        <details class="tab-help-accordion">
+          <summary style="cursor:pointer; font-weight:600; color:var(--primary); display:flex; align-items:center; gap:0.4rem">
+            <i class="ti ti-info-circle"></i> Bu sekme ne işe yarar? <span style="font-size:0.75rem; font-weight:400; color:var(--text-muted); margin-left:auto">▾</span>
+          </summary>
+          <div class="info-box" style="margin-top:0.5rem; font-size:0.85rem; line-height:1.7">
+            <b>⚗️ Rasyon Kurucu</b> — Hayvan profilinize uygun optimum yem karmasını oluşturur.<br>
+            • <b>Sol panel:</b> Rasyona dahil edilecek yemleri seçin. Her yem için isteğe bağlı min/maks kg sınırı girebilirsiniz.<br>
+            • <b>Sağ panel:</b> Kısıtları (NDF, NFC, forage, enerji, protein, amino asit…) gözden geçirin. Koyu renkli (hesaplanan) placeholder değerleri LP'nin otomatik uyguladığı minimumları gösterir; alanı boş bırakırsanız bu değerler kullanılır.<br>
+            • <b>Zorunlu kısıtlar:</b> İnfeasibility durumunda bile gevşetilmez (varsayılan: kaba yem oranı). Dikkatli kullanın.<br>
+            • <b>İleri Kısıtlar:</b> Amino asit, iz mineral, vitamin ve TMR nem kısıtları buradadır — genellikle boş bırakmak yeterlidir.<br>
+            • Hazır olunca <b>Optimize Et</b> butonuna basın; sonuç otomatik olarak <b>Sonuçlar</b> sekmesine taşır.
+          </div>
+        </details>
+      </div>
+
       <!-- Sol: Yem seçimi -->
       <div>
         <div class="card">
@@ -314,6 +331,13 @@ export async function renderRationBuilder(container, state, { onOptimize }) {
             </div>
 
             ${subHead(t('ration.adv_protein2'))}
+            <div class="info-box" style="margin:0.3rem 0 0.5rem; font-size:0.8rem; border-left:3px solid var(--warning)">
+              <b>⚠️ Amino asit kısıtları hakkında:</b><br>
+              • <b>Gri placeholder değerleri</b> (hesaplanan) → LP'nin uyguladığı <em>minimum alt sınır</em> (pctMP_min × MP gereksinimi).<br>
+              • <b>Sonuçlar sekmesindeki "Gereksinim"</b> → Hayvan profiline göre <em>optimal hedef</em> (pctMP × MP gereksinimi) — bu değer daha yüksektir.<br>
+              • Buraya değer girerseniz LP o gramı rasyonda <em>zorunlu</em> kılar. Hedef değerden yüksek bir sayı girilirse rumen-korumalı AA (RP-Met / RP-Lys) yemi gerekirken uyumsuzluk yaşanabilir.
+              ${(lysPh || metPh) ? `<br><span class="text-muted">LP min. sınırları: ${lysPh ? `Lys ≥ ${lysPh} g` : ''} ${lysPh && metPh ? '·' : ''} ${metPh ? `Met ≥ ${metPh} g` : ''} ${hisPh ? `· His ≥ ${hisPh} g` : ''}</span>` : ''}
+            </div>
             <div class="constraint-grid">
               ${constraintRow('rup_pct', t('ration.rup_label'), compOverride.rup_pct || {}, { minPh: t('ration.min_ph'), maxPh: t('ration.max_ph') })}
               ${constraintRow('aa_lys', 'Lys (g/gün)', compOverride.aa_lys || {}, { minPh: lysPh ?? t('ration.min_ph'), maxPh: '—', minComputed: lysPh != null })}

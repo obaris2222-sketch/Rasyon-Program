@@ -50,6 +50,20 @@ export function renderSettingsPanel(container, state, options = {}) {
   const s = getSettings();
 
   container.innerHTML = `
+    <!-- 📖 Sekme Yardımı -->
+    <details class="tab-help-accordion" style="margin-bottom:0.75rem">
+      <summary style="cursor:pointer; font-weight:600; color:var(--primary); display:flex; align-items:center; gap:0.4rem">
+        <i class="ti ti-info-circle"></i> Bu sekme ne işe yarar? <span style="font-size:0.75rem; font-weight:400; color:var(--text-muted); margin-left:auto">▾</span>
+      </summary>
+      <div class="info-box" style="margin-top:0.5rem; font-size:0.85rem; line-height:1.7">
+        <b>⚙️ Ayarlar Paneli</b> — Programın genel çalışma mantığını, dil/birim tercihlerini ve verilerinizi yönetin.<br>
+        • <b>Bilim Sistemi:</b> Hesaplama standartlarını (NASEM 2021 veya NRC 2001) seçebilir, KMT tahmin metodunu (de Souza vs) değiştirebilirsiniz.<br>
+        • <b>Çiftlik Profili:</b> Raporlarda çıkacak isim/adres ve konum bilgilerini doldurabilirsiniz.<br>
+        • <b>Veri Yönetimi:</b> Tüm kayıtlarınızı yedekleyip indirebilir, geri yükleyebilir veya tamamen silebilirsiniz.<br>
+        • <b>Bulut:</b> Hesabınıza giriş yaparak verilerinizi cihazlar arası senkronize edebilirsiniz.
+      </div>
+    </details>
+
     <div class="settings-panel">
       <div class="card">
         <div class="card-title">${t('settings.title')}</div>

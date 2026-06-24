@@ -39,6 +39,20 @@ let _searchDebounce = null;
 
 export async function renderFeedDatabase(container, state) {
   container.innerHTML = `
+    <!-- 📖 Sekme Yardımı -->
+    <details class="tab-help-accordion" style="margin-bottom:0.75rem">
+      <summary style="cursor:pointer; font-weight:600; color:var(--primary); display:flex; align-items:center; gap:0.4rem">
+        <i class="ti ti-info-circle"></i> Bu sekme ne işe yarar? <span style="font-size:0.75rem; font-weight:400; color:var(--text-muted); margin-left:auto">▾</span>
+      </summary>
+      <div class="info-box" style="margin-top:0.5rem; font-size:0.85rem; line-height:1.7">
+        <b>🌾 Yem Kütüphanesi</b> — Sistemdeki tüm yemleri inceleyin ve rasyon için seçim yapın.<br>
+        • <b>Ara ve filtrele:</b> Yem adına göre arama yapabilir, kategori butonlarıyla (kaba yem, tahıl, protein…) listeyi daraltabilirsiniz.<br>
+        • <b>Rasyona ekle/çıkar:</b> Yemin solundaki <b>+</b> butonuyla yemi aktif rasyona ekleyin; tekrar basınca çıkar.<br>
+        • <b>Yeni Yem / İçe Aktar:</b> Kendi yem analizlerinizi girebilir veya CSV/Excel dosyasından toplu olarak içe aktarabilirsiniz.<br>
+        • Yeme tıklayarak (👁️) besin değerlerinin tamamını görebilirsiniz.
+      </div>
+    </details>
+
     <div class="card">
       <div class="card-title">${t('feeds.title')}</div>
 

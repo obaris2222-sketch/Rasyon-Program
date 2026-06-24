@@ -693,10 +693,16 @@ function computeAminoAcids(items, feeds, mp, composition, animal, system = 'NASE
   const extraPctMP = aaTargets
     ? Object.fromEntries(['arg', 'thr', 'ile', 'leu', 'val', 'phe', 'trp'].map(a => [a, aaTargets[a]?.pctMP]))
     : null;
+  // DÜZELTME: Gereksinim hesabında hayvanın SABİT MP gereksinimi (mp.total) kullanılır.
+  // Eskiden rasyonun ürettiği mpTotal kullanılıyordu; bu durum kullanıcı kısıtı
+  // değiştirdiğinde (LP daha fazla RUP zorlayınca ration mpTotal artıyordu) aynı
+  // hayvan profili için gereksinim değerinin değişmesine neden oluyordu.
+  // mp.total → calcAllRequirements'tan gelen sabit hayvan MP ihtiyacı (g/gün).
+  const reqMpBase = (mp && mp.total > 0) ? mp.total : mpTotal;
   const requirement = calcAARequirements(
-    mpTotal, aaTargets?.lys.pctMP ?? 7.0, aaTargets?.met.pctMP ?? 2.6, aaTargets?.his?.pctMP ?? 2.2, extraPctMP);
+    reqMpBase, aaTargets?.lys.pctMP ?? 7.0, aaTargets?.met.pctMP ?? 2.6, aaTargets?.his?.pctMP ?? 2.2, extraPctMP);
   const assessment = assessAABalance(supply, requirement, aaTargets);
-  const recommendations = recommendRPAA(assessment, mpTotal, aaTargets);
+  const recommendations = recommendRPAA(assessment, reqMpBase, aaTargets);
 
   return {
     supply,

@@ -118,6 +118,20 @@ export async function renderObservationsPanel(container, state) {
 
   if (profiles.length === 0) {
     container.innerHTML = `
+      <!-- 📖 Sekme Yardımı -->
+      <details class="tab-help-accordion" style="margin-bottom:0.75rem">
+        <summary style="cursor:pointer; font-weight:600; color:var(--primary); display:flex; align-items:center; gap:0.4rem">
+          <i class="ti ti-info-circle"></i> Bu sekme ne işe yarar? <span style="font-size:0.75rem; font-weight:400; color:var(--text-muted); margin-left:auto">▾</span>
+        </summary>
+        <div class="info-box" style="margin-top:0.5rem; font-size:0.85rem; line-height:1.7">
+          <b>📈 Saha Gözlem Paneli</b> — Hayvanlarınızın gerçek sahadaki performansını (süt verimi, KM tüketimi, kondisyon vb.) kaydeder ve programın tahminleriyle kıyaslar.<br>
+          • <b>Yeni Kayıt / İçe Aktar:</b> Günlük veya haftalık ölçümlerinizi forma girebilir veya CSV dosyasından topluca aktarabilirsiniz.<br>
+          • <b>Tahmin vs Gerçek:</b> Programın "Rasyon Kurucu"da tahmin ettiği süt verimi veya tüketim ile sizin sahadan girdiğiniz gerçek rakamları grafik üzerinde karşılaştırır.<br>
+          • <b>Trend Analizi:</b> Kondisyon skoru (BCS) veya verim düşüşlerini tespit ederek size erken uyarılar üretir.<br>
+          • <b>Sürü Validasyonu:</b> Modelin çiftliğinizdeki doğruluğunu (RMSE, Hata payı) ölçer ve programı kalibre etmenize yardımcı olur.
+        </div>
+      </details>
+
       <div class="card">
         <div class="card-title">${t('obs.title')}</div>
         <div class="empty-state" style="padding:2.5rem">
@@ -134,6 +148,20 @@ export async function renderObservationsPanel(container, state) {
   let activeProfile = profiles.find(p => p.id === activeProfileId) || profiles[0];
 
   container.innerHTML = `
+    <!-- 📖 Sekme Yardımı -->
+    <details class="tab-help-accordion" style="margin-bottom:0.75rem">
+      <summary style="cursor:pointer; font-weight:600; color:var(--primary); display:flex; align-items:center; gap:0.4rem">
+        <i class="ti ti-info-circle"></i> Bu sekme ne işe yarar? <span style="font-size:0.75rem; font-weight:400; color:var(--text-muted); margin-left:auto">▾</span>
+      </summary>
+      <div class="info-box" style="margin-top:0.5rem; font-size:0.85rem; line-height:1.7">
+        <b>📈 Saha Gözlem Paneli</b> — Hayvanlarınızın gerçek sahadaki performansını (süt verimi, KM tüketimi, kondisyon vb.) kaydeder ve programın tahminleriyle kıyaslar.<br>
+        • <b>Yeni Kayıt / İçe Aktar:</b> Günlük veya haftalık ölçümlerinizi forma girebilir veya CSV dosyasından topluca aktarabilirsiniz.<br>
+        • <b>Tahmin vs Gerçek:</b> Programın "Rasyon Kurucu"da tahmin ettiği süt verimi veya tüketim ile sizin sahadan girdiğiniz gerçek rakamları grafik üzerinde karşılaştırır.<br>
+        • <b>Trend Analizi:</b> Kondisyon skoru (BCS) veya verim düşüşlerini tespit ederek size erken uyarılar üretir.<br>
+        • <b>Sürü Validasyonu:</b> Modelin çiftliğinizdeki doğruluğunu (RMSE, Hata payı) ölçer ve programı kalibre etmenize yardımcı olur.
+      </div>
+    </details>
+
     <div class="card">
       <div class="card-title">${t('obs.title')}
         <span class="text-small text-muted" style="font-weight:400;margin-left:auto">
