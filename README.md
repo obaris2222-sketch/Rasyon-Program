@@ -27,3 +27,4 @@ Endüstri standardı olan **NASEM 2021** ve **CNCPS v6.5 (Iterative)** besleme m
 ## 📦 Kurulum ve Çalıştırma
 
 Projeyi bilgisayarınızda yerel olarak çalıştırmak için **Node.js** (v18+) kurulu olmalıdır.
+**
