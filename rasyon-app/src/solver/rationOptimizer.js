@@ -913,6 +913,11 @@ function buildDiagnostics(comp, req, dmi_kg) {
   const mref = (r) => (r != null && typeof r === 'object') ? [r.min, r.max] : [r, undefined];
   if (req.ca_g !== undefined) { const [mn, mx] = mref(req.ca_g); check('Ca (g/gün)', comp.ca_g, mn, mx); }
   if (req.p_g !== undefined) { const [mn, mx] = mref(req.p_g); check('P (g/gün)', comp.p_g, mn, mx); }
+  if (req.ca_p_ratio !== undefined) {
+    const ratio = comp.p_g > 0 ? comp.ca_g / comp.p_g : 0;
+    const [mn, mx] = mref(req.ca_p_ratio);
+    check('Ca/P Oranı', ratio, mn, mx);
+  }
   if (req.mg_g !== undefined) { const [mn, mx] = mref(req.mg_g); check('Mg (g/gün)', comp.mg_g, mn, mx); }
   if (req.k_g !== undefined) { const [mn, mx] = mref(req.k_g); check('K (g/gün)', comp.k_g, mn, mx); }
   if (req.na_g !== undefined) { const [mn, mx] = mref(req.na_g); check('Na (g/gün)', comp.na_g, mn, mx); }
