@@ -17,6 +17,7 @@ import feedLibraryExt4JSON from '../data/feedLibraryExt4.json';  // FAZ 16.5: ka
 import feedLibraryExt5JSON from '../data/feedLibraryExt5.json';  // FAZ 16.5: protein + yağ
 import feedLibraryExt6JSON from '../data/feedLibraryExt6.json';  // FAZ 16.5: yan ürünler
 import feedLibraryExt7JSON from '../data/feedLibraryExt7.json';  // FAZ 16.5: mineral + katkı + TR
+import feedLibraryExt8JSON from '../data/feedLibraryExt8.json';  // INRA 2018 / CVB / Feedipedia ek yemler
 import { optimizeViaWorker } from '../solver/glpkWorker.js';
 import { renderDashboardPanel } from './components/dashboardPanel.js';
 import { renderAnimalForm } from './components/animalForm.js';
@@ -742,6 +743,7 @@ async function init() {
       ...feedLibraryExt5JSON.feeds,
       ...feedLibraryExt6JSON.feeds,
       ...feedLibraryExt7JSON.feeds,
+      ...feedLibraryExt8JSON.feeds,
     ];
     // version yem SAYISINDAN türetilir → her yem eklemesinde otomatik değişir →
     // mevcut kullanıcılarda reseed tetiklenir (yoksa sabit version'da yeni yemler yüklenmez).
@@ -756,8 +758,9 @@ async function init() {
         feedLibraryExt5JSON.source,
         feedLibraryExt6JSON.source,
         feedLibraryExt7JSON.source,
+        feedLibraryExt8JSON.source,
       ].join(' + '),
-      updatedAt: feedLibraryExt7JSON.updatedAt,
+      updatedAt: feedLibraryExt8JSON.updatedAt ?? feedLibraryExt7JSON.updatedAt,
       feeds: allFeeds,
     };
     await seedFeedLibrary(merged);

@@ -23,7 +23,7 @@ import { estimateRationFA, estimateMilkFA, assessFAProfile, faCoefPerKgDM } from
 import { calcAllRequirements } from '../core/animalRequirements.js';
 import { adjustDMIForFill } from '../core/dmi.js';  // FAZ 18.2: tüketim-duyarlı (NDF doluluk) KMT
 import { getIntakeMultiple, feedIntakeDiscountFactor } from '../core/nrc2001.js';  // FAZ 18.4 + 24.3: tüketim-düzeyi enerji iskontosu
-import { milkFeverRisk } from '../core/dcad.js';  // FAZ 13.8: süt humması risk skoru
+import { milkFeverRisk, calcDCAD } from '../core/dcad.js';  // FAZ 13.8: sütt humması risk skoru + DCAD hesap fonksiyonu
 import { methaneMoraes2014, methaneNiu2018, methaneIntensity, methaneCO2eq, interpretMethane, CH4_ENERGY_MCAL_PER_KG } from '../core/methane.js';  // FAZ 16.2: enterik metan emisyonu
 import { buildRationLP, mpPerKgDM, mpComponentsPerKgDM, aaPerKgDM, effectiveNel, TRACE_MINERAL_KEYS, VITAMIN_KEYS, BCAROTENE_TO_VITA_IU_PER_MG, GLP } from './lpBuilder.js';
 import { solveLP } from './glpkSolver.js';
@@ -203,7 +203,7 @@ export async function optimizeRation(input) {
   if (calcMode === 'cncps') {
     const loop = await runCncpsLoop({
       feeds, dmi_kg, bw: num(animal.bw), requirements, feedLimits, groupLimits,
-      objective, objectives, system: usedSystem, intakeMultiple, dmiSlack,
+      objective, objectives, system: usedSystem, energyDiscount: intakeMultiple, dmiSlack,
     });
     cncpsCoef = loop.coef;   // null → warm-start infeasible: NRC katsayılarına düşülür
     cncpsInfo = {
@@ -808,12 +808,13 @@ function aggregateComposition(items, feeds, dmi_kg, system = 'NASEM2021', intake
   // LP'deki iki-havuz MP kısıtı (lpBuilder) ile bire bir tutarlı.
   acc.mp_g = acc.mpRUP + Math.min(acc.mpEnergyPool, acc.mpRdpPool);
 
-  // DCAD (mEq/100g KM)
-  const naP = (acc.na_g / dmi_kg) / 10;  // % KM
-  const kP = (acc.k_g / dmi_kg) / 10;
-  const clP = (acc.cl_g / dmi_kg) / 10;
-  const sP = (acc.s_g / dmi_kg) / 10;
-  const dcad = ((naP / 23) + (kP / 39) - (clP / 35.5) - (sP / 16)) * 1000;
+  // DCAD (mEq/100g KM) — calcDCAD() ile hesapla (dcad.js tek kaynak)
+  const dcad = dmi_kg > 0 ? calcDCAD({
+    na_pct: (acc.na_g / dmi_kg) / 10,
+    k_pct:  (acc.k_g  / dmi_kg) / 10,
+    cl_pct: (acc.cl_g / dmi_kg) / 10,
+    s_pct:  (acc.s_g  / dmi_kg) / 10,
+  }) : 0;
 
   return {
     nel_mcal: round(acc.nel, 2),

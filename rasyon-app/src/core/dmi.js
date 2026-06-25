@@ -158,20 +158,31 @@ export function dmiDryCow(bw, daysToCalv) {
 
 /**
  * Ana KMT hesaplama fonksiyonu
- * Hayvan durumuna göre uygun denklemi seçer
+ * Hayvan durumuna göre uygun denklemi seçer:
+ *   - Kuru dönem (far_off / close_up): dmiDryCow() — NRC 2001 Eq. 1-3
+ *   - Laktasyon, deSouza2019 seçiliyse: dmiDeSouza2019()
+ *   - Laktasyon, NRC2001 seçiliyse: dmiNRC2001()
+ *
  * @param {object} animal - Hayvan profili
  * @param {string} method - 'NRC2001' | 'deSouza2019' (varsayılan: 'NRC2001')
- * @returns {object} { dmi, method, heatAdjusted }
+ * @returns {object} { dmi, method, heatAdjusted, isDryCow }
  */
 export function calcDMI(animal, method = 'NRC2001') {
-  const { milkYield, milkFat, milkProtein, bw, dim, thi } = animal;
+  const { milkYield, milkFat, milkProtein, bw, dim, thi, lactationStage } = animal;
 
   let dmi;
   const wol = dim / 7;
   const fcm = calcFCM(milkYield, milkFat);
   const ecm = calcECM(milkYield, milkFat, milkProtein || 3.1);
 
-  if (method === 'deSouza2019') {
+  // Kuru dönem: far_off / close_up → dmiDryCow() kullan (NRC 2001 Eq. 1-3)
+  // Formda kuru dönem için `dim` alanı "doğuma kalan gün" olarak kullanılır
+  // (DIM_RANGES: far_off 1-60 gün, close_up 1-21 gün).
+  const isDryCow = lactationStage === 'far_off' || lactationStage === 'close_up';
+  if (isDryCow) {
+    const daysToCalv = Number.isFinite(dim) && dim > 0 ? dim : (lactationStage === 'close_up' ? 14 : 45);
+    dmi = dmiDryCow(bw, daysToCalv);
+  } else if (method === 'deSouza2019') {
     dmi = dmiDeSouza2019(animal);
   } else {
     dmi = dmiNRC2001(fcm, bw, wol);
@@ -186,8 +197,9 @@ export function calcDMI(animal, method = 'NRC2001') {
     dmi: Math.round(dmi * 100) / 100,
     fcm: Math.round(fcm * 100) / 100,
     ecm: Math.round(ecm * 100) / 100,
-    method,
+    method: isDryCow ? 'NRC2001-DryCow' : method,
     heatAdjusted,
+    isDryCow,
     thi,
   };
 }
