@@ -331,13 +331,6 @@ export async function renderRationBuilder(container, state, { onOptimize }) {
             </div>
 
             ${subHead(t('ration.adv_protein2'))}
-            <div class="info-box" style="margin:0.3rem 0 0.5rem; font-size:0.8rem; border-left:3px solid var(--warning)">
-              <b>⚠️ Amino asit kısıtları hakkında:</b><br>
-              • <b>Gri placeholder değerleri</b> (hesaplanan) → LP'nin uyguladığı <em>minimum alt sınır</em> (pctMP_min × MP gereksinimi).<br>
-              • <b>Sonuçlar sekmesindeki "Gereksinim"</b> → Hayvan profiline göre <em>optimal hedef</em> (pctMP × MP gereksinimi) — bu değer daha yüksektir.<br>
-              • Buraya değer girerseniz LP o gramı rasyonda <em>zorunlu</em> kılar. Hedef değerden yüksek bir sayı girilirse rumen-korumalı AA (RP-Met / RP-Lys) yemi gerekirken uyumsuzluk yaşanabilir.
-              ${(lysPh || metPh) ? `<br><span class="text-muted">LP min. sınırları: ${lysPh ? `Lys ≥ ${lysPh} g` : ''} ${lysPh && metPh ? '·' : ''} ${metPh ? `Met ≥ ${metPh} g` : ''} ${hisPh ? `· His ≥ ${hisPh} g` : ''}</span>` : ''}
-            </div>
             <div class="constraint-grid">
               ${constraintRow('rup_pct', t('ration.rup_label'), compOverride.rup_pct || {}, { minPh: t('ration.min_ph'), maxPh: t('ration.max_ph') })}
               ${constraintRow('aa_lys', 'Lys (g/gün)', compOverride.aa_lys || {}, { minPh: lysPh ?? t('ration.min_ph'), maxPh: '—', minComputed: lysPh != null })}
