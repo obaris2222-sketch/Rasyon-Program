@@ -15,6 +15,7 @@ import { t, feedDisplayName } from '../i18n.js';
 // state.relaxPriority undefined → optimizeRation default RELAX_PRIORITY'yi kullanır).
 const RELAX_GROUP_TOKENS = {
   dcad: ['DCAD'], vit: ['vit_'], trace: ['trace_'],
+  macro: ['Mg', 'K', 'Na', 'Cl', 'S'], cap: ['Ca_P_min', 'Ca_P_max'],
   pendf: ['peNDF_min', 'peNDF_max'], forage: ['Forage'],
   fat: ['Fat_max', 'Fat_min'], pufa: ['PUFA_max', 'PUFA_min', 'n6n3_ratio'],
   starch: ['Starch_max', 'Starch_min'], sugar: ['Sugar_max', 'Sugar_min'],
@@ -22,13 +23,14 @@ const RELAX_GROUP_TOKENS = {
   rdp: ['RDP'], aa: ['Lys', 'Met', 'His', 'Arg', 'Thr', 'Ile', 'Leu', 'Val', 'Phe', 'Trp'],
   group: ['group_'], tmr: ['TMR_ration_moisture_min', 'TMR_DM_min', 'TMR_DM_max'],
 };
-const RELAX_DEFAULT_ORDER = ['dcad', 'vit', 'trace', 'pendf', 'forage', 'fat', 'pufa', 'starch', 'sugar', 'nfc', 'ndf', 'adf', 'rdp', 'aa', 'group', 'tmr'];
+const RELAX_DEFAULT_ORDER = ['dcad', 'vit', 'trace', 'cap', 'macro', 'pendf', 'forage', 'fat', 'pufa', 'starch', 'sugar', 'nfc', 'ndf', 'adf', 'rdp', 'aa', 'group', 'tmr'];
 
 function relaxLabel(key) {
   switch (key) {
     case 'dcad': return 'DCAD'; case 'pendf': return 'peNDF'; case 'pufa': return 'PUFA / ω6:ω3';
     case 'nfc': return 'NFC'; case 'ndf': return 'NDF'; case 'adf': return 'ADF'; case 'rdp': return 'RDP';
     case 'vit': return t('ration.relax_g_vit'); case 'trace': return t('ration.relax_g_trace');
+    case 'macro': return t('ration.relax_g_macro') || 'Makro Mineraller'; case 'cap': return t('ration.relax_g_cap') || 'Ca/P Oranı';
     case 'forage': return t('ration.relax_g_forage'); case 'fat': return t('ration.relax_g_fat');
     case 'starch': return t('ration.relax_g_starch'); case 'sugar': return t('ration.relax_g_sugar');
     case 'aa': return t('ration.relax_g_aa'); case 'group': return t('ration.relax_g_group');
@@ -49,14 +51,20 @@ function expandRelaxPriority(order) {
   for (const tk of RELAX_PRIORITY) if (!seen.has(tk)) { tokens.push(tk); seen.add(tk); }
   return tokens;
 }
-function renderRelaxPriorityRows(order) {
-  return order.map((key, i) => `
+function renderRelaxPriorityRows(order, state) {
+  const hardSet = new Set(state ? (state.hardConstraints || ['Forage']) : ['Forage']);
+  const visibleOrder = order.filter(key => {
+    const tokens = RELAX_GROUP_TOKENS[key] || [];
+    return !tokens.some(tk => hardSet.has(tk));
+  });
+
+  return visibleOrder.map((key, i) => `
     <div class="relax-row" data-key="${key}" style="display:flex; align-items:center; gap:0.5rem; padding:0.3rem 0; border-bottom:1px solid var(--border)">
       <span style="min-width:1.6rem; text-align:center; font-weight:600; color:var(--text-muted)">${i + 1}</span>
       <span style="flex:1">${escHtml(relaxLabel(key))}</span>
       <span style="display:flex; gap:0.25rem">
         <button type="button" class="btn btn-sm btn-secondary relax-up" data-key="${key}" ${i === 0 ? 'disabled' : ''} aria-label="up"><i class="ti ti-chevron-up"></i></button>
-        <button type="button" class="btn btn-sm btn-secondary relax-down" data-key="${key}" ${i === order.length - 1 ? 'disabled' : ''} aria-label="down"><i class="ti ti-chevron-down"></i></button>
+        <button type="button" class="btn btn-sm btn-secondary relax-down" data-key="${key}" ${i === visibleOrder.length - 1 ? 'disabled' : ''} aria-label="down"><i class="ti ti-chevron-down"></i></button>
       </span>
     </div>`).join('');
 }
@@ -364,7 +372,7 @@ export async function renderRationBuilder(container, state, { onOptimize }) {
           <details class="constraint-accordion">
             <summary class="section-title" style="cursor:pointer">${t('ration.relax_priority')}</summary>
             <div class="info-box" style="margin:0.4rem 0; font-size:0.82rem">${t('ration.relax_priority_info')}</div>
-            <div id="relax-priority-list">${renderRelaxPriorityRows(currentRelaxOrder(state))}</div>
+            <div id="relax-priority-list">${renderRelaxPriorityRows(currentRelaxOrder(state), state)}</div>
             <button type="button" class="btn btn-sm btn-secondary mt-1" id="relax-reset-btn"><i class="ti ti-rotate"></i> ${t('ration.relax_reset')}</button>
           </details>
 
@@ -520,22 +528,35 @@ export async function renderRationBuilder(container, state, { onOptimize }) {
   container.querySelectorAll('.hard-cons').forEach(chk => {
     chk.addEventListener('change', () => {
       state.hardConstraints = [...container.querySelectorAll('.hard-cons:checked')].map(c => c.dataset.name);
+      const rList = container.querySelector('#relax-priority-list');
+      if (rList) rList.innerHTML = renderRelaxPriorityRows(currentRelaxOrder(state), state);
     });
   });
 
   // FAZ 22.1: Gevşetme önceliği — ▲▼ ile grup sırasını değiştir (state.relaxPriority kalıcı)
   const relaxListEl = container.querySelector('#relax-priority-list');
   if (relaxListEl) {
-    const rerenderRelax = () => { relaxListEl.innerHTML = renderRelaxPriorityRows(currentRelaxOrder(state)); };
+    const rerenderRelax = () => { relaxListEl.innerHTML = renderRelaxPriorityRows(currentRelaxOrder(state), state); };
     relaxListEl.addEventListener('click', (e) => {
       const btn = e.target.closest('.relax-up, .relax-down');
       if (!btn) return;
-      const order = [...currentRelaxOrder(state)];
-      const i = order.indexOf(btn.dataset.key);
-      const j = btn.classList.contains('relax-up') ? i - 1 : i + 1;
-      if (i < 0 || j < 0 || j >= order.length) return;
-      [order[i], order[j]] = [order[j], order[i]];
-      state.relaxPriority = order;
+      const fullOrder = [...currentRelaxOrder(state)];
+      const hardSet = new Set(state.hardConstraints || ['Forage']);
+      const isVisible = k => !(RELAX_GROUP_TOKENS[k] || []).some(tk => hardSet.has(tk));
+      const visibleOrder = fullOrder.filter(isVisible);
+
+      const iVis = visibleOrder.indexOf(btn.dataset.key);
+      const jVis = btn.classList.contains('relax-up') ? iVis - 1 : iVis + 1;
+      if (iVis < 0 || jVis < 0 || jVis >= visibleOrder.length) return;
+
+      const keyA = visibleOrder[iVis];
+      const keyB = visibleOrder[jVis];
+
+      const iFull = fullOrder.indexOf(keyA);
+      const jFull = fullOrder.indexOf(keyB);
+      [fullOrder[iFull], fullOrder[jFull]] = [fullOrder[jFull], fullOrder[iFull]];
+      
+      state.relaxPriority = fullOrder;
       rerenderRelax();
     });
     const relaxReset = container.querySelector('#relax-reset-btn');
