@@ -38,6 +38,7 @@ import { onAuthChange, isCloudConfigured } from '../data/auth.js';
 import { showToast, showLoading } from './utils.js';
 import { validateForm, summarizeErrors } from './validation.js';
 import { initI18n, t } from './i18n.js';
+import { registerSW } from 'virtual:pwa-register';
 
 // FAZ 15.9 — Optimize öncesi state.animal'da kontrol edilecek alanlar (FIELD_RULES anahtarları)
 const ANIMAL_VALIDATE_FIELDS = [
@@ -583,6 +584,30 @@ async function init() {
     const { migrated } = migrateDmiMethodToAuto();
     if (migrated) showToast(t('settings.dmi_migrated_toast'), 'info', 8000);
   } catch { /* göç best-effort; başarısızsa sessiz geç */ }
+
+  // PWA Güncelleme Kontrolü (Bildirimli)
+  const updateSW = registerSW({
+    onNeedRefresh() {
+      const pwaToast = document.getElementById('pwa-toast');
+      if (pwaToast) {
+        pwaToast.classList.remove('hidden');
+        // render frame'den sonra animasyonu tetikle
+        requestAnimationFrame(() => pwaToast.classList.add('show'));
+        
+        document.getElementById('pwa-refresh')?.addEventListener('click', () => {
+          updateSW(true);
+        });
+        
+        document.getElementById('pwa-close')?.addEventListener('click', () => {
+          pwaToast.classList.remove('show');
+          setTimeout(() => pwaToast.classList.add('hidden'), 300);
+        });
+      }
+    },
+    onOfflineReady() {
+      showToast('Uygulama çevrimdışı kullanım için hazır.', 'success');
+    },
+  });
 
   // FAZ 15.2: Kullanıcı varsayılanlarını (parite/BCS/sıcaklık/nem/süt fiyatı) uygula
   applySettingsToState();

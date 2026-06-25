@@ -3353,5 +3353,57 @@ details.acc-panel table.diag-table {
     min-width: fit-content;
   }
 
+}
 
+/* ─── PWA Update Toast ─── */
+.pwa-toast {
+  position: fixed;
+  right: 20px;
+  bottom: 85px; /* bottom-nav'ın üzerinde durması için */
+  background: var(--surface);
+  border: 1px solid var(--primary);
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.15);
+  border-radius: var(--radius);
+  padding: 1rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform: translateY(120%);
+  opacity: 0;
+}
+
+[data-theme="dark"] .pwa-toast {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  background: var(--bg-card);
+}
+
+.pwa-toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.pwa-toast.hidden {
+  display: none !important;
+}
+
+.pwa-message {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pwa-message i {
+  color: var(--primary);
+  font-size: 1.2rem;
+}
+
+.pwa-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
 }

@@ -4,7 +4,7 @@
  */
 
 import { interpretRumenRisk } from '../../../core/rumenDynamics.js';
-import { assessRumenHealth } from '../../../core/rumenHealth.js';
+import { assessRumenHealth, getDynamicRumenTargets } from '../../../core/rumenHealth.js';
 import { escHtml } from '../../utils.js';
 import { t } from '../../i18n.js';
 
@@ -93,7 +93,11 @@ export function renderRumenHealthPanel(composition, animal) {
     milkFatPct:     animal.milkFat,
     milkProteinPct: animal.milkProtein,
     breed:          animal.breed,   // PROBLEMLER #1: ırka göre F:P bandı
+    lactationStage: animal.lactationStage,
+    milkYield:      animal.milkYield,
   });
+
+  const targets = getDynamicRumenTargets(animal.lactationStage, animal.milkYield);
 
   const gradeColor = {
     A: 'var(--primary)',
@@ -148,26 +152,26 @@ export function renderRumenHealthPanel(composition, animal) {
         <tr>
           <td>NDF (${t('results.unit_dm')})</td>
           <td class="num">${composition.ndf_pct.toFixed(1)}</td>
-          <td>≥ 28</td>
-          <td><span class="status-${composition.ndf_pct >= 28 ? 'ok' : composition.ndf_pct >= 25 ? 'below' : 'above'}">${composition.ndf_pct >= 28 ? t('rumen.ndf_ok') : composition.ndf_pct >= 25 ? t('rumen.ndf_marginal') : t('rumen.ndf_critical')}</span></td>
+          <td>≥ ${targets.minNDF}</td>
+          <td><span class="status-${composition.ndf_pct >= targets.minNDF ? 'ok' : composition.ndf_pct >= (targets.minNDF - 3) ? 'below' : 'above'}">${composition.ndf_pct >= targets.minNDF ? t('rumen.ndf_ok') : composition.ndf_pct >= (targets.minNDF - 3) ? t('rumen.ndf_marginal') : t('rumen.ndf_critical')}</span></td>
         </tr>
         <tr>
           <td>peNDF (${t('results.unit_dm')})</td>
           <td class="num">${composition.peNDF_pct.toFixed(1)}</td>
-          <td>≥ 22 (Mertens 1997)</td>
-          <td><span class="status-${composition.peNDF_pct >= 22 ? 'ok' : composition.peNDF_pct >= 19 ? 'below' : 'above'}">${composition.peNDF_pct >= 22 ? t('rumen.pendf_ok') : composition.peNDF_pct >= 19 ? t('rumen.pendf_marginal') : t('rumen.pendf_risk')}</span></td>
+          <td>≥ ${targets.minPeNDF}</td>
+          <td><span class="status-${composition.peNDF_pct >= targets.minPeNDF ? 'ok' : composition.peNDF_pct >= (targets.minPeNDF - 3) ? 'below' : 'above'}">${composition.peNDF_pct >= targets.minPeNDF ? t('rumen.pendf_ok') : composition.peNDF_pct >= (targets.minPeNDF - 3) ? t('rumen.pendf_marginal') : t('rumen.pendf_risk')}</span></td>
         </tr>
         <tr>
           <td>NFC (${t('results.unit_dm')})</td>
           <td class="num">${composition.nfc_pct.toFixed(1)}</td>
-          <td>≤ 42</td>
-          <td><span class="status-${composition.nfc_pct <= 42 ? 'ok' : composition.nfc_pct <= 44 ? 'below' : 'above'}">${composition.nfc_pct <= 42 ? t('rumen.nfc_ok') : composition.nfc_pct <= 44 ? t('rumen.nfc_borderline') : t('rumen.nfc_risk')}</span></td>
+          <td>≤ ${targets.maxNFC}</td>
+          <td><span class="status-${composition.nfc_pct <= targets.maxNFC ? 'ok' : composition.nfc_pct <= (targets.maxNFC + 2) ? 'below' : 'above'}">${composition.nfc_pct <= targets.maxNFC ? t('rumen.nfc_ok') : composition.nfc_pct <= (targets.maxNFC + 2) ? t('rumen.nfc_borderline') : t('rumen.nfc_risk')}</span></td>
         </tr>
         <tr>
           <td>${t('rumen.forage_ratio')}</td>
           <td class="num">${composition.forage_pct.toFixed(1)}</td>
-          <td>≥ 45</td>
-          <td><span class="status-${composition.forage_pct >= 45 ? 'ok' : composition.forage_pct >= 35 ? 'below' : 'above'}">${composition.forage_pct >= 45 ? t('rumen.forage_ok') : composition.forage_pct >= 35 ? t('rumen.forage_low') : t('rumen.forage_critical')}</span></td>
+          <td>≥ ${targets.minForage}</td>
+          <td><span class="status-${composition.forage_pct >= targets.minForage ? 'ok' : composition.forage_pct >= (targets.minForage - 10) ? 'below' : 'above'}">${composition.forage_pct >= targets.minForage ? t('rumen.forage_ok') : composition.forage_pct >= (targets.minForage - 10) ? t('rumen.forage_low') : t('rumen.forage_critical')}</span></td>
         </tr>
         <tr>
           <td>${t('rumen.fp_ratio')}</td>

@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     // FAZ 15.3 — PWA: çevrimdışı çalışma + mobil install
     VitePWA({
-      registerType: 'autoUpdate',      // yeni sürüm sessizce güncellenir
+      registerType: 'prompt',          // Yeni sürüm inince kullanıcıya bildirimi tetikler
       injectRegister: 'auto',          // register script index.html'e otomatik enjekte
       includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {

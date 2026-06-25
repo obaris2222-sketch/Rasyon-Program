@@ -91,6 +91,40 @@ function fprBands(breed) {
 }
 
 /**
+ * Hayvan profiline göre dinamik rumen sağlık hedeflerini hesaplar.
+ * @param {string} stage - Laktasyon dönemi (örn: 'early', 'mid', 'late', 'far_off', 'close_up')
+ * @param {number} yieldKg - Günlük süt verimi (kg)
+ * @returns {object} Dinamik hedefler: { minForage, minPeNDF, minNDF, maxNFC }
+ */
+export function getDynamicRumenTargets(stage, yieldKg) {
+  let targets = {
+    minForage: 45,
+    minPeNDF: 22,
+    minNDF: 28,
+    maxNFC: 42
+  };
+
+  if (stage === 'far_off' || stage === 'close_up') {
+    targets.minForage = stage === 'close_up' ? 60 : 80;
+    targets.minPeNDF = 24;
+    targets.minNDF = 35;
+    targets.maxNFC = 35;
+  } else if (stage === 'early' || yieldKg > 40) {
+    targets.minForage = 40;
+    targets.minPeNDF = 22;
+    targets.minNDF = 28;
+    targets.maxNFC = 44;
+  } else if (stage === 'late' || (yieldKg > 0 && yieldKg < 20)) {
+    targets.minForage = 55;
+    targets.minPeNDF = 22;
+    targets.minNDF = 30;
+    targets.maxNFC = 38;
+  }
+
+  return targets;
+}
+
+/**
  * Rumen Sağlığı Tam Değerlendirmesi
  * @param {object} ration - Rasyon parametreleri
  * @returns {object} Rumen sağlık skoru ve uyarılar
@@ -105,46 +139,51 @@ export function assessRumenHealth(ration) {
     milkFatPct,  // Süt yağı (%) - gerçek değer
     milkProteinPct,
     breed,       // PROBLEMLER #1: ırka göre F:P bandı (Jersey daha yüksek yağ)
+    lactationStage, // Dinamik rumen hedefleri için
+    milkYield,      // Dinamik rumen hedefleri için
   } = ration;
 
   const warnings = [];
   const recommendations = [];
   let score = 100; // 0-100 arası rumen sağlık skoru
 
-  // peNDF kontrolü (Mertens 1997: ≥%22 KM)
-  const peNDFStatus = peNDFPct >= 22 ? 'ok' : peNDFPct >= 19 ? 'warning' : 'danger';
+  // Dinamik hedefleri al
+  const targets = getDynamicRumenTargets(lactationStage, milkYield);
+
+  // peNDF kontrolü
+  const peNDFStatus = peNDFPct >= targets.minPeNDF ? 'ok' : peNDFPct >= (targets.minPeNDF - 3) ? 'warning' : 'danger';
   if (peNDFStatus === 'warning') {
-    warnings.push({ type: 'peNDF', message: 'peNDF %22 hedefinin altında - SARA riski', severity: 'medium' });
+    warnings.push({ type: 'peNDF', message: `peNDF %${targets.minPeNDF} hedefinin altında - SARA riski`, severity: 'medium' });
     score -= 15;
   } else if (peNDFStatus === 'danger') {
-    warnings.push({ type: 'peNDF', message: 'peNDF kritik düzeyde düşük - yüksek SARA riski!', severity: 'high' });
+    warnings.push({ type: 'peNDF', message: `peNDF kritik düzeyde düşük - yüksek SARA riski!`, severity: 'high' });
     score -= 30;
   }
 
-  // NDF kontrolü (≥%28 KM önerilir)
-  if (ndfPct < 25) {
-    warnings.push({ type: 'NDF', message: 'NDF %25\'in altında - rumen tampon kapasitesi yetersiz', severity: 'high' });
+  // NDF kontrolü
+  if (ndfPct < (targets.minNDF - 3)) {
+    warnings.push({ type: 'NDF', message: `NDF %${targets.minNDF - 3}'in altında - rumen tampon kapasitesi yetersiz`, severity: 'high' });
     score -= 20;
-  } else if (ndfPct < 28) {
-    warnings.push({ type: 'NDF', message: 'NDF %28 hedefinin altında', severity: 'medium' });
+  } else if (ndfPct < targets.minNDF) {
+    warnings.push({ type: 'NDF', message: `NDF %${targets.minNDF} hedefinin altında`, severity: 'medium' });
     score -= 10;
   }
 
-  // NFC kontrolü (≤%42 KM)
-  if (nfcPct > 44) {
-    warnings.push({ type: 'NFC', message: 'NFC %44\'ü aşıyor - asidoz riski yüksek', severity: 'high' });
+  // NFC kontrolü
+  if (nfcPct > (targets.maxNFC + 2)) {
+    warnings.push({ type: 'NFC', message: `NFC %${targets.maxNFC + 2}'yi aşıyor - asidoz riski yüksek`, severity: 'high' });
     score -= 25;
-  } else if (nfcPct > 42) {
-    warnings.push({ type: 'NFC', message: 'NFC %42 sınırını aşıyor', severity: 'medium' });
+  } else if (nfcPct > targets.maxNFC) {
+    warnings.push({ type: 'NFC', message: `NFC %${targets.maxNFC} sınırını aşıyor`, severity: 'medium' });
     score -= 10;
   }
 
-  // Kaba yem oranı (≥%45 KM önerilir)
-  if (forageRatio < 35) {
-    warnings.push({ type: 'ForageRatio', message: 'Kaba yem oranı kritik düzeyde düşük', severity: 'high' });
+  // Kaba yem oranı
+  if (forageRatio < (targets.minForage - 10)) {
+    warnings.push({ type: 'ForageRatio', message: `Kaba yem oranı kritik düzeyde düşük (<%${targets.minForage - 10})`, severity: 'high' });
     score -= 20;
-  } else if (forageRatio < 45) {
-    warnings.push({ type: 'ForageRatio', message: 'Kaba yem oranı %45 hedefinin altında', severity: 'low' });
+  } else if (forageRatio < targets.minForage) {
+    warnings.push({ type: 'ForageRatio', message: `Kaba yem oranı %${targets.minForage} hedefinin altında`, severity: 'low' });
     score -= 5;
   }
 
