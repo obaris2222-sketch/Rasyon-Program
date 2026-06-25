@@ -364,6 +364,16 @@ function setupProfileHandlers(container, state, profiles, groups) {
   const nameEl   = container.querySelector('#profile-name');
   const groupEl  = container.querySelector('#profile-group');
 
+  const syncHerdSize = (groupId) => {
+    if (!state.economics) state.economics = { milkPrice_tl: 18, herdSize: 1 };
+    if (groupId) {
+      const g = groups.find(x => x.id === groupId);
+      state.economics.herdSize = g?.animalCount || 1;
+    } else {
+      state.economics.herdSize = 1;
+    }
+  };
+
   // Profil yükle
   selectEl.addEventListener('change', () => {
     const id = selectEl.value;
@@ -376,6 +386,7 @@ function setupProfileHandlers(container, state, profiles, groups) {
       if (p[k] !== undefined) state.animal[k] = p[k];
     }
     state.animal._profileId = p.id;
+    syncHerdSize(state.animal.groupId);
     showToast(t('acalc.profile_loaded', { name: p.name }), 'success');
     renderAnimalForm(container, state); // tam re-render
   });
@@ -402,6 +413,7 @@ function setupProfileHandlers(container, state, profiles, groups) {
       state.animal._profileId = savedId;
       state.animal.name = name;
       state.animal.groupId = groupId;
+      syncHerdSize(groupId);
       showToast(t('acalc.profile_saved', { name }), 'success');
       renderAnimalForm(container, state);
     } catch (err) {
@@ -414,6 +426,7 @@ function setupProfileHandlers(container, state, profiles, groups) {
     delete state.animal._profileId;
     state.animal.name = '';
     state.animal.groupId = '';
+    syncHerdSize('');
     showToast(t('acalc.profile_new'), 'info');
     renderAnimalForm(container, state);
   });
@@ -426,6 +439,7 @@ function setupProfileHandlers(container, state, profiles, groups) {
       await animalProfileDelete(state.animal._profileId);
       delete state.animal._profileId;
       state.animal.name = '';
+      syncHerdSize(state.animal.groupId);
       showToast(t('acalc.profile_deleted'), 'success');
       renderAnimalForm(container, state);
     } catch (err) {
