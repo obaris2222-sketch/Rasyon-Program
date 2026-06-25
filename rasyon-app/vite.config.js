@@ -19,7 +19,6 @@ export default defineConfig({
         theme_color: '#2d7d46',
         background_color: '#f5f7f5',
         display: 'standalone',
-        orientation: 'any',
         start_url: '/',
         scope: '/',
         categories: ['agriculture', 'productivity', 'business'],

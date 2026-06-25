@@ -887,7 +887,7 @@ function buildDiagnostics(comp, req, dmi_kg) {
     diag.push({ name, value: round(value, 2), min, max, status });
   };
   if (req.nel_mcal !== undefined) check('NEL (Mcal/gün)', comp.nel_mcal, req.nel_mcal, req.nel_mcal_max);
-  if (req.mp_g !== undefined) check('MP (g/gün) ⭐', comp.mp_g, req.mp_g, req.mp_g_max);  // FAZ 10A
+  if (req.mp_g !== undefined) check('MP (g/gün)', comp.mp_g, req.mp_g, req.mp_g_max);  // FAZ 10A
   // FAZ 14.4: Amino asit (Lys/Met) — g/gün; aaPerKgDM ile LP-tutarlı
   if (req.aminoAcids?.lys_g) check('Lys (g/gün)', comp.lys_g, req.aminoAcids.lys_g.min, req.aminoAcids.lys_g.max);
   if (req.aminoAcids?.met_g) check('Met (g/gün)', comp.met_g, req.aminoAcids.met_g.min, req.aminoAcids.met_g.max);

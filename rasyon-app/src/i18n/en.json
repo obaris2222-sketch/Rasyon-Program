@@ -357,7 +357,7 @@
     "tmr_already_wet": "Ration is already wetter than target ({m}% moisture) → no added water needed.",
     "sum_moisture_title": "Ration moisture (100 − DM%); recommended 45-55%",
     "sum_nel": "NEL (Mcal)",
-    "sum_mp": "MP ⭐ (g/day)",
+    "sum_mp": "MP (g/day)",
     "sum_cp": "CP (%DM, info)",
     "sum_ndf": "NDF (%DM)",
     "sum_cost": "Cost (₺/day)",

@@ -357,7 +357,7 @@
     "tmr_already_wet": "Rasyon zaten hedeften ıslak (nem %{m}) → dışarıdan su eklemeye gerek yok.",
     "sum_moisture_title": "Rasyon nem oranı (100 − KM%); önerilen %45-55",
     "sum_nel": "NEL (Mcal)",
-    "sum_mp": "MP ⭐ (g/gün)",
+    "sum_mp": "MP (g/gün)",
     "sum_cp": "HP (%KM, bilgi)",
     "sum_ndf": "NDF (%KM)",
     "sum_cost": "Maliyet (₺/gün)",
