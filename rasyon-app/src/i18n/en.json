@@ -233,6 +233,8 @@
     "relax_reset": "Reset to default",
     "relax_g_vit": "Vitamins",
     "relax_g_trace": "Trace minerals",
+    "relax_g_macro": "Macro minerals",
+    "relax_g_cap": "Ca/P Ratio",
     "relax_g_forage": "Forage",
     "relax_g_fat": "Fat",
     "relax_g_starch": "Starch",
