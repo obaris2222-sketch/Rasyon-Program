@@ -55,6 +55,7 @@ export const DEFAULT_COMPOSITION = {
   peNDF_pct: { min: 22 },
   forage_pct:{ min: 40,  max: 70 },
   dcad_meq:  { min: 25,  max: 40 },
+  ca_p_ratio:{ min: 1.5, max: 2.5 },
   // FAZ 14.5: RDP min — rumen mikrobiyal protein sentezi için yeterli yıkılabilir N
   // (NRC 2001 Böl. 3). MAX default verilmez (rasyon-spesifik; kullanıcı override
   // ile aşırı amonyak/üre yükü üst sınırı ekleyebilir). Laktasyon min %9 KM.

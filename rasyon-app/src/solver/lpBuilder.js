@@ -566,6 +566,35 @@ export function buildRationLP(input) {
     });
   }
 
+  // 10b. Ca/P Oranı (Kalsiyum/Fosfor)
+  // Oran = Ca / P. Lineerleştirilmiş hali:
+  // Ca / P >= min  <=>  Ca - min * P >= 0
+  // Ca / P <= max  <=>  Ca - max * P <= 0
+  if (requirements.ca_p_ratio) {
+    if (requirements.ca_p_ratio.min !== undefined) {
+      const R_min = requirements.ca_p_ratio.min;
+      pushConstraint(subjectTo, {
+        name: 'Ca_P_min',
+        vars: feeds.map((f, i) => ({
+          name: varNames[i],
+          coef: (num(f.ca) * 10) - R_min * (num(f.p) * 10),
+        })),
+        lb: 0,
+      });
+    }
+    if (requirements.ca_p_ratio.max !== undefined) {
+      const R_max = requirements.ca_p_ratio.max;
+      pushConstraint(subjectTo, {
+        name: 'Ca_P_max',
+        vars: feeds.map((f, i) => ({
+          name: varNames[i],
+          coef: (num(f.ca) * 10) - R_max * (num(f.p) * 10),
+        })),
+        ub: 0,
+      });
+    }
+  }
+
   // 11. DCAD (mEq/100g KM): [(Na/23 + K/39) − (Cl/35.5 + S/16)] × 1000
   // Net mEq/100g = Σ (xi × dcad_coef_i) / dmi
   // Σ (xi × dcad_coef_i) [≥ ≤] dcad_target × dmi

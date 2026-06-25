@@ -177,6 +177,7 @@ export async function optimizeRation(input) {
     dcad_meq: comp.dcad_meq,
     ca_g: macroReq(minerals.ca.dietary, composition.ca),
     p_g: macroReq(minerals.p.total, composition.p),
+    ca_p_ratio: comp.ca_p_ratio,
     mg_g: macroReq(minerals.mg.total, composition.mg),
     k_g: macroReq(minerals.k.total, composition.k),
     na_g: macroReq(minerals.na.total, composition.na),

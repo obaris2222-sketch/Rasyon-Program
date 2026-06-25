@@ -27,7 +27,7 @@ import { GLP } from './lpBuilder.js';
 // Liste başı = en yüksek öncelik = en yüksek penalty = en SON gevşetilir.
 // Liste sonu = en düşük öncelik = en ucuz = İLK gevşetilir.
 // Tam ad veya prefix (`trace_`, `vit_`, `group_`) eşleşmesi.
-// Burada OLMAYAN kısıtlar HARD'dır (DMI, NEL, MP, Ca, P, Mg, K, Na, Cl, S, RUP_min, CP).
+// Burada OLMAYAN kısıtlar HARD'dır (DMI, NEL, MP, Ca, P, RUP_min, CP).
 export const RELAX_PRIORITY = [
   'DCAD',        // geçiş dönemi süt humması — en kritik (relaxed = milk fever riski)
   // SAHA-DENETİM C: vitamin/iz mineral — DCAD'den hemen sonra YÜKSEK öncelik.
@@ -44,6 +44,9 @@ export const RELAX_PRIORITY = [
   //  korumadı → aşırı-kısıtlı senaryoda forage düşüşü içsel; bu yerleşim TÜM mikroları karşılar.)
   'vit_',        // vitamin (kaynak varsa öncelikli karşıla — prefix)
   'trace_',      // iz mineral (kaynak varsa öncelikli karşıla — prefix)
+  'Ca_P_min',    // Ca:P Oranı min
+  'Ca_P_max',    // Ca:P Oranı max
+  'Mg', 'K', 'Na', 'Cl', 'S', // Makro mineraller (Ca ve P hariç) esnetilebilir
   'peNDF_min',   // rumen sağlığı / MFD (fiziksel etkin lif — SARA koruması, yüksek öncelik)
   'peNDF_max',   // çift-taraflı band: kullanıcı opsiyonel üst sınırı (kardeşinin yanında)
   'Forage',      // kaba yem oranı

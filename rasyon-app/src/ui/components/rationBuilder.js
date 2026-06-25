@@ -328,6 +328,7 @@ export async function renderRationBuilder(container, state, { onOptimize }) {
               ${MACRO_UI.map(([k, lbl, ph]) => constraintRow('macro_' + k, lbl, compOverride['macro_' + k] || {}, {
                 minPh: ph ?? t('ration.min_ph'), maxPh: t('ration.max_ph'), minComputed: ph != null,
               })).join('')}
+              ${constraintRow('ca_p_ratio', 'Ca/P Oranı', compOverride.ca_p_ratio || {}, { minPh: '1.5', maxPh: '2.5' })}
             </div>
 
             ${subHead(t('ration.adv_protein2'))}
