@@ -1080,7 +1080,10 @@
     "s4_tip": "Entering a max limit like 2 kg/day for some feeds yields realistic results.",
     "s5_title": "Review the Results",
     "s5_desc": "The <b>Results</b> tab shows diagnostics, amino acid balance, economic analysis and nutrient profile. Download a PDF or Excel report.",
-    "s5_tip": "Green = on target; Yellow = low; Red = high — for quick assessment."
+    "s5_tip": "Green = on target; Yellow = low; Red = high — for quick assessment.",
+    "s6_title": "Protect Data with Account & Cloud",
+    "s6_desc": "Using the <b>Cloud</b> infrastructure, you can create an account and sync your farm and data (profiles, feeds, rations, etc.) to the cloud. Click the cloud icon at the top to create your account and work seamlessly across multiple devices.",
+    "s6_tip": "Don't forget to click the Sync button at the end of the day to avoid losing your work."
   },
   "herd": {
     "empty_no_profile": "No saved animal profiles yet.",

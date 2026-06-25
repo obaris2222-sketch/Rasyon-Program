@@ -1080,7 +1080,10 @@
     "s4_tip": "Bazı yemler için maks limiti 2 kg/gün gibi girmek gerçekçi sonuçlar sağlar.",
     "s5_title": "Sonuçları İnceleyin",
     "s5_desc": "<b>Sonuçlar</b> sekmesinde diagnostik, amino asit dengesi, ekonomik analiz ve besin profili görünür. PDF veya Excel raporu indirin.",
-    "s5_tip": "Yeşil = hedefte; Sarı = düşük; Kırmızı = yüksek — hızlı değerlendirme için."
+    "s5_tip": "Yeşil = hedefte; Sarı = düşük; Kırmızı = yüksek — hızlı değerlendirme için.",
+    "s6_title": "Hesap & Bulut ile Verilerinizi Koruyun",
+    "s6_desc": "<b>Bulut</b> altyapısı sayesinde hesap oluşturabilir, çiftliğinizi ve verilerinizi (profiller, yemler, rasyonlar, vb.) buluta kaydedebilirsiniz. Üst kısımdaki bulut ikonuna basarak hesabınızı oluşturabilir ve çoklu cihazda senkronize çalışabilirsiniz.",
+    "s6_tip": "Çalışmalarınızı kaybetmemek için gün sonunda Eşitle butonuna tıklamayı unutmayın."
   },
   "herd": {
     "empty_no_profile": "Henüz kayıtlı hayvan profili yok.",
