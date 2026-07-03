@@ -898,6 +898,10 @@ body {
   font-size: 0.83rem;
 }
 
+.feed-table thead tr {
+  border-bottom: 2px solid var(--border);
+}
+
 .feed-table th {
   background: var(--bg);
   padding: 0.5rem 0.75rem;
@@ -907,9 +911,8 @@ body {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  border-bottom: 1px solid var(--border);
   white-space: nowrap;
-  vertical-align: bottom;
+  vertical-align: middle;
 }
 
 .feed-table td {
@@ -2121,8 +2124,9 @@ details.acc-panel table.diag-table {
 
 .feed-actions {
   white-space: nowrap;
-  display: flex;
+  display: inline-flex;
   gap: 0.25rem;
+  align-items: center;
 }
 
 .user-badge {
