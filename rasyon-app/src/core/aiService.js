@@ -22,7 +22,7 @@ export async function askGemini(userMessage, systemPrompt) {
   // Format required by Gemini API v1beta
   const payload = {
     system_instruction: {
-      parts: { text: systemPrompt }
+      parts: [{ text: systemPrompt }]
     },
     contents: [
       {
