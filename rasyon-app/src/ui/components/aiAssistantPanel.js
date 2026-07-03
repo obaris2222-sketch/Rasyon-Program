@@ -2,6 +2,8 @@ import { state } from '../app.js';
 import { t } from '../i18n.js';
 import { askGemini } from '../../core/aiService.js';
 import { showToast } from '../utils.js';
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 
 let messageHistory = [];
 
@@ -47,7 +49,9 @@ export function renderAiAssistantPanel(container) {
     const typingHtml = `
       <div class="ai-message ai-message-assistant" id="${typingId}">
         <div class="ai-message-content typing">
-          ${t('ai.typing')}
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
         </div>
       </div>
     `;
@@ -119,14 +123,20 @@ function renderHistory(container) {
 
   messageHistory.forEach(msg => {
     const msgClass = msg.role === 'user' ? 'ai-message-user' : 'ai-message-assistant';
-    // Basic markdown parsing for bold text
-    const formattedContent = msg.content
-      .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')
-      .replace(/\\n/g, '<br/>');
+    
+    let formattedContent = '';
+    if (msg.role === 'assistant') {
+      formattedContent = DOMPurify.sanitize(marked.parse(msg.content));
+    } else {
+      // Escape user text to prevent XSS
+      const div = document.createElement('div');
+      div.innerText = msg.content;
+      formattedContent = div.innerHTML.replace(/\n/g, '<br/>');
+    }
 
     const html = `
       <div class="ai-message ${msgClass}">
-        <div class="ai-message-content">
+        <div class="ai-message-content markdown-body">
           ${formattedContent}
         </div>
       </div>

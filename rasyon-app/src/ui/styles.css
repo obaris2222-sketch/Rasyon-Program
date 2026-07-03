@@ -3508,30 +3508,62 @@ details.acc-panel table.diag-table {
 }
 
 .ai-message-content {
-  max-width: 75%;
-  padding: 1rem;
-  border-radius: 1rem;
+  max-width: 80%;
+  padding: 1rem 1.25rem;
+  border-radius: 1.25rem;
   font-size: 0.9375rem;
-  line-height: 1.5;
+  line-height: 1.6;
   word-wrap: break-word;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
 .ai-message-user .ai-message-content {
-  background-color: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   color: white;
   border-bottom-right-radius: 0.25rem;
 }
 
 .ai-message-assistant .ai-message-content {
-  background-color: var(--surface-hover);
+  background-color: var(--surface);
   color: var(--text-primary);
   border: 1px solid var(--border);
   border-bottom-left-radius: 0.25rem;
 }
 
+/* Markdown Body Styles */
+.markdown-body p { margin-bottom: 0.75rem; }
+.markdown-body p:last-child { margin-bottom: 0; }
+.markdown-body ul, .markdown-body ol { margin: 0.5rem 0 0.5rem 1.5rem; padding: 0; }
+.markdown-body li { margin-bottom: 0.25rem; }
+.markdown-body strong { color: var(--primary); font-weight: 600; }
+.ai-message-user .markdown-body strong { color: white; }
+
+/* Typing Indicator Animation */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 4px;
+}
+.typing-indicator span {
+  display: block;
+  width: 6px;
+  height: 6px;
+  background-color: var(--text-secondary);
+  border-radius: 50%;
+  animation: typingBounce 1.4s infinite ease-in-out both;
+}
+.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
 .ai-message-content.typing {
-  font-style: italic;
-  opacity: 0.7;
+  padding: 0.75rem 1.25rem;
 }
 
 .ai-chat-input-wrapper {
