@@ -21,7 +21,7 @@ export async function askGemini(userMessage, systemPrompt) {
   const endpoint = "https://api.groq.com/openai/v1/chat/completions";
 
   const payload = {
-    model: "llama3-70b-8192",
+    model: "llama-3.3-70b-versatile",
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userMessage }
