@@ -1,41 +1,60 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
 /**
- * AI Service for Gemini API Integration using Official SDK
+ * AI Service for Groq API Integration (LLaMA 3)
  */
 
 /**
- * Sends a message to the Google Gemini API with the given system prompt.
- * Uses the gemini-1.5-flash model via the official SDK.
+ * Sends a message to the Groq API with the given system prompt.
+ * Uses the incredibly fast llama3-70b-8192 model.
  * 
  * @param {string} userMessage - The message written by the user.
  * @param {string} systemPrompt - The formatted system prompt containing context.
  * @returns {Promise<string>} The AI's response text.
  */
 export async function askGemini(userMessage, systemPrompt) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  
+  // Read the new Groq API Key
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+
   if (!apiKey) {
-    throw new Error("Gemini API key (VITE_GEMINI_API_KEY) is not set in .env");
+    throw new Error("Groq API key (VITE_GROQ_API_KEY) is not set in .env");
   }
 
+  const endpoint = "https://api.groq.com/openai/v1/chat/completions";
+
+  const payload = {
+    model: "llama3-70b-8192",
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage }
+    ],
+    temperature: 0.7
+  };
+
   try {
-    // Initialize the official SDK
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // Get the standard 1.5 flash model
-    const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
-      systemInstruction: systemPrompt
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(payload)
     });
 
-    // Generate content
-    const result = await model.generateContent(userMessage);
-    const response = await result.response;
-    return response.text();
-    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error("Groq API Error Response:", errorData);
+      throw new Error(`API Hatası: ${response.status} - Lütfen API anahtarınızı kontrol edin.`);
+    }
+
+    const data = await response.json();
+
+    if (data.choices && data.choices.length > 0) {
+      return data.choices[0].message.content;
+    } else {
+      throw new Error("Yapay zeka boş bir yanıt döndürdü.");
+    }
+
   } catch (error) {
-    console.error("Gemini SDK Error Response:", error);
+    console.error("Groq Fetch Error:", error);
     throw new Error(`AI Hatası: ${error.message || "İletişim kurulamadı."}`);
   }
 }
