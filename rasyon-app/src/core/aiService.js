@@ -17,7 +17,7 @@ export async function askGemini(userMessage, systemPrompt) {
     throw new Error("Gemini API key (VITE_GEMINI_API_KEY) is not set in .env");
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
   // Format required by Gemini API v1beta
   const payload = {
