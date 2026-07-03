@@ -12,7 +12,15 @@
     "herd": "🐮 Herd Batch",
     "prices": "💰 Price Manager",
     "observations": "📊 Field Obs.",
-    "settings": "⚙️ Settings"
+    "settings": "⚙️ Settings",
+    "ai": "🤖 AI Assistant"
+  },
+  "ai": {
+    "disclaimer": "⚠️ Disclaimer: This is an AI assistant. Always consult a real zootechnist or veterinarian before applying any decisions.",
+    "placeholder": "Ask the AI a question...",
+    "send": "Send",
+    "typing": "Assistant is thinking...",
+    "systemPrompt": "You are an expert zootechnist and animal nutritionist. The user's current animal profile and ration data are as follows:\n\n{{data}}\n\nAnswer the user's question by taking these metrics (production goals, weight, selected feeds) into account. Provide professional, scientific, and practical advice. If there are deficiencies (energy, protein, etc.), point them out and suggest which feeds to change or add."
   },
   "bottomNav": {
     "more": "Menu"

@@ -28,6 +28,7 @@ import { setChartTheme, resizeAllCharts } from './charts.js';
 import { renderHerdBatchPanel } from './components/herdBatchPanel.js';
 import { renderPriceManager } from './components/priceManager.js';
 import { renderObservationsPanel } from './components/observationsPanel.js';
+import { renderAiAssistantPanel } from './components/aiAssistantPanel.js';
 import { renderSettingsPanel } from './components/settingsPanel.js';
 import { shouldShowOnboarding, showOnboarding } from './components/onboarding.js';
 import { getSettings, saveSettings, migrateDmiMethodToAuto } from '../data/settings.js';
@@ -81,7 +82,7 @@ export const state = {
 
 // ─── Tab Routing ─────────────────────────────────────────────────────────────
 
-const TABS = ['dashboard', 'animal', 'feeds', 'ration', 'results', 'herd', 'prices', 'observations', 'settings'];
+const TABS = ['dashboard', 'animal', 'feeds', 'ration', 'results', 'herd', 'prices', 'observations', 'ai', 'settings'];
 // FAZ 15.4: mobil alt barda doğrudan gösterilen çekirdek sekmeler (kalanlar "Daha Fazla"da)
 const BOTTOM_NAV_TABS = ['dashboard', 'animal', 'ration', 'results'];
 let activeTab = 'dashboard';
@@ -143,6 +144,7 @@ async function renderTab(tab) {
     case 'herd':    await renderHerdBatchPanel(panel, state); break;
     case 'prices':  await renderPriceManager(panel, state); break;
     case 'observations': await renderObservationsPanel(panel, state); break;
+    case 'ai':      renderAiAssistantPanel(panel); break;
     case 'settings': renderSettingsPanel(panel, state, { onSettingsChange: handleSettingsChange }); break;
   }
 }
