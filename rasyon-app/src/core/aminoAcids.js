@@ -25,7 +25,8 @@ export const AA_TARGETS = {
     pctMP_max: 2.80,
     source: 'Schwab 1996; CNCPS v6.5',
   },
-  // FAZ 18.3: Histidin — süt ineğinde kritik 3. sınırlayıcı AA (özellikle çayır/mısır
+  //düzeltmeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+  //.3: Histidin — süt ineğinde kritik 3. sınırlayıcı AA (özellikle çayır/mısır
   // silajı ağırlıklı, düşük-bypass rasyonlarda). NASEM 2021 / Lapierre 2008 hedef ~%2.2 MP.
   his: {
     pctMP: 2.20,
@@ -61,7 +62,7 @@ export const EAA_LIST = ['lys', 'met', 'his', 'arg', 'thr', 'ile', 'leu', 'val',
 // Arg/Thr/Ile/Leu/Val/Phe/Trp için NRC↔NASEM farkı ihmal edilebilir). Pipeline default NASEM 2021.
 const MICROBIAL_EAA7 = { arg: 5.08, thr: 5.81, ile: 5.74, leu: 7.49, val: 6.24, phe: 5.36, trp: 1.49 };
 export const MICROBIAL_AA = {
-  NRC2001:   { lys: 7.90, met: 2.65, his: 2.10, ...MICROBIAL_EAA7 },
+  NRC2001: { lys: 7.90, met: 2.65, his: 2.10, ...MICROBIAL_EAA7 },
   NASEM2021: { lys: 7.30, met: 2.40, his: 2.00, ...MICROBIAL_EAA7 },
 };
 
