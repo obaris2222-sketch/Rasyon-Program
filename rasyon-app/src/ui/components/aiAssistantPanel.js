@@ -332,7 +332,9 @@ export async function renderAiAssistantPanel(container) {
     }
 
     messages.forEach(msg => {
-      const msgClass = msg.role === 'user' ? 'ai-message-user' : 'ai-message-assistant';
+      let msgClass = msg.role === 'user' ? 'ai-message-user' : 'ai-message-assistant';
+      if (msg.isError) msgClass += ' ai-message-error';
+      
       let formattedContent = '';
       if (msg.role === 'assistant') {
         formattedContent = DOMPurify.sanitize(marked.parse(msg.content));
@@ -432,7 +434,16 @@ export async function renderAiAssistantPanel(container) {
       console.error(error);
       const typingEl = document.getElementById(typingId);
       if (typingEl) typingEl.remove();
-      showToast("Yapay zeka ile iletişimde bir hata oluştu.", "error");
+      
+      // Hata mesajını sohbet ekranında göster
+      const errorMessage = "⚠️ Sunucu ile iletişim kurulamadı veya bir hata oluştu. Lütfen tekrar deneyin. Detay: " + error.message;
+      activeChat.messages.push({ role: 'assistant', content: errorMessage, isError: true });
+      await saveAiChat(activeChat);
+      
+      renderSidebar();
+      renderHistory();
+      
+      showToast(t('ai.error') || "Bir hata oluştu", "error");
     } finally {
       sendBtn.disabled = false;
       chatInput.focus();

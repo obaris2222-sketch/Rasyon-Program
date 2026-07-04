@@ -3649,6 +3649,14 @@ details.acc-panel table.diag-table {
   border-bottom-left-radius: 0.25rem;
 }
 
+.ai-message-error .ai-message-content {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444; /* text-red-500 */
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-bottom-left-radius: 0.25rem;
+}
+
+
 /* Markdown Body Styles */
 .markdown-body p { margin-bottom: 0.75rem; }
 .markdown-body p:last-child { margin-bottom: 0; }
