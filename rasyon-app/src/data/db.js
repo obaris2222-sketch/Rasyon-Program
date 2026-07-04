@@ -800,14 +800,7 @@ export async function saveAiChat(chat) {
 }
 
 export async function deleteAiChat(id) {
-  const db = await getDB();
-  const tx = db.transaction('aiChats', 'readwrite');
-  const existing = await tx.store.get(id);
-  if (!existing) return;
-
-  const toSave = softDelete(existing);
-  await tx.store.put(toSave);
-  await tx.done;
+  return softDelete('aiChats', id);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
