@@ -773,6 +773,8 @@ export async function dbStats() {
       : 0;
   }
   return out;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // AI SOHBET GEÇMİŞİ (AI CHATS) (FAZ v4)
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -806,8 +808,6 @@ export async function deleteAiChat(id) {
   const toSave = softDelete(existing);
   await tx.store.put(toSave);
   await tx.done;
-}
-
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
