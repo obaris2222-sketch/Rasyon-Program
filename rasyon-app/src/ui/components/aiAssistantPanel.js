@@ -9,8 +9,8 @@ import { getAiChats, saveAiChat, deleteAiChat, rationGetAll, animalProfileGetAll
 
 // ─── Sabit Limitler ───────────────────────────────────────────────────────────
 const MAX_HISTORY_MESSAGES = 20; // API'ya gönderilecek maksimum önceki mesaj sayısı
-const MAX_RATIONS          = 5;  // Bağlama dahil edilecek son rasyon sayısı
-const MAX_OBSERVATIONS     = 10; // Bağlama dahil edilecek son gözlem sayısı
+const MAX_RATIONS = 5;  // Bağlama dahil edilecek son rasyon sayısı
+const MAX_OBSERVATIONS = 10; // Bağlama dahil edilecek son gözlem sayısı
 
 let chats = [];
 let activeChatId = null;
@@ -30,61 +30,103 @@ async function buildContextData() {
       getActiveFarm().catch(() => null),
     ]);
 
-    // Son 5 rasyon — sadece özet alanlar (token tasarrufu)
+    // Son 5 rasyon — hammaddeler ve besin bileşimi dahil tam snapshot
     const rationHistory = allRations
       .slice(-MAX_RATIONS)
       .map(r => ({
         name:      r.name || 'İsimsiz Rasyon',
-        createdAt: r.createdAt || r.updatedAt || null,
-        cost:      r.result?.cost ?? null,
-        dmi:       r.result?.dmi ?? null,
-        nel:       r.result?.nel ?? null,
-        cp:        r.result?.cp  ?? null,
-        ndf:       r.result?.ndf ?? null,
+        savedAt:   r.savedAt || r.createdAt || r.updatedAt || null,
         status:    r.result?.statusName ?? null,
+        totalCost: r.result?.totalCost ?? r.result?.cost ?? null,
+        // Hayvan profili snapshot'u
+        animal: r.animal ? {
+          breed:          r.animal.breed          || null,
+          bw:             r.animal.bw             || null,
+          milkYield:      r.animal.milkYield      || null,
+          milkFat:        r.animal.milkFat        || null,
+          milkProtein:    r.animal.milkProtein    || null,
+          parity:         r.animal.parity         || null,
+          lactationStage: r.animal.lactationStage || null,
+          dim:            r.animal.dim            || null,
+        } : null,
+        // Kullanılan hammaddeler (solver'ın items dizisinden)
+        ingredients: (r.result?.items || []).map(item => ({
+          name:       item.name || item.tr_name || item.en_name || null,
+          dmKg:       item.dmKg      ?? null,   // KM kg/gün
+          asFedKg:    item.asFedKg   ?? null,   // Yaş madde kg/gün
+          pctDm:      item.pctDm     ?? null,   // KM içindeki pay %
+          costPerDay: item.costPerDay ?? null,  // Günlük maliyet
+        })),
+        // Tam besin madde bileşimi (solver'ın composition nesnesinden)
+        composition: r.result?.composition ? {
+          nel_mcal:   r.result.composition.nel_mcal   ?? null,
+          cp_g:       r.result.composition.cp_g       ?? null,
+          cp_pct:     r.result.composition.cp_pct     ?? null,
+          rup_g:      r.result.composition.rup_g      ?? null,
+          rdp_g:      r.result.composition.rdp_g      ?? null,
+          ndf_pct:    r.result.composition.ndf_pct    ?? null,
+          adf_pct:    r.result.composition.adf_pct    ?? null,
+          nfc_pct:    r.result.composition.nfc_pct    ?? null,
+          starch_pct: r.result.composition.starch_pct ?? null,
+          fat_pct:    r.result.composition.fat_pct    ?? null,
+          ash_pct:    r.result.composition.ash_pct    ?? null,
+          ca_g:       r.result.composition.ca_g       ?? null,
+          p_g:        r.result.composition.p_g        ?? null,
+          mg_g:       r.result.composition.mg_g       ?? null,
+          k_g:        r.result.composition.k_g        ?? null,
+          na_g:       r.result.composition.na_g       ?? null,
+          dcad_meq:   r.result.composition.dcad_meq   ?? null,
+        } : null,
+        // Hedef gereksinimler
+        requirements: r.result?.requirements ? {
+          nel: r.result.requirements.nel ?? null,
+          mp:  r.result.requirements.mp  ?? null,
+        } : null,
+        milkFever: r.result?.milkFever ?? null,
       }));
+
 
     // Tüm hayvan profilleri — özet alanlar
     const animalProfiles = allProfiles.map(p => ({
-      name:            p.name || 'İsimsiz Profil',
-      breed:           p.breed || null,
-      bw:              p.bw   || null,
-      milkYield:       p.milkYield || null,
-      milkFat:         p.milkFat  || null,
-      milkProtein:     p.milkProtein || null,
-      parity:          p.parity || null,
-      lactationStage:  p.lactationStage || null,
-      dim:             p.dim  || null,
+      name: p.name || 'İsimsiz Profil',
+      breed: p.breed || null,
+      bw: p.bw || null,
+      milkYield: p.milkYield || null,
+      milkFat: p.milkFat || null,
+      milkProtein: p.milkProtein || null,
+      parity: p.parity || null,
+      lactationStage: p.lactationStage || null,
+      dim: p.dim || null,
     }));
 
     // Son 10 gözlem — tarih, süt verimi, BCS, DMI
     const recentObservations = allObservations
       .slice(-MAX_OBSERVATIONS)
       .map(o => ({
-        date:       o.date || null,
-        profileId:  o.profileId || null,
-        milkYield:  o.milkYield  ?? null,
-        milkFat:    o.milkFat    ?? null,
-        milkProtein:o.milkProtein ?? null,
-        bcs:        o.bcs        ?? null,
-        dmiActual:  o.dmiActual  ?? null,
-        notes:      o.notes      || null,
+        date: o.date || null,
+        profileId: o.profileId || null,
+        milkYield: o.milkYield ?? null,
+        milkFat: o.milkFat ?? null,
+        milkProtein: o.milkProtein ?? null,
+        bcs: o.bcs ?? null,
+        dmiActual: o.dmiActual ?? null,
+        notes: o.notes || null,
       }));
 
     // Anlık oturum verisi
     const currentSession = {
       animal: state.animal,
       feeds: (state.selectedFeeds || []).map(f => ({
-        name:    f.name,
-        category:f.category,
-        amountKg:f.val || 0,
+        name: f.name,
+        category: f.category,
+        amountKg: f.val || 0,
       })),
       rationResult: state.rationResult ? {
-        dmi:        state.rationResult.dmi,
-        nel:        state.rationResult.nel,
-        cp:         state.rationResult.cp,
-        ndf:        state.rationResult.ndf,
-        cost:       state.rationResult.cost,
+        dmi: state.rationResult.dmi,
+        nel: state.rationResult.nel,
+        cp: state.rationResult.cp,
+        ndf: state.rationResult.ndf,
+        cost: state.rationResult.cost,
         statusName: state.rationResult.statusName,
       } : null,
     };
@@ -95,10 +137,10 @@ async function buildContextData() {
       animalProfiles,
       recentObservations,
       farm: {
-        name:      activeFarm?.name     || null,
-        address:   activeFarm?.address  || null,
-        advisor:   activeFarm?.advisor  || null,
-        herdSize:  state.economics?.herdSize || null,
+        name: activeFarm?.name || null,
+        address: activeFarm?.address || null,
+        advisor: activeFarm?.advisor || null,
+        herdSize: state.economics?.herdSize || null,
       },
     };
   } catch (err) {
@@ -110,10 +152,10 @@ async function buildContextData() {
         feeds: (state.selectedFeeds || []).map(f => ({ name: f.name, category: f.category, amountKg: f.val || 0 })),
         rationResult: state.rationResult ? { dmi: state.rationResult.dmi, nel: state.rationResult.nel, cp: state.rationResult.cp, cost: state.rationResult.cost } : null,
       },
-      rationHistory:       [],
-      animalProfiles:      [],
-      recentObservations:  [],
-      farm:                {},
+      rationHistory: [],
+      animalProfiles: [],
+      recentObservations: [],
+      farm: {},
     };
   }
 }
@@ -189,18 +231,18 @@ export async function renderAiAssistantPanel(container) {
     </div>
   `;
 
-  const chatListEl    = document.getElementById('aiChatList');
+  const chatListEl = document.getElementById('aiChatList');
   const chatHistoryEl = document.getElementById('aiChatHistory');
-  const chatInput     = document.getElementById('aiChatInput');
-  const sendBtn       = document.getElementById('aiSendBtn');
-  const newChatBtn    = document.getElementById('aiNewChatBtn');
-  
+  const chatInput = document.getElementById('aiChatInput');
+  const sendBtn = document.getElementById('aiSendBtn');
+  const newChatBtn = document.getElementById('aiNewChatBtn');
+
   // Mobile specific elements
-  const menuBtn             = document.getElementById('aiMenuBtn');
-  const closeSidebarBtn     = document.getElementById('aiCloseSidebarBtn');
-  const sidebar             = document.getElementById('aiSidebar');
-  const overlay             = document.getElementById('aiSidebarOverlay');
-  const deleteCurrentChatBtn= document.getElementById('aiDeleteCurrentChatBtn');
+  const menuBtn = document.getElementById('aiMenuBtn');
+  const closeSidebarBtn = document.getElementById('aiCloseSidebarBtn');
+  const sidebar = document.getElementById('aiSidebar');
+  const overlay = document.getElementById('aiSidebarOverlay');
+  const deleteCurrentChatBtn = document.getElementById('aiDeleteCurrentChatBtn');
 
   const openSidebar = () => {
     sidebar.classList.add('open');
@@ -212,9 +254,9 @@ export async function renderAiAssistantPanel(container) {
     overlay.classList.remove('show');
   };
 
-  if (menuBtn)         menuBtn.addEventListener('click', openSidebar);
+  if (menuBtn) menuBtn.addEventListener('click', openSidebar);
   if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
-  if (overlay)         overlay.addEventListener('click', closeSidebar);
+  if (overlay) overlay.addEventListener('click', closeSidebar);
 
   if (deleteCurrentChatBtn) {
     deleteCurrentChatBtn.addEventListener('click', async () => {
@@ -277,7 +319,7 @@ export async function renderAiAssistantPanel(container) {
     chatHistoryEl.innerHTML = '';
     const activeChat = chats.find(c => c.id === activeChatId);
     const messages = activeChat ? (activeChat.messages || []) : [];
-    
+
     if (messages.length === 0) {
       chatHistoryEl.innerHTML = `
         <div class="ai-empty-state">
@@ -309,7 +351,7 @@ export async function renderAiAssistantPanel(container) {
       `;
       chatHistoryEl.insertAdjacentHTML('beforeend', html);
     });
-    
+
     chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
   };
 
@@ -330,11 +372,11 @@ export async function renderAiAssistantPanel(container) {
 
     activeChat.messages.push({ role: 'user', content: text });
     await saveAiChat(activeChat);
-    
+
     chatInput.value = '';
     renderSidebar();
     renderHistory();
-    
+
     // Show typing indicator
     const typingId = 'typing-indicator';
     const typingHtml = `
@@ -382,7 +424,7 @@ export async function renderAiAssistantPanel(container) {
 
       activeChat.messages.push({ role: 'assistant', content: response });
       await saveAiChat(activeChat);
-      
+
       renderSidebar();
       renderHistory();
 
