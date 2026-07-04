@@ -32,9 +32,9 @@ export async function renderAiAssistantPanel(container) {
       <!-- SOL MENÜ: GEÇMİŞ SOHBETLER (Mobilde Bottom Sheet) -->
       <div class="ai-sidebar-overlay" id="aiSidebarOverlay"></div>
       <div class="ai-sidebar" id="aiSidebar">
-        <div class="ai-sidebar-header d-flex d-md-none justify-content-between align-items-center mb-3">
-          <h4 class="m-0 d-flex align-items-center gap-2"><i class="ti ti-message-circle-2"></i> Sohbetler</h4>
-          <button id="aiCloseSidebarBtn" class="btn btn-icon btn-sm" style="background: transparent; border:none;"><i class="ti ti-x" style="font-size: 1.5rem;"></i></button>
+        <div class="ai-sidebar-header d-flex d-md-none align-items-center mb-3" style="width: 100%; justify-content: space-between;">
+          <h4 class="m-0 d-flex align-items-center gap-2" style="font-weight: bold;"><i class="ti ti-message-circle-2"></i> Sohbetler</h4>
+          <button id="aiCloseSidebarBtn" class="btn btn-icon p-0" style="background: transparent; border:none; color: var(--text-primary);"><i class="ti ti-x" style="font-size: 1.5rem;"></i></button>
         </div>
         <button id="aiNewChatBtn" class="btn btn-primary w-100 mb-3" style="margin-bottom: 1rem; background-color: #1c5237; border-color: #1c5237;">
           <i class="ti ti-plus"></i> Yeni Sohbet
