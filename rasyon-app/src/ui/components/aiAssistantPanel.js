@@ -46,12 +46,11 @@ export async function renderAiAssistantPanel(container) {
 
       <!-- SAĞ EKRAN: AKTİF SOHBET -->
       <div class="ai-main">
-        <div class="ai-mobile-header d-flex d-md-none align-items-center justify-content-between p-3 border-bottom">
-          <div style="width: 32px;"></div> <!-- Spacer for center alignment -->
-          <h3 class="ai-chat-title m-0 font-weight-bold" style="font-size: 1.2rem;">Sohbet</h3>
-          <div class="ai-mobile-header-actions d-flex gap-2">
-            <button id="aiMenuBtn" class="btn btn-icon btn-sm" style="background:transparent; border:none; color:var(--text-primary);"><i class="ti ti-menu-2" style="font-size: 1.5rem;"></i></button>
-            <button id="aiDeleteCurrentChatBtn" class="btn btn-icon btn-sm" style="background:transparent; border:none; color:var(--text-secondary);"><i class="ti ti-trash" style="font-size: 1.5rem;"></i></button>
+        <div class="ai-mobile-header d-flex d-md-none align-items-center p-3 border-bottom" style="position: relative; justify-content: flex-end;">
+          <h3 class="ai-chat-title m-0 font-weight-bold" style="position: absolute; left: 50%; transform: translateX(-50%); font-size: 1.25rem;">Sohbet</h3>
+          <div class="ai-mobile-header-actions d-flex gap-3">
+            <button id="aiMenuBtn" class="btn btn-icon p-0" style="background:transparent; border:none; color:var(--text-primary);"><i class="ti ti-menu-2" style="font-size: 1.5rem;"></i></button>
+            <button id="aiDeleteCurrentChatBtn" class="btn btn-icon p-0" style="background:transparent; border:none; color:var(--text-secondary);"><i class="ti ti-trash" style="font-size: 1.5rem;"></i></button>
           </div>
         </div>
         
