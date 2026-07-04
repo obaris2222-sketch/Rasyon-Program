@@ -5,10 +5,120 @@ import { showToast } from '../utils.js';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { newId } from '../../data/uuid.js';
-import { getAiChats, saveAiChat, deleteAiChat } from '../../data/db.js';
+import { getAiChats, saveAiChat, deleteAiChat, rationGetAll, animalProfileGetAll, observationGetAll, getActiveFarm } from '../../data/db.js';
+
+// ─── Sabit Limitler ───────────────────────────────────────────────────────────
+const MAX_HISTORY_MESSAGES = 20; // API'ya gönderilecek maksimum önceki mesaj sayısı
+const MAX_RATIONS          = 5;  // Bağlama dahil edilecek son rasyon sayısı
+const MAX_OBSERVATIONS     = 10; // Bağlama dahil edilecek son gözlem sayısı
 
 let chats = [];
 let activeChatId = null;
+
+// ─── Zengin Bağlam Verisi Oluşturucu ─────────────────────────────────────────
+
+/**
+ * IndexedDB'den güncel verileri çekerek AI'ın kullanacağı zengin bağlam nesnesini oluşturur.
+ * Her mesaj gönderiminde çalışır — veriler her zaman güncel kalır.
+ */
+async function buildContextData() {
+  try {
+    const [allRations, allProfiles, allObservations, activeFarm] = await Promise.all([
+      rationGetAll().catch(() => []),
+      animalProfileGetAll().catch(() => []),
+      observationGetAll().catch(() => []),
+      getActiveFarm().catch(() => null),
+    ]);
+
+    // Son 5 rasyon — sadece özet alanlar (token tasarrufu)
+    const rationHistory = allRations
+      .slice(-MAX_RATIONS)
+      .map(r => ({
+        name:      r.name || 'İsimsiz Rasyon',
+        createdAt: r.createdAt || r.updatedAt || null,
+        cost:      r.result?.cost ?? null,
+        dmi:       r.result?.dmi ?? null,
+        nel:       r.result?.nel ?? null,
+        cp:        r.result?.cp  ?? null,
+        ndf:       r.result?.ndf ?? null,
+        status:    r.result?.statusName ?? null,
+      }));
+
+    // Tüm hayvan profilleri — özet alanlar
+    const animalProfiles = allProfiles.map(p => ({
+      name:            p.name || 'İsimsiz Profil',
+      breed:           p.breed || null,
+      bw:              p.bw   || null,
+      milkYield:       p.milkYield || null,
+      milkFat:         p.milkFat  || null,
+      milkProtein:     p.milkProtein || null,
+      parity:          p.parity || null,
+      lactationStage:  p.lactationStage || null,
+      dim:             p.dim  || null,
+    }));
+
+    // Son 10 gözlem — tarih, süt verimi, BCS, DMI
+    const recentObservations = allObservations
+      .slice(-MAX_OBSERVATIONS)
+      .map(o => ({
+        date:       o.date || null,
+        profileId:  o.profileId || null,
+        milkYield:  o.milkYield  ?? null,
+        milkFat:    o.milkFat    ?? null,
+        milkProtein:o.milkProtein ?? null,
+        bcs:        o.bcs        ?? null,
+        dmiActual:  o.dmiActual  ?? null,
+        notes:      o.notes      || null,
+      }));
+
+    // Anlık oturum verisi
+    const currentSession = {
+      animal: state.animal,
+      feeds: (state.selectedFeeds || []).map(f => ({
+        name:    f.name,
+        category:f.category,
+        amountKg:f.val || 0,
+      })),
+      rationResult: state.rationResult ? {
+        dmi:        state.rationResult.dmi,
+        nel:        state.rationResult.nel,
+        cp:         state.rationResult.cp,
+        ndf:        state.rationResult.ndf,
+        cost:       state.rationResult.cost,
+        statusName: state.rationResult.statusName,
+      } : null,
+    };
+
+    return {
+      currentSession,
+      rationHistory,
+      animalProfiles,
+      recentObservations,
+      farm: {
+        name:      activeFarm?.name     || null,
+        address:   activeFarm?.address  || null,
+        advisor:   activeFarm?.advisor  || null,
+        herdSize:  state.economics?.herdSize || null,
+      },
+    };
+  } catch (err) {
+    console.warn('buildContextData hatası (kısmi bağlam kullanılacak):', err);
+    // Fallback: sadece anlık oturum
+    return {
+      currentSession: {
+        animal: state.animal,
+        feeds: (state.selectedFeeds || []).map(f => ({ name: f.name, category: f.category, amountKg: f.val || 0 })),
+        rationResult: state.rationResult ? { dmi: state.rationResult.dmi, nel: state.rationResult.nel, cp: state.rationResult.cp, cost: state.rationResult.cost } : null,
+      },
+      rationHistory:       [],
+      animalProfiles:      [],
+      recentObservations:  [],
+      farm:                {},
+    };
+  }
+}
+
+// ─── Ana Panel Renderlayıcı ───────────────────────────────────────────────────
 
 export async function renderAiAssistantPanel(container) {
   // Yükleme sırasında geçici ekran
@@ -58,6 +168,12 @@ export async function renderAiAssistantPanel(container) {
           <i class="ti ti-alert-triangle"></i>
           <span>${t('ai.disclaimer')}</span>
         </div>
+
+        <!-- Bağlam Bilgi Kartı -->
+        <div class="ai-context-info" id="aiContextInfo">
+          <i class="ti ti-brain"></i>
+          <span>${t('ai.contextInfo')}</span>
+        </div>
         
         <div class="ai-chat-history" id="aiChatHistory">
           <!-- Messages will appear here -->
@@ -73,18 +189,18 @@ export async function renderAiAssistantPanel(container) {
     </div>
   `;
 
-  const chatListEl = document.getElementById('aiChatList');
+  const chatListEl    = document.getElementById('aiChatList');
   const chatHistoryEl = document.getElementById('aiChatHistory');
-  const chatInput = document.getElementById('aiChatInput');
-  const sendBtn = document.getElementById('aiSendBtn');
-  const newChatBtn = document.getElementById('aiNewChatBtn');
+  const chatInput     = document.getElementById('aiChatInput');
+  const sendBtn       = document.getElementById('aiSendBtn');
+  const newChatBtn    = document.getElementById('aiNewChatBtn');
   
   // Mobile specific elements
-  const menuBtn = document.getElementById('aiMenuBtn');
-  const closeSidebarBtn = document.getElementById('aiCloseSidebarBtn');
-  const sidebar = document.getElementById('aiSidebar');
-  const overlay = document.getElementById('aiSidebarOverlay');
-  const deleteCurrentChatBtn = document.getElementById('aiDeleteCurrentChatBtn');
+  const menuBtn             = document.getElementById('aiMenuBtn');
+  const closeSidebarBtn     = document.getElementById('aiCloseSidebarBtn');
+  const sidebar             = document.getElementById('aiSidebar');
+  const overlay             = document.getElementById('aiSidebarOverlay');
+  const deleteCurrentChatBtn= document.getElementById('aiDeleteCurrentChatBtn');
 
   const openSidebar = () => {
     sidebar.classList.add('open');
@@ -96,9 +212,9 @@ export async function renderAiAssistantPanel(container) {
     overlay.classList.remove('show');
   };
 
-  if (menuBtn) menuBtn.addEventListener('click', openSidebar);
+  if (menuBtn)         menuBtn.addEventListener('click', openSidebar);
   if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
-  if (overlay) overlay.addEventListener('click', closeSidebar);
+  if (overlay)         overlay.addEventListener('click', closeSidebar);
 
   if (deleteCurrentChatBtn) {
     deleteCurrentChatBtn.addEventListener('click', async () => {
@@ -167,6 +283,7 @@ export async function renderAiAssistantPanel(container) {
         <div class="ai-empty-state">
           <i class="ti ti-robot"></i>
           <p>Merhaba! Rasyon veya hayvan besleme ile ilgili sorularınızı sorabilirsiniz.</p>
+          <p style="font-size:0.8rem; opacity:0.7;">Geçmiş rasyonlarınızı, hayvan profillerinizi ve saha gözlemlerinizi sormaktan çekinmeyin.</p>
         </div>
       `;
       return;
@@ -212,7 +329,7 @@ export async function renderAiAssistantPanel(container) {
     }
 
     activeChat.messages.push({ role: 'user', content: text });
-    await saveAiChat(activeChat); // Hemen kaydet
+    await saveAiChat(activeChat);
     
     chatInput.value = '';
     renderSidebar();
@@ -235,27 +352,36 @@ export async function renderAiAssistantPanel(container) {
     sendBtn.disabled = true;
 
     try {
-      const contextData = {
-        animal: state.animal,
-        feeds: state.selectedFeeds.map(f => ({ name: f.name, category: f.category, currentAmount: f.val || 0 })),
-        result: state.rationResult ? {
-          dmi: state.rationResult.dmi,
-          nel: state.rationResult.nel,
-          cp: state.rationResult.cp,
-          cost: state.rationResult.cost
-        } : null
-      };
+      // ── 1. Zengin bağlam verisini async olarak derle ────────────────────
+      const contextData = await buildContextData();
 
+      // ── 2. System prompt'u bağlamla doldur ─────────────────────────────
       const systemPromptTemplate = t('ai.systemPrompt');
-      const systemPrompt = systemPromptTemplate.replace('{{data}}', JSON.stringify(contextData, null, 2));
+      const systemPrompt = systemPromptTemplate.replace(
+        '{{data}}',
+        JSON.stringify(contextData, null, 2)
+      );
 
-      const response = await askGemini(text, systemPrompt);
+      // ── 3. Konuşma geçmişini hazırla (son MAX_HISTORY_MESSAGES mesaj) ──
+      // Yeni kullanıcı mesajı zaten activeChat.messages'e eklendi, onu dahil et
+      const allMessages = activeChat.messages;
+      const historySlice = allMessages.length > MAX_HISTORY_MESSAGES
+        ? allMessages.slice(-MAX_HISTORY_MESSAGES)
+        : allMessages;
+
+      // ── 4. Groq'a gönderilecek tam mesaj dizisi ─────────────────────────
+      const apiMessages = [
+        { role: 'system', content: systemPrompt },
+        ...historySlice.map(m => ({ role: m.role, content: m.content })),
+      ];
+
+      const response = await askGemini(apiMessages);
 
       const typingEl = document.getElementById(typingId);
       if (typingEl) typingEl.remove();
 
       activeChat.messages.push({ role: 'assistant', content: response });
-      await saveAiChat(activeChat); // IndexedDB + Supabase'e kaydet
+      await saveAiChat(activeChat);
       
       renderSidebar();
       renderHistory();

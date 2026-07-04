@@ -3,15 +3,14 @@
  */
 
 /**
- * Sends a message to the Groq API with the given system prompt.
- * Uses the incredibly fast llama3-70b-8192 model.
- * 
- * @param {string} userMessage - The message written by the user.
- * @param {string} systemPrompt - The formatted system prompt containing context.
+ * Sends a full conversation to the Groq API.
+ * Supports multi-turn chat history for context-aware responses.
+ *
+ * @param {Array<{role: string, content: string}>} messages - Full conversation history
+ *   including the system prompt as the first element.
  * @returns {Promise<string>} The AI's response text.
  */
-export async function askGemini(userMessage, systemPrompt) {
-  // Read the new Groq API Key
+export async function askGemini(messages) {
   const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
   if (!apiKey) {
@@ -22,11 +21,10 @@ export async function askGemini(userMessage, systemPrompt) {
 
   const payload = {
     model: "llama-3.3-70b-versatile",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userMessage }
-    ],
-    temperature: 0.3
+    messages,
+    temperature: 0.35,
+    max_tokens: 4096,
+    top_p: 0.9,
   };
 
   try {
