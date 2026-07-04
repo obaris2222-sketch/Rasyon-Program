@@ -134,15 +134,15 @@ export function renderSettingsPanel(container, state, options = {}) {
               value="${escHtml(s.farm.address)}" />
           </div>
           <div class="form-group">
-            <label style="display: flex; align-items: center; min-height: 26px;">${t('settings.latitude')}</label>
+            <label>${t('settings.latitude')}</label>
             <input type="number" id="set-farm-lat" step="0.000001" value="${s.farm.latitude !== null ? s.farm.latitude : ''}" placeholder="39.92077" />
           </div>
           <div class="form-group">
-            <label style="display: flex; align-items: center; justify-content: space-between; min-height: 26px;">
-              <span>${t('settings.longitude')}</span>
-              <button type="button" id="btn-locate-me" class="btn btn-sm btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; height: auto;"><i class="ti ti-map-pin"></i> ${t('settings.locate_me')}</button>
-            </label>
-            <input type="number" id="set-farm-lon" step="0.000001" value="${s.farm.longitude !== null ? s.farm.longitude : ''}" placeholder="32.85411" />
+            <label>${t('settings.longitude')}</label>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <input type="number" id="set-farm-lon" step="0.000001" value="${s.farm.longitude !== null ? s.farm.longitude : ''}" placeholder="32.85411" style="flex: 1; min-width: 130px;" />
+              <button type="button" id="btn-locate-me" class="btn btn-sm btn-secondary" style="flex-shrink: 0;"><i class="ti ti-map-pin"></i> ${t('settings.locate_me')}</button>
+            </div>
             <span class="hint">${t('settings.location_hint')}</span>
             <div id="farm-place-name" class="hint" style="margin-top:2px; font-weight:600; color:var(--primary)"></div>
           </div>
