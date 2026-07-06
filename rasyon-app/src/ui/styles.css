@@ -3451,7 +3451,7 @@ details.acc-panel table.diag-table {
 .ai-panel {
   display: flex;
   flex-direction: row;
-  height: calc(100vh - var(--header-height) - 3rem);
+  height: calc(100vh - 110px);
   background: var(--surface);
   border-radius: 1.5rem;
   border: 1px solid var(--border);
@@ -3765,7 +3765,7 @@ details.acc-panel table.diag-table {
 @media (max-width: 768px) {
   .ai-panel {
     flex-direction: column;
-    height: calc(100vh - var(--header-height) - 1rem);
+    height: calc(100vh - 140px); /* Account for bottom nav in mobile */
     border: none;
     box-shadow: none;
     background: var(--background);
