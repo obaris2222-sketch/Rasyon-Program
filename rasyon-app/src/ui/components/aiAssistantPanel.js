@@ -206,17 +206,6 @@ export async function renderAiAssistantPanel(container) {
           </div>
         </div>
         
-        <div class="ai-disclaimer">
-          <i class="ti ti-alert-triangle"></i>
-          <span>${t('ai.disclaimer')}</span>
-        </div>
-
-        <!-- Bağlam Bilgi Kartı -->
-        <div class="ai-context-info" id="aiContextInfo">
-          <i class="ti ti-brain"></i>
-          <span>${t('ai.contextInfo')}</span>
-        </div>
-        
         <div class="ai-chat-history" id="aiChatHistory">
           <!-- Messages will appear here -->
         </div>
@@ -316,18 +305,29 @@ export async function renderAiAssistantPanel(container) {
   };
 
   const renderHistory = () => {
-    chatHistoryEl.innerHTML = '';
+    const bannersHtml = `
+      <div class="ai-disclaimer" style="margin: 0; flex-shrink: 0;">
+        <i class="ti ti-alert-triangle"></i>
+        <span>${t('ai.disclaimer')}</span>
+      </div>
+      <div class="ai-context-info" id="aiContextInfo" style="margin: 0; flex-shrink: 0;">
+        <i class="ti ti-brain"></i>
+        <span>${t('ai.contextInfo')}</span>
+      </div>
+    `;
+
+    chatHistoryEl.innerHTML = bannersHtml;
     const activeChat = chats.find(c => c.id === activeChatId);
     const messages = activeChat ? (activeChat.messages || []) : [];
 
     if (messages.length === 0) {
-      chatHistoryEl.innerHTML = `
+      chatHistoryEl.insertAdjacentHTML('beforeend', `
         <div class="ai-empty-state">
-          <i class="ti ti-robot"></i>
+          <i class="ti ti-sparkles"></i>
           <p>Merhaba! Rasyon veya hayvan besleme ile ilgili sorularınızı sorabilirsiniz.</p>
           <p style="font-size:0.8rem; opacity:0.7;">Geçmiş rasyonlarınızı, hayvan profillerinizi ve saha gözlemlerinizi sormaktan çekinmeyin.</p>
         </div>
-      `;
+      `);
       return;
     }
 
