@@ -266,9 +266,22 @@ export async function renderAiAssistantPanel(container) {
     chats.forEach(chat => {
       const isActive = chat.id === activeChatId ? 'active' : '';
       const title = chat.title || 'Yeni Sohbet';
+      
+      let dateHtml = '';
+      if (chat.updatedAt) {
+        const d = new Date(chat.updatedAt);
+        const today = new Date();
+        const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+        const dateStr = isToday ? d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : d.toLocaleDateString([], {day:'numeric', month:'short'});
+        dateHtml = `<span style="font-size: 0.7rem; opacity: 0.6; margin-left: 1.5rem;">${dateStr}</span>`;
+      }
+
       const html = `
         <div class="ai-chat-item ${isActive}" data-id="${chat.id}">
-          <div class="ai-chat-item-title"><i class="ti ti-message-circle"></i> <span>${title}</span></div>
+          <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="ai-chat-item-title"><i class="ti ti-message-circle"></i> <span>${title}</span></div>
+            ${dateHtml}
+          </div>
           <button class="ai-chat-delete-btn" data-id="${chat.id}" title="Sil"><i class="ti ti-trash"></i></button>
         </div>
       `;
@@ -344,10 +357,18 @@ export async function renderAiAssistantPanel(container) {
         formattedContent = div.innerHTML.replace(/\n/g, '<br/>');
       }
 
+      let timeHtml = '';
+      if (msg.timestamp) {
+        const d = new Date(msg.timestamp);
+        const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        timeHtml = `<div style="font-size: 0.7rem; opacity: 0.6; text-align: right; margin-top: 6px;">${timeStr}</div>`;
+      }
+
       const html = `
         <div class="ai-message ${msgClass}">
           <div class="ai-message-content markdown-body">
             ${formattedContent}
+            ${timeHtml}
           </div>
         </div>
       `;
@@ -372,7 +393,8 @@ export async function renderAiAssistantPanel(container) {
       activeChat.title = text.length > 25 ? text.substring(0, 25) + '...' : text;
     }
 
-    activeChat.messages.push({ role: 'user', content: text });
+    activeChat.updatedAt = Date.now();
+    activeChat.messages.push({ role: 'user', content: text, timestamp: Date.now() });
     await saveAiChat(activeChat);
 
     chatInput.value = '';
@@ -424,7 +446,8 @@ export async function renderAiAssistantPanel(container) {
       const typingEl = document.getElementById(typingId);
       if (typingEl) typingEl.remove();
 
-      activeChat.messages.push({ role: 'assistant', content: response });
+      activeChat.updatedAt = Date.now();
+      activeChat.messages.push({ role: 'assistant', content: response, timestamp: Date.now() });
       await saveAiChat(activeChat);
 
       renderSidebar();
@@ -437,7 +460,8 @@ export async function renderAiAssistantPanel(container) {
       
       // Hata mesajını sohbet ekranında göster
       const errorMessage = "⚠️ Sunucu ile iletişim kurulamadı veya bir hata oluştu. Lütfen tekrar deneyin. Detay: " + error.message;
-      activeChat.messages.push({ role: 'assistant', content: errorMessage, isError: true });
+      activeChat.updatedAt = Date.now();
+      activeChat.messages.push({ role: 'assistant', content: errorMessage, isError: true, timestamp: Date.now() });
       await saveAiChat(activeChat);
       
       renderSidebar();
@@ -473,7 +497,7 @@ export async function renderAiAssistantPanel(container) {
 
 function startNewChat() {
   const newIdStr = newId();
-  const newChat = { id: newIdStr, title: 'Yeni Sohbet', messages: [] };
+  const newChat = { id: newIdStr, title: 'Yeni Sohbet', messages: [], updatedAt: Date.now() };
   chats.unshift(newChat);
   activeChatId = newIdStr;
 }
