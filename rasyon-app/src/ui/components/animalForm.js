@@ -874,10 +874,10 @@ function updateCalc(form, state, container) {
           </tbody>
         </table>
 </div>
-        ${heatRecs ? `<div class="info-box" style="margin-top:0.5rem">
+        ${heatRecs && heatRecs.length > 0 ? `<div class="info-box" style="margin-top:0.5rem">
           <strong>${t('acalc.heat_mgmt')}</strong>
           <ul style="margin:0.3rem 0 0 1rem; font-size:0.85rem">
-            ${(heatRecs.actions || []).map(a => `<li>${a}</li>`).join('')}
+            ${heatRecs.map(a => `<li>${a}</li>`).join('')}
           </ul>
         </div>` : ''}
       </details>
