@@ -11,16 +11,16 @@
  * @returns {Promise<string>} The AI's response text.
  */
 export async function askGemini(messages) {
-  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+  const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY;
 
   if (!apiKey) {
-    throw new Error("Groq API key (VITE_GROQ_API_KEY) is not set in .env");
+    throw new Error("DeepSeek API key (VITE_DEEPSEEK_API_KEY) is not set in .env");
   }
 
-  const endpoint = "https://api.groq.com/openai/v1/chat/completions";
+  const endpoint = "https://api.deepseek.com/chat/completions";
 
   const payload = {
-    model: "llama-3.1-8b-instant",
+    model: "deepseek-chat",
     messages,
     temperature: 0.35,
     max_tokens: 4096,
@@ -39,7 +39,7 @@ export async function askGemini(messages) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error("Groq API Error Response:", errorData);
+      console.error("DeepSeek API Error Response:", errorData);
       throw new Error(`API Hatası: ${response.status} - Lütfen API anahtarınızı kontrol edin.`);
     }
 
@@ -52,7 +52,7 @@ export async function askGemini(messages) {
     }
 
   } catch (error) {
-    console.error("Groq Fetch Error:", error);
+    console.error("DeepSeek Fetch Error:", error);
     throw new Error(`AI Hatası: ${error.message || "İletişim kurulamadı."}`);
   }
 }
