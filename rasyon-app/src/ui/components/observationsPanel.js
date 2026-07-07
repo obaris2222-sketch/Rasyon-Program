@@ -6,7 +6,7 @@
  */
 
 import {
-  animalProfileGetAll, rationGetById,
+  animalProfileGetAll, rationGetById, rationGetAll,
   observationAdd, observationGetByProfile, observationDelete, observationDeleteByProfile,
 } from '../../data/db.js';
 import { analyzeObservations, performanceGrade } from '../../core/observationAnalysis.js';
@@ -116,7 +116,10 @@ function drawObservationCharts(observations, analysis) {
 }
 
 export async function renderObservationsPanel(container, state) {
-  const profiles = await animalProfileGetAll().catch(() => []);
+  const [profiles, allRations] = await Promise.all([
+    animalProfileGetAll().catch(() => []),
+    rationGetAll().catch(() => [])
+  ]);
 
   if (profiles.length === 0) {
     container.innerHTML = `
@@ -183,6 +186,12 @@ export async function renderObservationsPanel(container, state) {
             ${profiles.map(p => `<option value="${escHtml(p.id)}" ${p.id === activeProfileId ? 'selected' : ''}>
               ${escHtml(p.name)} (${p.milkYield ?? '?'} kg/gün, DIM ${p.dim ?? '?'})
             </option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kullanılacak Rasyon</label>
+          <select id="obs-ration-select">
+            <!-- JavaScript ile doldurulacak -->
           </select>
         </div>
       </div>
@@ -260,6 +269,24 @@ export async function renderObservationsPanel(container, state) {
     </div>
   `;
 
+  function updateRationSelect(profileId) {
+    const rationSelect = container.querySelector('#obs-ration-select');
+    if (!rationSelect) return;
+    
+    const profileRations = allRations.filter(r => r.animal?.id === profileId || r.animal?._profileId === profileId);
+    profileRations.sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
+    
+    let html = `<option value="current">Mevcut (Yeni Çözülmüş) Rasyon</option>`;
+    for (const r of profileRations) {
+      const d = r.savedAt ? new Date(r.savedAt).toLocaleDateString() : '';
+      const name = escHtml(r.name || 'İsimsiz Rasyon');
+      html += `<option value="${r.id}">${name} ${d ? '('+d+')' : ''}</option>`;
+    }
+    rationSelect.innerHTML = html;
+  }
+
+  updateRationSelect(activeProfile.id);
+
   await refreshAnalysis(container, activeProfile, state);
   // FAZ 22.2: sürü-geneli validasyon — tüm profillerin gözlemlerini topla (profil bağımsız).
   renderHerdValidation(container, profiles).catch(() => { });
@@ -269,6 +296,12 @@ export async function renderObservationsPanel(container, state) {
     const id = e.target.value;
     state.activeObservationProfileId = id;
     activeProfile = profiles.find(p => p.id === id);
+    updateRationSelect(activeProfile.id);
+    await refreshAnalysis(container, activeProfile, state);
+  });
+
+  // Rasyon değişimi
+  container.querySelector('#obs-ration-select')?.addEventListener('change', async () => {
     await refreshAnalysis(container, activeProfile, state);
   });
 
@@ -395,16 +428,25 @@ async function refreshAnalysis(container, profile, state) {
 
     let res = null;
 
-    // 1. Öncelik: Aynı oturumda az önce çözülmüş rasyon sonucu (en taze, tüm alanları var)
-    // NOT: animalForm.js profil ID'sini _profileId olarak saklar, id değil
-    const optimizedProfileId = state.lastOptimizedAnimal?.id || state.lastOptimizedAnimal?._profileId;
-    if (state?.rationResult && optimizedProfileId === profile.id) {
-      res = state.rationResult;
-    }
+    const rationSelect = container.querySelector('#obs-ration-select');
+    const selectedRationId = rationSelect ? rationSelect.value : 'current';
 
-    // 2. Yedek: DB'den kaydedilmiş rasyon (profil ayarlarından seçilmiş targetRationId)
-    if (!res && profile.targetRationId) {
-      const savedRation = await rationGetById(profile.targetRationId);
+    if (selectedRationId === 'current') {
+      // 1. Öncelik: Aynı oturumda az önce çözülmüş rasyon sonucu
+      const optimizedProfileId = state.lastOptimizedAnimal?.id || state.lastOptimizedAnimal?._profileId;
+      if (state?.rationResult && optimizedProfileId === profile.id) {
+        res = state.rationResult;
+      }
+      // Yedek: Eğer 'current' seçili ama state'te rasyon yoksa, DB'den profildeki targetRationId'ye bak
+      if (!res && profile.targetRationId) {
+        const savedRation = await rationGetById(profile.targetRationId);
+        if (savedRation && savedRation.result) {
+          res = savedRation.result;
+        }
+      }
+    } else {
+      // Dropdown'dan spesifik bir kayıtlı rasyon seçilmiş
+      const savedRation = await rationGetById(selectedRationId);
       if (savedRation && savedRation.result) {
         res = savedRation.result;
       }
