@@ -72,14 +72,14 @@ export async function renderHerdBatchPanel(container, state) {
     </details>
 
     <div class="card">
-      <div class="card-title">${t('herd.title')}
+      <div class="card-title">Çiftlik Yönetim ve TMR Paneli
         <span class="text-small text-muted" style="font-weight:400; margin-left:auto">
           ${t('herd.n_profiles', { n: profiles.length })}
         </span>
       </div>
 
       <div class="info-box">
-        Bu panelde çiftliğinizdeki tüm hayvan gruplarına <b>kayıtlı rasyonlarınızı</b> atayabilir, güncel maliyetler ve hammadde fiyatları üzerinden çiftliğinizin makro özetini ve <b>Günlük TMR (Yem) İhtiyacını</b> hesaplayabilirsiniz.
+        Bu panelde çiftliğinizdeki tüm hayvan gruplarına <b>kayıtlı rasyonlarınızı</b> atayabilir, güncel maliyetler ve hammadde fiyatları üzerinden çiftliğinizin makro özetini ve <b>Günlük TMR (Yem) İhtiyacını</b> hesaplayabilirsiniz. Sağmallar, kuru dönem veya düveler için hazırladığınız özel reçeteleri kendi gruplarına bağlayarak tek ekrandan tüm çiftlik yükleme tablosunu görebilirsiniz.
       </div>
 
       <div class="card mb-2" style="border-left: 4px solid var(--primary); padding-bottom: 1rem;">
@@ -296,6 +296,7 @@ async function runBatchOptimization(container, state, profiles, groups) {
 
   try {
     const rations = await rationGetAll();
+    const allFeeds = await getAllFeeds();
     const settings = getSettings();
     const science = settings.science || {};
 
@@ -306,16 +307,37 @@ async function runBatchOptimization(container, state, profiles, groups) {
         }
         
         const ration = rations.find(r => r.id === profile.targetRationId);
-        if (!ration || !ration.input) {
-           return { profile, result: null, economics: null, groupName: '', groupSize: 1, error: 'Atanan rasyon bulunamadı.' };
+        if (!ration) {
+           return { profile, result: null, economics: null, groupName: '', groupSize: 1, error: 'Atanan rasyon bulunamadı (silinmiş olabilir).' };
+        }
+
+        let feedsForOpt = [];
+        let feedLimitsForOpt = {};
+        let groupLimitsForOpt = {};
+        let objectiveForOpt = 'cost';
+
+        if (ration.input) {
+          feedsForOpt = ration.input.feeds || [];
+          feedLimitsForOpt = ration.input.feedLimits || {};
+          groupLimitsForOpt = ration.input.groupLimits || {};
+          objectiveForOpt = ration.input.objective || 'cost';
+        } else if (ration.result && ration.result.items) {
+          // Eski kaydedilmiş rasyon (input objesi yok)
+          feedsForOpt = ration.result.items.map(item => allFeeds.find(f => f.id === item.feedId)).filter(Boolean);
+          // Orijinal reçetedeki kullanım miktarlarını minimum kısıt olarak sabitlemeye çalışalım (reçete bozulmasın)
+          ration.result.items.forEach(item => {
+            feedLimitsForOpt[item.feedId] = { min: item.asFedKg * 0.95, max: item.asFedKg * 1.05 };
+          });
+        } else {
+           return { profile, result: null, economics: null, groupName: '', groupSize: 1, error: 'Rasyon verisi eksik.' };
         }
 
         const result = await optimizeViaWorker({
           animal: profile,
-          feeds: ration.input.feeds || [],
-          feedLimits: ration.input.feedLimits || {},
-          groupLimits: ration.input.groupLimits || {},
-          objective: ration.input.objective || 'cost',
+          feeds: feedsForOpt,
+          feedLimits: feedLimitsForOpt,
+          groupLimits: groupLimitsForOpt,
+          objective: objectiveForOpt,
           system: science.system || 'NASEM2021',
           dmiMethod: science.dmiMethod || 'auto',
           autoEnergyDiscount: science.autoEnergyDiscount !== false,

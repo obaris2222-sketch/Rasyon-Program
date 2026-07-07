@@ -64,6 +64,12 @@ export function attachReportHandlers(container, state) {
       const ration = {
         name,
         animal: { ...state.animal },
+        input: {
+          feeds: state.selectedFeeds ? [...state.selectedFeeds] : [],
+          feedLimits: state.feedLimits ? { ...state.feedLimits } : {},
+          groupLimits: state.groupLimits ? { ...state.groupLimits } : {},
+          objective: state.objective || 'cost'
+        },
         // denetim #15: daha zengin snapshot → geçmiş "Detay"ında tam kompozisyon + teşhis
         result: {
           feasible: result.feasible,
