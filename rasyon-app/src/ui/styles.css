@@ -3829,4 +3829,4 @@ details.acc-panel table.diag-table {
   .ai-message-content {
     max-width: 95%;
   }
-}
+}.feed-table-wrap { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; } 

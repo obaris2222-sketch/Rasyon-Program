@@ -86,33 +86,35 @@ export async function renderHerdBatchPanel(container, state) {
         <div class="card-title" style="margin-bottom: 0.5rem">Aktif Rasyon Atamaları</div>
         <div class="text-small text-muted" style="margin-bottom:1rem">Aşağıdaki her grup/profil için Rasyon Kurucu'da kaydettiğiniz reçetelerden birini seçin.</div>
         
-        <table class="diag-table" style="font-size:0.9rem">
-          <thead>
-            <tr>
-              <th>Profil / Grup Adı</th>
-              <th>Bağlı Olduğu Sürü</th>
-              <th>Aktif Kayıtlı Rasyon</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${profiles.map(p => {
-              const group = groups.find(g => g.id === p.groupId);
-              const rationOpts = rations.map(r => `<option value="${r.id}" ${p.targetRationId === r.id ? 'selected' : ''}>${escHtml(r.name || r.id)}</option>`).join('');
-              return `
-                <tr>
-                  <td><b>${escHtml(p.name || p.id)}</b></td>
-                  <td>${group ? escHtml(group.name) : '<span class="text-muted">—</span>'}</td>
-                  <td>
-                    <select class="profile-ration-select" data-profile-id="${p.id}" style="width: 100%; max-width: 300px;">
-                      <option value="">-- Rasyon Seçin --</option>
-                      ${rationOpts}
-                    </select>
-                  </td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
+        <div class="feed-table-wrap">
+          <table class="diag-table" style="font-size:0.9rem; min-width: 450px;">
+            <thead>
+              <tr>
+                <th>Profil / Grup Adı</th>
+                <th>Bağlı Olduğu Sürü</th>
+                <th>Aktif Kayıtlı Rasyon</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${profiles.map(p => {
+                const group = groups.find(g => g.id === p.groupId);
+                const rationOpts = rations.map(r => `<option value="${r.id}" ${p.targetRationId === r.id ? 'selected' : ''}>${escHtml(r.name || r.id)}</option>`).join('');
+                return `
+                  <tr>
+                    <td><b>${escHtml(p.name || p.id)}</b></td>
+                    <td>${group ? escHtml(group.name) : '<span class="text-muted">—</span>'}</td>
+                    <td>
+                      <select class="profile-ration-select" data-profile-id="${p.id}" style="width: 100%; min-width: 150px;">
+                        <option value="">-- Rasyon Seçin --</option>
+                        ${rationOpts}
+                      </select>
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="form-grid">
@@ -488,18 +490,20 @@ function renderBatchResults(el, results, milkPrice) {
           <div class="text-small text-muted" style="margin-bottom:1rem">
             Tüm hesaplanan grupların günlük ve aylık toplam karma ihtiyacı
           </div>
-          <table class="diag-table" style="max-width: 600px;">
-            <thead>
-              <tr>
-                <th>Yem Adı</th>
-                <th class="num">Günlük Toplam (Kg)</th>
-                <th class="num">Aylık Toplam (Kg)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tmrRows}
-            </tbody>
-          </table>
+          <div class="feed-table-wrap">
+            <table class="diag-table" style="min-width: 450px;">
+              <thead>
+                <tr>
+                  <th>Yem Adı</th>
+                  <th class="num">Günlük Toplam (Kg)</th>
+                  <th class="num">Aylık Toplam (Kg)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tmrRows}
+              </tbody>
+            </table>
+          </div>
         </div>
       ` : '';
     })()}
