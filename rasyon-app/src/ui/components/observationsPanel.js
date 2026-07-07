@@ -6,7 +6,7 @@
  */
 
 import {
-  animalProfileGetAll,
+  animalProfileGetAll, rationGetById,
   observationAdd, observationGetByProfile, observationDelete, observationDeleteByProfile,
 } from '../../data/db.js';
 import { analyzeObservations, performanceGrade } from '../../core/observationAnalysis.js';
@@ -391,9 +391,20 @@ async function refreshAnalysis(container, profile, state) {
       milkFat: null
     };
 
-    // FAZ 25.1: Eğer aktif profil çözülmüş rasyonun profiline eşitse, rasyon sonuçlarından ekstra tahminler
-    if (state?.rationResult && state.lastOptimizedAnimal?.id === profile.id) {
-      const res = state.rationResult;
+    let res = null;
+
+    if (profile.targetRationId) {
+      const savedRation = await rationGetById(profile.targetRationId);
+      if (savedRation && savedRation.result) {
+        res = savedRation.result;
+      }
+    }
+
+    if (!res && state?.rationResult && state.lastOptimizedAnimal?.id === profile.id) {
+      res = state.rationResult;
+    }
+
+    if (res) {
       if (res.methane && res.methane.production_g) {
         validations.methane = validatePredictionForProfile(observations, res.methane.production_g, 'methane');
       }
