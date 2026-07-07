@@ -552,7 +552,7 @@ function renderBatchResults(el, results, milkPrice) {
   });
 }
 
-function renderBatchRow(r, idx) {
+function renderRow(r, idx) {
   if (r.error && !r.result) {
     return `
       <tr class="status-row-below" style="opacity:0.8">
