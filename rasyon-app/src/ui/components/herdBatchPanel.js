@@ -5,7 +5,7 @@
  * karşılaştırmalı tablo ve toplam sürü-ölçek ekonomik analiz gösterir.
  */
 
-import { animalProfileGetAll, herdGroupGetAll } from '../../data/db.js';
+import { animalProfileGetAll, herdGroupGetAll, animalProfilePut, rationGetAll } from '../../data/db.js';
 import { getAllFeeds, FEED_CATEGORIES, feedMatchesQuery } from '../../data/feedService.js';
 import { optimizeViaWorker } from '../../solver/glpkWorker.js';
 import { optimizeHerd } from '../../solver/herdOptimizer.js';
@@ -23,13 +23,13 @@ let _allFeeds = [];
 const stageLabel = (s) => { const k = `herd.st_${s}`; const v = t(k); return v === k ? t('herd.st_early') : v; };
 
 export async function renderHerdBatchPanel(container, state) {
-  const [profiles, groups, allFeeds] = await Promise.all([
+  const [profiles, groups, allFeeds, rations] = await Promise.all([
     animalProfileGetAll().catch(() => []),
     herdGroupGetAll().catch(() => []),
-    getAllFeeds().catch(() => [])
+    getAllFeeds().catch(() => []),
+    rationGetAll().catch(() => [])
   ]);
   _allFeeds = allFeeds;
-  state.herdSelectedFeeds = state.herdSelectedFeeds || [];
 
   if (profiles.length === 0) {
     container.innerHTML = `
@@ -79,26 +79,40 @@ export async function renderHerdBatchPanel(container, state) {
       </div>
 
       <div class="info-box">
-        ${t('herd.info')}
+        Bu panelde çiftliğinizdeki tüm hayvan gruplarına <b>kayıtlı rasyonlarınızı</b> atayabilir, güncel maliyetler ve hammadde fiyatları üzerinden çiftliğinizin makro özetini ve <b>Günlük TMR (Yem) İhtiyacını</b> hesaplayabilirsiniz.
       </div>
 
       <div class="card mb-2" style="border-left: 4px solid var(--primary); padding-bottom: 1rem;">
-        <div class="flex-between" style="margin-bottom:0.5rem">
-          <div class="card-title" style="margin:0">${t('ration.feed_selection')}</div>
-          <span class="text-small text-muted" id="herd-feed-count">${t('ration.feeds_selected', { n: state.herdSelectedFeeds.length })}</span>
-        </div>
-        <div class="text-small text-muted" style="margin-bottom:1rem">${t('herd.feed_hint')}</div>
+        <div class="card-title" style="margin-bottom: 0.5rem">Aktif Rasyon Atamaları</div>
+        <div class="text-small text-muted" style="margin-bottom:1rem">Aşağıdaki her grup/profil için Rasyon Kurucu'da kaydettiğiniz reçetelerden birini seçin.</div>
         
-        <div class="search-wrap" style="position:relative">
-          <i class="ti ti-search" style="position:absolute; left:0.8rem; top:50%; transform:translateY(-50%); color:var(--text-muted)"></i>
-          <input class="search-input" id="herd-feed-search" type="search"
-            placeholder="${t('ration.search_feed')}" autocomplete="off"
-            style="width:100%; padding:0.6rem 0.6rem 0.6rem 2.2rem; border:1px solid var(--border); border-radius:4px" />
-          <div id="herd-feed-list" class="feed-selection-list" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-top:none; border-radius:0 0 4px 4px; display:none;"></div>
-        </div>
-
-        <div id="herd-selected-feeds-area" class="mt-2"></div>
-        <button class="btn btn-secondary btn-sm mt-1" id="herd-clear-feeds-btn">${t('ration.clear_all')}</button>
+        <table class="diag-table" style="font-size:0.9rem">
+          <thead>
+            <tr>
+              <th>Profil / Grup Adı</th>
+              <th>Bağlı Olduğu Sürü</th>
+              <th>Aktif Kayıtlı Rasyon</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${profiles.map(p => {
+              const group = groups.find(g => g.id === p.groupId);
+              const rationOpts = rations.map(r => `<option value="${r.id}" ${p.targetRationId === r.id ? 'selected' : ''}>${escHtml(r.name || r.id)}</option>`).join('');
+              return `
+                <tr>
+                  <td><b>${escHtml(p.name || p.id)}</b></td>
+                  <td>${group ? escHtml(group.name) : '<span class="text-muted">—</span>'}</td>
+                  <td>
+                    <select class="profile-ration-select" data-profile-id="${p.id}" style="width: 100%; max-width: 300px;">
+                      <option value="">-- Rasyon Seçin --</option>
+                      ${rationOpts}
+                    </select>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
       </div>
 
       <div class="form-grid">
@@ -118,52 +132,34 @@ export async function renderHerdBatchPanel(container, state) {
 
       <div class="flex gap-1 mt-2">
         <button class="btn btn-primary" id="btn-batch-optimize">
-          ${t('herd.optimize_all')}
+          <i class="ti ti-calculator"></i> Çiftlik Tablosunu Hesapla
         </button>
         <button class="btn btn-secondary btn-sm" id="btn-batch-clear">${t('herd.clear')}</button>
       </div>
-
-      <details class="acc-panel mt-2">
-        <summary><strong>${t('herd.hw_title')}</strong></summary>
-        <div class="info-box text-small">${t('herd.hw_info')}</div>
-        ${(state.herdSelectedFeeds && state.herdSelectedFeeds.length) ? `
-          <div class="text-small text-muted" style="margin:0.4rem 0">${t('herd.hw_stock_hint')}</div>
-          <div class="feed-table-wrap">
-          <table class="diag-table" style="font-size:0.85rem; max-width:520px">
-            <thead><tr><th>${t('herd.hw_feed')}</th><th class="num">${t('herd.hw_stock')}</th></tr></thead>
-            <tbody>
-              ${state.herdSelectedFeeds.map(sf => `
-                <tr>
-                  <td>${escHtml(sf.name || sf.id)}</td>
-                  <td class="num"><input type="number" class="herd-stock-input" data-feed-id="${escHtml(sf.id)}" min="0" step="10" placeholder="${t('herd.hw_no_limit')}" style="width:120px" /></td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-          </div>
-          <div class="form-grid" style="margin:0.6rem 0; max-width:520px">
-            <div class="form-group">
-              <label>${t('herd.hw_budget')}</label>
-              <input type="number" id="herd-budget-input" min="0" step="100" placeholder="${t('herd.hw_budget_ph')}" />
-              <span class="hint">${t('herd.hw_budget_hint')}</span>
-            </div>
-            <div class="form-group">
-              <div class="checkbox-group" style="display:flex; align-items:center; gap:0.5rem; margin-top:1.5rem;">
-                <input type="checkbox" id="herd-include-micros" />
-                <label for="herd-include-micros" style="margin-bottom:0; font-weight:bold; cursor:pointer;">${t('herd.hw_include_micros')}</label>
-              </div>
-              <span class="hint" style="display:block; margin-top:0.5rem; line-height:1.4;">${t('herd.hw_micros_hint')}</span>
-            </div>
-          </div>
-          <button class="btn btn-primary mt-1" id="btn-herd-optimize">${t('herd.hw_optimize')}</button>
-          <div id="herd-results" class="mt-2"></div>
-        ` : `<div class="info-box mt-1">${t('herd.select_feeds_first')}</div>`}
-      </details>
 
       <hr class="divider" />
 
       <div id="batch-results"></div>
     </div>
   `;
+
+  // Profil-Rasyon atama değişikliklerini yakala ve kaydet
+  container.querySelectorAll('.profile-ration-select').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const profileId = sel.dataset.profileId;
+      const rationId = sel.value;
+      const profile = profiles.find(p => p.id === profileId);
+      if (profile) {
+        profile.targetRationId = rationId || null;
+        try {
+          await animalProfilePut(profile);
+          showToast('Rasyon ataması kaydedildi', 'success');
+        } catch (e) {
+          showToast('Hata: Atama kaydedilemedi', 'error');
+        }
+      }
+    });
+  });
 
   container.querySelector('#btn-batch-optimize').addEventListener('click', () =>
     runBatchOptimization(container, state, profiles, groups)
@@ -172,13 +168,6 @@ export async function renderHerdBatchPanel(container, state) {
   container.querySelector('#btn-batch-clear').addEventListener('click', () => {
     container.querySelector('#batch-results').innerHTML = '';
   });
-
-  // FAZ 20.2: Sürü-geneli (ortak stok) optimizasyon
-  container.querySelector('#btn-herd-optimize')?.addEventListener('click', () =>
-    runHerdOptimization(container, state, profiles, groups)
-  );
-
-  setupHerdFeedSelection(container, state);
 }
 
 // ─── FAZ 20.2: Sürü-Geneli Eşzamanlı Optimizasyon (ortak yem stoğu) ──────────
@@ -287,11 +276,6 @@ function renderHerdResults(el, res) {
 }
 
 async function runBatchOptimization(container, state, profiles, groups) {
-  if (!state.herdSelectedFeeds || state.herdSelectedFeeds.length === 0) {
-    showToast(t('herd.select_feeds_first'), 'error');
-    return;
-  }
-
   const filterGroupId = container.querySelector('#batch-group-filter').value;
   const milkPrice = +container.querySelector('#batch-milk-price').value || 18;
 
@@ -304,7 +288,6 @@ async function runBatchOptimization(container, state, profiles, groups) {
     return;
   }
 
-  // FAZ 15.5: sürü modunda hayvan-başına ilerleme yüzdesi
   const total = targetProfiles.length;
   let done = 0;
   showLoading(true, { message: t('herd.optimizing'), percent: 0, sub: t('herd.profiles_progress', { done: 0, total }) });
@@ -312,39 +295,31 @@ async function runBatchOptimization(container, state, profiles, groups) {
   resultsEl.innerHTML = `<div class="empty-state" style="padding:1rem"><p>${t('herd.optimizing_short')}</p></div>`;
 
   try {
-    const allFeeds = await getAllFeeds();
-    const feedIds = state.herdSelectedFeeds.map(sf => sf.id);
-    const feeds = feedIds.map(id => allFeeds.find(f => f.id === id)).filter(Boolean);
-
-    // Rasyon Kurucu ile tutarlı: kg limit + FAZ 14.11 MILP tipi
-    const feedLimits = {};
-    for (const sf of state.herdSelectedFeeds) {
-      if (sf.minKg !== null || sf.maxKg !== null || sf.milpType) {
-        const lim = { min: sf.minKg ?? undefined, max: sf.maxKg ?? undefined };
-        if (sf.milpType) lim.type = sf.milpType;
-        feedLimits[sf.id] = lim;
-      }
-    }
-    // FAZ 14.7: kategori grup sınırları da sürü moduna taşınır
-    const groupLimits = state.groupLimits || {};
-
-    // FAZ 15.2: Bilim sistemi + KMT yöntemi Ayarlar'dan (tekil optimize ile tutarlı)
+    const rations = await rationGetAll();
     const settings = getSettings();
     const science = settings.science || {};
 
-    // Her profil için optimizasyonu paralelle çalıştır (FAZ 14.1: Worker üzerinden)
     const optimizationPromises = targetProfiles.map(async profile => {
       try {
+        if (!profile.targetRationId) {
+           return { profile, result: null, economics: null, groupName: '', groupSize: 1, error: 'Kayıtlı rasyon atanmamış.' };
+        }
+        
+        const ration = rations.find(r => r.id === profile.targetRationId);
+        if (!ration || !ration.input) {
+           return { profile, result: null, economics: null, groupName: '', groupSize: 1, error: 'Atanan rasyon bulunamadı.' };
+        }
+
         const result = await optimizeViaWorker({
           animal: profile,
-          feeds,
-          feedLimits,
-          groupLimits,
-          objective: 'cost',
+          feeds: ration.input.feeds || [],
+          feedLimits: ration.input.feedLimits || {},
+          groupLimits: ration.input.groupLimits || {},
+          objective: ration.input.objective || 'cost',
           system: science.system || 'NASEM2021',
-          dmiMethod: science.dmiMethod || 'auto',   // FAZ 17.3: bilim sistemiyle tutarlı
-          autoEnergyDiscount: science.autoEnergyDiscount !== false,  // FAZ 18.4
-          calcMode: science.calcMode || 'nrc',      // FAZ 19.1: nrc tek-geçiş | cncps iteratif
+          dmiMethod: science.dmiMethod || 'auto',
+          autoEnergyDiscount: science.autoEnergyDiscount !== false,
+          calcMode: science.calcMode || 'nrc',
         });
         const groupName = groups.find(g => g.id === profile.groupId)?.name ?? '—';
         const groupSize = groups.find(g => g.id === profile.groupId)?.animalCount ?? 1;
@@ -352,7 +327,7 @@ async function runBatchOptimization(container, state, profiles, groups) {
           milkYield_kg: profile.milkYield,
           milkPrice_tl: milkPrice,
           feedCost_tl_day: result.totalCost,
-          dmi_kg: result.dmi.achieved_kg,
+          dmi_kg: result.dmi?.achieved_kg || 0,
           herdSize: groupSize,
         });
         return { profile, result, economics, groupName, groupSize, error: null };
@@ -468,6 +443,53 @@ function renderBatchResults(el, results, milkPrice) {
       &nbsp;•&nbsp; ${t('herd.herd_co2')}
       <b>${totalCo2TonYear.toLocaleString(undefined, { maximumFractionDigits: 0 })} ton</b>
     </div>
+
+    ${(() => {
+      const tmrTotals = {};
+      results.filter(r => r.result?.feasible).forEach(r => {
+        if (!r.result.items) return;
+        r.result.items.forEach(item => {
+          const feedId = item.feedId || item.name;
+          const feedName = item.name;
+          const dailyKg = item.asFedKg * (r.groupSize || 1);
+          if (!tmrTotals[feedId]) {
+            tmrTotals[feedId] = { name: feedName, kg: 0 };
+          }
+          tmrTotals[feedId].kg += dailyKg;
+        });
+      });
+
+      const tmrRows = Object.values(tmrTotals)
+        .sort((a, b) => b.kg - a.kg)
+        .map(t => `
+          <tr>
+            <td>${escHtml(t.name)}</td>
+            <td class="num">${t.kg.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg</td>
+            <td class="num"><b>${(t.kg / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 })} Ton</b></td>
+          </tr>
+        `).join('');
+
+      return tmrRows ? `
+        <div class="card mt-2" style="border-top: 3px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+          <div class="card-title mb-1" style="display:flex; align-items:center; gap:0.5rem;">
+            <i class="ti ti-truck" style="font-size:1.2rem; color:var(--primary);"></i> Günlük Yükleme (TMR) İhtiyacı
+          </div>
+          <div class="text-small text-muted mb-1">Tüm hesaplanan grupların günlük toplam karma ihtiyacı (Ton/Gün)</div>
+          <table class="diag-table" style="max-width: 600px;">
+            <thead>
+              <tr>
+                <th>Yem Adı</th>
+                <th class="num">Günlük Toplam (Kg)</th>
+                <th class="num">Günlük Toplam (Ton)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tmrRows}
+            </tbody>
+          </table>
+        </div>
+      ` : '';
+    })()}
 
     <!-- Rasyon Detay Modal -->
     <div id="herd-detail-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem">
