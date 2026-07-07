@@ -128,10 +128,11 @@ export async function renderHerdBatchPanel(container, state) {
               <span class="hint">${t('herd.hw_budget_hint')}</span>
             </div>
             <div class="form-group">
-              <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer; font-weight:600">
-                <input type="checkbox" id="herd-include-micros" style="width: 1.2rem; height: 1.2rem; min-width: auto; margin: 0; padding: 0;" /> ${t('herd.hw_include_micros')}
-              </label>
-              <span class="hint">${t('herd.hw_micros_hint')}</span>
+              <div class="checkbox-group" style="display:flex; align-items:center; gap:0.5rem; margin-top:1.5rem;">
+                <input type="checkbox" id="herd-include-micros" />
+                <label for="herd-include-micros" style="margin-bottom:0; font-weight:bold; cursor:pointer;">${t('herd.hw_include_micros')}</label>
+              </div>
+              <span class="hint" style="display:block; margin-top:0.5rem; line-height:1.4;">${t('herd.hw_micros_hint')}</span>
             </div>
           </div>
           <button class="btn btn-primary mt-1" id="btn-herd-optimize">${t('herd.hw_optimize')}</button>
