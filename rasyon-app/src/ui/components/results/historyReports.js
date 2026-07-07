@@ -203,7 +203,8 @@ function renderHistoryContent(rations, currentResult) {
     <div class="info-box box-info" style="margin-bottom:1rem">
       ${t('history.count_info', { n: sorted.length })}
     </div>
-    <table class="diag-table" style="font-size:0.85rem">
+    <div class="table-scroll-wrap">
+      <table class="diag-table" style="font-size:0.85rem">
       <thead>
         <tr>
           <th>${t('history.col_date')}</th>
@@ -250,7 +251,7 @@ function renderHistoryContent(rations, currentResult) {
             </td>
           </tr>
           <tr class="hist-detail-row" data-idx="${i}" style="display:none">
-            <td colspan="8" style="background:var(--bg)">
+            <td colspan="9" style="background:var(--bg)">
               <div class="text-small" style="margin:0.3rem 0 0.5rem"><b>${t('history.detail_feeds')}:</b> ${feedsLine}</div>
               <div class="card" style="margin-bottom: 1rem">
                 <div class="section-title">${t('results.card_items')}</div>
@@ -271,6 +272,7 @@ function renderHistoryContent(rations, currentResult) {
         }).join('')}
       </tbody>
     </table>
+    </div>
     <div class="text-small text-muted mt-1">
       ${t('history.footer')}
     </div>

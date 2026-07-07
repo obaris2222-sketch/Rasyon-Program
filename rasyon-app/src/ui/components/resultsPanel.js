@@ -260,7 +260,7 @@ export function renderResultsPanel(container, state) {
 
     <!-- Geçmiş Rasyonlar Modal (gizli, butonla açılır) -->
     <div id="history-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem">
-      <div class="card" style="position:relative; width:100%; max-width:900px; max-height:90vh; display:flex; flex-direction:column; margin:0; padding:0;">
+      <div class="card" style="position:relative; width:100%; max-width:1200px; max-height:90vh; display:flex; flex-direction:column; margin:0; padding:0;">
         <div style="padding:1.5rem 1.5rem 0 1.5rem; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
           <div class="card-title" style="margin:0">${t('results.history_modal')}</div>
           <button id="btn-close-history" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted); line-height:1; padding:0.5rem; margin:-0.5rem -0.5rem 0 0;">&times;</button>
