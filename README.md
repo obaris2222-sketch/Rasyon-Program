@@ -12,7 +12,7 @@
   - **Hayvan Profili Yönetimi:** Laktasyon durumu, süt verimi, canlı ağırlık gibi parametrelerin takibi.
   - **Geniş Yem Veritabanı:** Besin madde analizleriyle detaylandırılmış özelleştirilebilir yem deposu.
   - **Fiyat ve Maliyet Yöneticisi:** Yem maliyetlerinin güncel takibi ile en ekonomik rasyonun oluşturulması.
-  - **Toplu Sürü ve Saha Gözlem Takibi:** Sürü bazlı değerlendirmeler ve dışkı, kondisyon gibi saha gözlemleri.
+  - **Çiftlik Paneli ve Saha Gözlem Takibi:** Sürü bazlı değerlendirmeler ve dışkı, kondisyon gibi saha gözlemleri.
 - **Gelişmiş Raporlama:** Rasyon sonuçlarını ve analizleri grafiklerle görüntüleme, Excel ve PDF formatlarında dışa aktarma.
 - **Modern ve Duyarlı Arayüz:** Karanlık/Aydınlık (Dark/Light) tema desteği ve mobil/tablet cihazlarla tam uyumlu (Responsive) kullanıcı dostu tasarım.
 
