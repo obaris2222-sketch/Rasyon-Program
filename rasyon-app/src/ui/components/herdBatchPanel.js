@@ -6,25 +6,30 @@
  */
 
 import { animalProfileGetAll, herdGroupGetAll } from '../../data/db.js';
-import { getAllFeeds } from '../../data/feedService.js';
+import { getAllFeeds, FEED_CATEGORIES, feedMatchesQuery } from '../../data/feedService.js';
 import { optimizeViaWorker } from '../../solver/glpkWorker.js';
-import { optimizeHerd } from '../../solver/herdOptimizer.js';  // FAZ 20.2: sürü-geneli ortak-stok optimizasyonu
+import { optimizeHerd } from '../../solver/herdOptimizer.js';
 import { calcEconomics } from '../../core/economics.js';
 import { getSettings } from '../../data/settings.js';
 import { showToast, showLoading, updateLoadingProgress, escHtml } from '../utils.js';
-import { t } from '../i18n.js';
+import { t, feedDisplayName } from '../i18n.js';
+import { renderRationItemsTable, renderDiagnostics, renderCompositionTable, renderMissingSources } from './results/tables.js';
 
 // Son toplu optimizasyon sonucu — PDF butonu için saklanır
 let _lastBatchResults = null;
 let _lastMilkPrice = 18;
+let _allFeeds = [];
 
 const stageLabel = (s) => { const k = `herd.st_${s}`; const v = t(k); return v === k ? t('herd.st_early') : v; };
 
 export async function renderHerdBatchPanel(container, state) {
-  const [profiles, groups] = await Promise.all([
+  const [profiles, groups, allFeeds] = await Promise.all([
     animalProfileGetAll().catch(() => []),
     herdGroupGetAll().catch(() => []),
+    getAllFeeds().catch(() => [])
   ]);
+  _allFeeds = allFeeds;
+  state.herdSelectedFeeds = state.herdSelectedFeeds || [];
 
   if (profiles.length === 0) {
     container.innerHTML = `
@@ -77,12 +82,26 @@ export async function renderHerdBatchPanel(container, state) {
         ${t('herd.info')}
       </div>
 
-      <div class="form-grid">
-        <div class="form-group">
-          <label>${t('herd.feed_count')}</label>
-          <input type="text" value="${t('herd.feeds_unit', { n: state.selectedFeeds?.length || 0 })}" disabled />
-          <span class="hint">${t('herd.feed_hint')}</span>
+      <div class="card mb-2" style="border-left: 4px solid var(--primary); padding-bottom: 1rem;">
+        <div class="flex-between" style="margin-bottom:0.5rem">
+          <div class="card-title" style="margin:0">${t('ration.feed_selection')}</div>
+          <span class="text-small text-muted" id="herd-feed-count">${t('ration.feeds_selected', { n: state.herdSelectedFeeds.length })}</span>
         </div>
+        <div class="text-small text-muted" style="margin-bottom:1rem">${t('herd.feed_hint')}</div>
+        
+        <div class="search-wrap" style="position:relative">
+          <i class="ti ti-search" style="position:absolute; left:0.8rem; top:50%; transform:translateY(-50%); color:var(--text-muted)"></i>
+          <input class="search-input" id="herd-feed-search" type="search"
+            placeholder="${t('ration.search_feed')}" autocomplete="off"
+            style="width:100%; padding:0.6rem 0.6rem 0.6rem 2.2rem; border:1px solid var(--border); border-radius:4px" />
+          <div id="herd-feed-list" class="feed-selection-list" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-top:none; border-radius:0 0 4px 4px; display:none;"></div>
+        </div>
+
+        <div id="herd-selected-feeds-area" class="mt-2"></div>
+        <button class="btn btn-secondary btn-sm mt-1" id="herd-clear-feeds-btn">${t('ration.clear_all')}</button>
+      </div>
+
+      <div class="form-grid">
         <div class="form-group">
           <label>${t('herd.milk_price')}</label>
           <input type="number" id="batch-milk-price" min="0" step="0.5"
@@ -107,13 +126,13 @@ export async function renderHerdBatchPanel(container, state) {
       <details class="acc-panel mt-2">
         <summary><strong>${t('herd.hw_title')}</strong></summary>
         <div class="info-box text-small">${t('herd.hw_info')}</div>
-        ${(state.selectedFeeds && state.selectedFeeds.length) ? `
+        ${(state.herdSelectedFeeds && state.herdSelectedFeeds.length) ? `
           <div class="text-small text-muted" style="margin:0.4rem 0">${t('herd.hw_stock_hint')}</div>
           <div class="feed-table-wrap">
           <table class="diag-table" style="font-size:0.85rem; max-width:520px">
             <thead><tr><th>${t('herd.hw_feed')}</th><th class="num">${t('herd.hw_stock')}</th></tr></thead>
             <tbody>
-              ${state.selectedFeeds.map(sf => `
+              ${state.herdSelectedFeeds.map(sf => `
                 <tr>
                   <td>${escHtml(sf.name || sf.id)}</td>
                   <td class="num"><input type="number" class="herd-stock-input" data-feed-id="${escHtml(sf.id)}" min="0" step="10" placeholder="${t('herd.hw_no_limit')}" style="width:120px" /></td>
@@ -158,12 +177,14 @@ export async function renderHerdBatchPanel(container, state) {
   container.querySelector('#btn-herd-optimize')?.addEventListener('click', () =>
     runHerdOptimization(container, state, profiles, groups)
   );
+
+  setupHerdFeedSelection(container, state);
 }
 
 // ─── FAZ 20.2: Sürü-Geneli Eşzamanlı Optimizasyon (ortak yem stoğu) ──────────
 
 async function runHerdOptimization(container, state, profiles, groups) {
-  if (!state.selectedFeeds || state.selectedFeeds.length === 0) { showToast(t('herd.select_feeds_first'), 'error'); return; }
+  if (!state.herdSelectedFeeds || state.herdSelectedFeeds.length === 0) { showToast(t('herd.select_feeds_first'), 'error'); return; }
   const filterGroupId = container.querySelector('#batch-group-filter').value;
   const targetProfiles = filterGroupId ? profiles.filter(p => p.groupId === filterGroupId) : profiles;
   if (targetProfiles.length === 0) { showToast(t('herd.no_match_profile'), 'error'); return; }
@@ -184,10 +205,10 @@ async function runHerdOptimization(container, state, profiles, groups) {
   if (resultsEl) resultsEl.innerHTML = '';
   try {
     const allFeeds = await getAllFeeds();
-    const feeds = state.selectedFeeds.map(sf => allFeeds.find(f => f.id === sf.id)).filter(Boolean);
+    const feeds = state.herdSelectedFeeds.map(sf => allFeeds.find(f => f.id === sf.id)).filter(Boolean);
     // Yem kg limitleri (Rasyon Kurucu ile tutarlı); MILP tipi sürü-geneli v1'de yok sayılır (saf LP).
     const feedLimits = {};
-    for (const sf of state.selectedFeeds) {
+    for (const sf of state.herdSelectedFeeds) {
       if (sf.minKg != null || sf.maxKg != null) feedLimits[sf.id] = { min: sf.minKg ?? undefined, max: sf.maxKg ?? undefined };
     }
     const science = getSettings().science || {};
@@ -266,7 +287,7 @@ function renderHerdResults(el, res) {
 }
 
 async function runBatchOptimization(container, state, profiles, groups) {
-  if (!state.selectedFeeds || state.selectedFeeds.length === 0) {
+  if (!state.herdSelectedFeeds || state.herdSelectedFeeds.length === 0) {
     showToast(t('herd.select_feeds_first'), 'error');
     return;
   }
@@ -292,12 +313,12 @@ async function runBatchOptimization(container, state, profiles, groups) {
 
   try {
     const allFeeds = await getAllFeeds();
-    const feedIds = state.selectedFeeds.map(sf => sf.id);
+    const feedIds = state.herdSelectedFeeds.map(sf => sf.id);
     const feeds = feedIds.map(id => allFeeds.find(f => f.id === id)).filter(Boolean);
 
     // Rasyon Kurucu ile tutarlı: kg limit + FAZ 14.11 MILP tipi
     const feedLimits = {};
-    for (const sf of state.selectedFeeds) {
+    for (const sf of state.herdSelectedFeeds) {
       if (sf.minKg !== null || sf.maxKg !== null || sf.milpType) {
         const lim = { min: sf.minKg ?? undefined, max: sf.maxKg ?? undefined };
         if (sf.milpType) lim.type = sf.milpType;
@@ -431,10 +452,11 @@ function renderBatchResults(el, results, milkPrice) {
           <th class="num">${t('herd.col_groupsize')}</th>
           <th class="num">${t('herd.col_groupiofc')}</th>
           <th>${t('herd.col_status')}</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
-        ${results.map(r => renderRow(r)).join('')}
+        ${results.map((r, i) => renderRow(r, i)).join('')}
       </tbody>
     </table>
     </div>
@@ -446,16 +468,65 @@ function renderBatchResults(el, results, milkPrice) {
       &nbsp;•&nbsp; ${t('herd.herd_co2')}
       <b>${totalCo2TonYear.toLocaleString(undefined, { maximumFractionDigits: 0 })} ton</b>
     </div>
+
+    <!-- Rasyon Detay Modal -->
+    <div id="herd-detail-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem">
+      <div class="card" style="max-width:900px; width:100%; max-height:90vh; overflow-y:auto; position:relative;">
+        <div class="flex-between" style="position:sticky; top:0; background:var(--bg-main); padding-bottom:1rem; border-bottom:1px solid var(--border); z-index:10; margin-bottom:1rem;">
+          <div class="card-title" id="herd-detail-title" style="margin:0">Rasyon Detayı</div>
+          <button class="btn btn-sm btn-secondary" id="btn-close-herd-detail"><i class="ti ti-x"></i></button>
+        </div>
+        <div id="herd-detail-content"></div>
+      </div>
+    </div>
   `;
+
+  // Detay butonlarına event listener ekle
+  const detailModal = el.querySelector('#herd-detail-modal');
+  const detailContent = el.querySelector('#herd-detail-content');
+  const detailTitle = el.querySelector('#herd-detail-title');
+  
+  el.querySelector('#btn-close-herd-detail')?.addEventListener('click', () => {
+    detailModal.style.display = 'none';
+  });
+
+  el.querySelectorAll('.btn-herd-detail').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = +btn.dataset.idx;
+      const r = results[idx];
+      if (!r || !r.result || !r.result.feasible) return;
+      
+      detailTitle.textContent = `${escHtml(r.profile.name || r.profile.id)} - Rasyon Detayı`;
+      
+      detailContent.innerHTML = `
+        <div class="card" style="box-shadow:none; border:1px solid var(--border); margin-bottom:1rem">
+          <div class="card-title">${t('results.card_items')}</div>
+          ${renderRationItemsTable(r.result.items, r.result.dmi)}
+        </div>
+        <div class="card" style="box-shadow:none; border:1px solid var(--border); margin-bottom:1rem">
+          <div class="card-title">${t('results.card_diagnostics')}</div>
+          ${renderMissingSources(r.result.missingSources)}
+          ${renderDiagnostics(r.result.diagnostics, r.result.requirements)}
+        </div>
+        <div class="card" style="box-shadow:none; border:1px solid var(--border)">
+          <div class="card-title">${t('results.card_composition')}</div>
+          ${renderCompositionTable(r.result.composition)}
+        </div>
+      `;
+      
+      detailModal.style.display = 'flex';
+    });
+  });
 }
 
-function renderRow(r) {
+function renderRow(r, idx) {
   if (r.error) {
     return `
       <tr class="status-row-above">
         <td><b>${escHtml(r.profile.name || r.profile.id)}</b></td>
         <td colspan="10" class="text-muted">${escHtml(r.error)}</td>
         <td><span class="status-above">${t('herd.status_err')}</span></td>
+        <td></td>
       </tr>`;
   }
   if (!r.result.feasible) {
@@ -467,6 +538,7 @@ function renderRow(r) {
         <td class="num">${r.profile.milkYield ?? '—'}</td>
         <td colspan="6" class="text-muted">${t('herd.status_infeasible')} (${r.result.statusName})</td>
         <td><span class="status-above">${t('herd.status_infeasible')}</span></td>
+        <td></td>
       </tr>`;
   }
 
@@ -487,6 +559,7 @@ function renderRow(r) {
       <td class="num">${r.groupSize}</td>
       <td class="num"><b>${r.economics.herd.dailyIOFC_tl.toLocaleString(undefined, { maximumFractionDigits: 0 })}</b></td>
       <td><span class="status-ok">${t('herd.status_ok')}</span></td>
+      <td><button class="btn btn-sm btn-secondary btn-herd-detail" data-idx="${idx}" title="Rasyon Detayını Gör"><i class="ti ti-eye"></i> Detay</button></td>
     </tr>`;
 }
 
@@ -510,3 +583,164 @@ function attachBatchPDFHandler(container) {
     }
   });
 }
+
+// ─── Sürü Geneli Yem Seçimi (Bağımsız Modül) ─────────────────────────────────
+
+function setupHerdFeedSelection(container, state) {
+  const searchInput = container.querySelector('#herd-feed-search');
+  if (searchInput) {
+    let debounce = null;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(() => updateHerdQuickList(container, state, searchInput.value), 200);
+    });
+    // Menü dışına tıklanınca listeyi gizle
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-wrap')) {
+        const listEl = container.querySelector('#herd-feed-list');
+        if (listEl) listEl.style.display = 'none';
+      }
+    });
+    searchInput.addEventListener('focus', () => {
+      const listEl = container.querySelector('#herd-feed-list');
+      if (listEl && listEl.innerHTML.trim() !== '') listEl.style.display = 'block';
+    });
+  }
+
+  container.querySelector('#herd-clear-feeds-btn')?.addEventListener('click', () => {
+    state.herdSelectedFeeds = [];
+    refreshHerdSelectedFeeds(container, state);
+  });
+
+  updateHerdQuickList(container, state, '');
+  refreshHerdSelectedFeeds(container, state);
+}
+
+function updateHerdQuickList(container, state, query) {
+  const listEl = container.querySelector('#herd-feed-list');
+  if (!listEl) return;
+
+  let feeds = _allFeeds;
+  if (query.trim()) {
+    feeds = feeds.filter(f => feedMatchesQuery(f, query));
+  } else {
+    const commonKeywords = ['yonca', 'mısır silajı', 'mısır tane', 'soya', 'süt yemi', 'premiks', 'saman', 'arpa'];
+    const commonFeeds = [];
+    const otherFeeds = [];
+    for (const f of feeds) {
+      const name = (f.name || '').toLocaleLowerCase('tr-TR');
+      if (commonKeywords.some(kw => name.includes(kw))) {
+        commonFeeds.push(f);
+      } else {
+        otherFeeds.push(f);
+      }
+    }
+    feeds = [...commonFeeds, ...otherFeeds];
+  }
+  const visible = feeds.slice(0, 60);
+
+  if (visible.length === 0) {
+    listEl.innerHTML = `<div class="empty-state" style="padding:0.75rem"><p>${t('ration.no_results')}</p></div>`;
+    listEl.style.display = 'block';
+    return;
+  }
+
+  const catLabel = (cat) => t(`feed.cat_${cat}`);
+
+  listEl.innerHTML = visible.map(f => {
+    const sel = !!state.herdSelectedFeeds.find(s => s.id === f.id);
+    return `
+      <div class="feed-selection-item${sel ? ' selected' : ''}" data-id="${f.id}" style="padding:0.4rem 0.6rem; cursor:pointer; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.5rem">
+        <input type="checkbox" ${sel ? 'checked' : ''} data-id="${f.id}" style="margin:0" />
+        <span class="feed-sel-name" style="flex:1">${escHtml(feedDisplayName(f))}</span>
+        <span class="feed-sel-cat" style="font-size:0.7rem; color:var(--text-muted); background:var(--bg-main); padding:0.1rem 0.3rem; border-radius:3px">${catLabel(f.category)}</span>
+      </div>`;
+  }).join('');
+  listEl.style.display = 'block';
+
+  listEl.querySelectorAll('.feed-selection-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      // Checkbox tıklandıysa çift tetiklemeyi önle
+      if (e.target.tagName.toLowerCase() === 'input') return;
+      const chk = item.querySelector('input');
+      chk.checked = !chk.checked;
+      chk.dispatchEvent(new Event('change'));
+    });
+  });
+
+  listEl.querySelectorAll('input[type="checkbox"]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      const id = chk.dataset.id;
+      if (chk.checked) {
+        if (!state.herdSelectedFeeds.find(s => s.id === id)) {
+          const feed = _allFeeds.find(f => f.id === id);
+          if (feed) {
+            state.herdSelectedFeeds.push({ id: feed.id, name: feed.name, nameEn: feed.nameEn, category: feed.category, minKg: null, maxKg: null });
+          }
+        }
+      } else {
+        const idx = state.herdSelectedFeeds.findIndex(s => s.id === id);
+        if (idx !== -1) {
+          state.herdSelectedFeeds.splice(idx, 1);
+        }
+      }
+      refreshHerdSelectedFeeds(container, state);
+    });
+  });
+}
+
+function refreshHerdSelectedFeeds(container, state) {
+  const area = container.querySelector('#herd-selected-feeds-area');
+  if (!area) return;
+
+  const countSpan = container.querySelector('#herd-feed-count');
+  if (countSpan) countSpan.textContent = t('ration.feeds_selected', { n: state.herdSelectedFeeds.length });
+
+  if (state.herdSelectedFeeds.length === 0) {
+    area.innerHTML = `<div class="empty-state" style="padding:1rem; background:var(--bg-main); border-radius:4px">
+      <div class="icon" style="font-size:1.5rem"><i class="ti ti-leaf"></i></div>
+      <p>Sürü optimizasyonlarında kullanılmak üzere henüz yem seçilmedi.</p>
+    </div>`;
+    return;
+  }
+
+  // Sadece Min/Maks kg gösterilecek, MILP vs yok
+  area.innerHTML = `
+    <div class="selected-feeds-list">
+      <div class="selected-feed-row selected-feed-head" style="font-weight:700; font-size:0.72rem; color:var(--text-muted); display:grid; grid-template-columns: 2fr 1fr 1fr 30px; gap:0.5rem; padding-bottom:0.4rem">
+        <span>${t('ration.col_feed')}</span><span>${t('ration.col_min')}</span><span>${t('ration.col_max')}</span><span></span>
+      </div>
+      ${state.herdSelectedFeeds.map((sf, i) => `
+        <div class="selected-feed-row" data-idx="${i}" style="display:grid; grid-template-columns: 2fr 1fr 1fr 30px; gap:0.5rem; align-items:center; margin-bottom:0.4rem">
+          <span title="${sf.category}" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${escHtml(feedDisplayName(sf))}</span>
+          <input type="number" class="limit-min" min="0" step="0.1" value="${sf.minKg ?? ''}" placeholder="—" data-idx="${i}" style="width:100%" />
+          <input type="number" class="limit-max" min="0" step="0.1" value="${sf.maxKg ?? ''}" placeholder="—" data-idx="${i}" style="width:100%" />
+          <button class="remove-feed-btn btn btn-sm btn-secondary" data-idx="${i}" aria-label="Kaldır" style="padding:0.2rem; display:flex; justify-content:center"><i class="ti ti-x"></i></button>
+        </div>
+      `).join('')}
+    </div>`;
+
+  area.querySelectorAll('.remove-feed-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = +btn.dataset.idx;
+      state.herdSelectedFeeds.splice(idx, 1);
+      refreshHerdSelectedFeeds(container, state);
+      updateHerdQuickList(container, state, container.querySelector('#herd-feed-search')?.value ?? '');
+    });
+  });
+
+  area.querySelectorAll('.limit-min').forEach(input => {
+    input.addEventListener('change', () => {
+      const idx = +input.dataset.idx;
+      state.herdSelectedFeeds[idx].minKg = input.value !== '' ? +input.value : null;
+    });
+  });
+
+  area.querySelectorAll('.limit-max').forEach(input => {
+    input.addEventListener('change', () => {
+      const idx = +input.dataset.idx;
+      state.herdSelectedFeeds[idx].maxKg = input.value !== '' ? +input.value : null;
+    });
+  });
+}
+
