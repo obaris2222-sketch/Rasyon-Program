@@ -211,6 +211,7 @@ function renderHistoryContent(rations, currentResult) {
           <th class="num">${t('history.col_cost')}</th>
           <th class="num">${t('history.col_dmi')}</th>
           <th class="num">${t('history.col_nel')}</th>
+          <th class="num">MP (g)</th>
           <th class="num">${t('history.col_cp')}</th>
           <th class="num">${t('history.col_ndf')}</th>
           <th>${t('history.col_action')}</th>
@@ -240,6 +241,7 @@ function renderHistoryContent(rations, currentResult) {
             <td class="num">${cost.toFixed(2)} ${delta(cost, cur?.cost)}</td>
             <td class="num">${dmi.toFixed(1)} ${delta(dmi, cur?.dmi)}</td>
             <td class="num">${(c.nel_mcal || 0).toFixed(1)} ${delta(c.nel_mcal, cur?.nel)}</td>
+            <td class="num">${(c.mp_g || 0).toFixed(0)} ${delta(c.mp_g, cur?.mp_g)}</td>
             <td class="num">${(c.cp_pct || 0).toFixed(1)} ${delta(c.cp_pct, cur?.cp)}</td>
             <td class="num">${(c.ndf_pct || 0).toFixed(1)} ${delta(c.ndf_pct, cur?.ndf)}</td>
             <td style="white-space:nowrap">

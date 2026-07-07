@@ -3830,3 +3830,5 @@ details.acc-panel table.diag-table {
     max-width: 95%;
   }
 }.feed-table-wrap { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; margin-bottom: 1rem; } 
+
+@media print { #app, .app-body { display: block !important; width: 100% !important; max-width: 100% !important; } }
