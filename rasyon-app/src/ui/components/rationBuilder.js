@@ -928,7 +928,11 @@ function readComposition(container) {
   });
   // PROBLEMLER #3: tekil (skaler) değerler — TMR hedef nem / rasyondan min nem
   container.querySelectorAll('.comp-single').forEach(input => {
-    if (input.value !== '') comp[input.dataset.key] = +input.value;
+    if (input.value !== '') {
+      comp[input.dataset.key] = +input.value;
+    } else if (input.dataset.key === 'tmr_target_moisture') {
+      comp[input.dataset.key] = 50; // Boş bırakıldığında varsayılan 50%
+    }
   });
   // Temizle: yalnız boş OBJECT'leri sil (skalerleri koru)
   for (const k of Object.keys(comp)) {
