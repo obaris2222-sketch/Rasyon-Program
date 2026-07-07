@@ -290,9 +290,9 @@ async function runBatchOptimization(container, state, profiles, groups) {
 
   const total = targetProfiles.length;
   let done = 0;
-  showLoading(true, { message: t('herd.optimizing'), percent: 0, sub: t('herd.profiles_progress', { done: 0, total }) });
+  showLoading(true, { message: 'TMR İhtiyaçları Hesaplanıyor...', percent: 0, sub: t('herd.profiles_progress', { done: 0, total }) });
   const resultsEl = container.querySelector('#batch-results');
-  resultsEl.innerHTML = `<div class="empty-state" style="padding:1rem"><p>${t('herd.optimizing_short')}</p></div>`;
+  resultsEl.innerHTML = `<div class="empty-state" style="padding:1rem"><p>Hesaplanıyor...</p></div>`;
 
   try {
     const rations = await rationGetAll();
@@ -358,7 +358,7 @@ async function runBatchOptimization(container, state, profiles, groups) {
 
     renderBatchResults(resultsEl, results, milkPrice);
     attachBatchPDFHandler(container);
-    showToast(t('herd.n_optimized', { n: results.length }), 'success');
+    showToast(`${results.length} profil için hesaplama tamamlandı.`, 'success');
   } catch (err) {
     console.error('Toplu optimizasyon hatası:', err);
     resultsEl.innerHTML = `<div class="warn-box">${t('herd.batch_err')}${err.message}</div>`;
@@ -396,7 +396,7 @@ function renderBatchResults(el, results, milkPrice) {
     <div class="summary-bar">
       <div class="summary-card">
         <div class="val">${results.length}</div>
-        <div class="lbl">${t('herd.sum_optimized')}</div>
+        <div class="lbl">Hesaplanan Grup</div>
       </div>
       <div class="summary-card" style="background:${feasibleCount === results.length ? 'var(--primary-light)' : '#fff3cd'}">
         <div class="val">${feasibleCount}/${results.length}</div>
@@ -505,7 +505,7 @@ function renderBatchResults(el, results, milkPrice) {
     <!-- Rasyon Detay Modal -->
     <div id="herd-detail-modal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:1rem">
       <div class="card" style="max-width:900px; width:100%; max-height:90vh; overflow-y:auto; position:relative;">
-        <div class="flex-between" style="position:sticky; top:0; background:var(--bg-card); padding:1rem; margin:-1rem -1rem 1rem -1rem; border-bottom:1px solid var(--border); z-index:10;">
+        <div class="flex-between" style="padding-bottom:1rem; border-bottom:1px solid var(--border); margin-bottom:1rem;">
           <div class="card-title" id="herd-detail-title" style="margin:0">Rasyon Detayı</div>
           <button class="btn btn-sm btn-secondary" id="btn-close-herd-detail"><i class="ti ti-x"></i></button>
         </div>
@@ -527,7 +527,7 @@ function renderBatchResults(el, results, milkPrice) {
     btn.addEventListener('click', () => {
       const idx = +btn.dataset.idx;
       const r = results[idx];
-      if (!r || !r.result || !r.result.feasible) return;
+      if (!r || !r.result) return;
       
       detailTitle.textContent = `${escHtml(r.profile.name || r.profile.id)} - Rasyon Detayı`;
       
