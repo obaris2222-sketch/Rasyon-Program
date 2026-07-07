@@ -22,13 +22,13 @@ Chart.register(...registerables);
 
 // FAZ 15.9 — Gözlem formu alan eşlemesi (input name → FIELD_RULES anahtarı)
 const OBSERVATION_FIELD_BINDINGS = [
-  { name: 'milkYield',    rule: 'obs_milkYield' },
-  { name: 'milkFat',      rule: 'obs_milkFat' },
-  { name: 'milkProtein',  rule: 'obs_milkProtein' },
-  { name: 'bcs',          rule: 'obs_bcs' },
-  { name: 'dmiActual',    rule: 'obs_dmiActual' },
-  { name: 'methane',      rule: 'obs_methane' },
-  { name: 'rumenPh',      rule: 'obs_rumenPh' },
+  { name: 'milkYield', rule: 'obs_milkYield' },
+  { name: 'milkFat', rule: 'obs_milkFat' },
+  { name: 'milkProtein', rule: 'obs_milkProtein' },
+  { name: 'bcs', rule: 'obs_bcs' },
+  { name: 'dmiActual', rule: 'obs_dmiActual' },
+  { name: 'methane', rule: 'obs_methane' },
+  { name: 'rumenPh', rule: 'obs_rumenPh' },
 ];
 
 // FAZ 15.6: trend + karşılaştırma grafik örnekleri (yeniden çizimde destroy edilir)
@@ -80,9 +80,11 @@ function drawObservationCharts(observations, analysis) {
         plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 14 } } },
         scales: {
           x: { ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true } },
-          y:  { position: 'left',  title: { display: true, text: t('obs.chart_kgday'), font: { size: 10 } }, ticks: { font: { size: 10 } } },
-          y1: { position: 'right', min: 2, max: 5, title: { display: true, text: 'BCS', font: { size: 10 } },
-                grid: { drawOnChartArea: false }, ticks: { font: { size: 10 } } },
+          y: { position: 'left', title: { display: true, text: t('obs.chart_kgday'), font: { size: 10 } }, ticks: { font: { size: 10 } } },
+          y1: {
+            position: 'right', min: 2, max: 5, title: { display: true, text: 'BCS', font: { size: 10 } },
+            grid: { drawOnChartArea: false }, ticks: { font: { size: 10 } }
+          },
         },
       },
     });
@@ -197,7 +199,7 @@ export async function renderObservationsPanel(container, state) {
         <div class="form-grid">
           <div class="form-group">
             <label>${t('obs.date')}</label>
-            <input type="date" name="date" value="${new Date().toISOString().slice(0,10)}" required />
+            <input type="date" name="date" value="${new Date().toISOString().slice(0, 10)}" required />
           </div>
           <div class="form-group">
             <label>${t('obs.milk')}</label>
@@ -260,7 +262,7 @@ export async function renderObservationsPanel(container, state) {
 
   await refreshAnalysis(container, activeProfile, state);
   // FAZ 22.2: sürü-geneli validasyon — tüm profillerin gözlemlerini topla (profil bağımsız).
-  renderHerdValidation(container, profiles).catch(() => {});
+  renderHerdValidation(container, profiles).catch(() => { });
 
   // Profil değişimi
   container.querySelector('#obs-profile-select').addEventListener('change', async (e) => {
@@ -299,7 +301,7 @@ export async function renderObservationsPanel(container, state) {
       showToast(t('obs.saved'), 'success');
       e.target.reset();
       // Tarihi yine bugünle doldur (reset sonrası)
-      e.target.querySelector('[name="date"]').value = new Date().toISOString().slice(0,10);
+      e.target.querySelector('[name="date"]').value = new Date().toISOString().slice(0, 10);
       await refreshAnalysis(container, activeProfile, state);
     } catch (err) {
       console.error(err);
@@ -374,7 +376,7 @@ export async function renderObservationsPanel(container, state) {
 
 async function refreshAnalysis(container, profile, state) {
   const analysisEl = container.querySelector('#obs-analysis-content');
-  const historyEl  = container.querySelector('#obs-history-content');
+  const historyEl = container.querySelector('#obs-history-content');
   if (!analysisEl || !historyEl) return;
 
   try {
@@ -414,6 +416,10 @@ async function refreshAnalysis(container, profile, state) {
       if (res.fattyAcids?.milk?.estimatedMilkFatPct) {
         validations.milkFat = validatePredictionForProfile(observations, res.fattyAcids.milk.estimatedMilkFatPct, 'milkFat');
       }
+      // Eski formatta kaydedilmiş rasyonlarda methane/rumenDynamics/fattyAcids alanları yok
+      if (!res.methane && !res.rumenDynamics && !res.fattyAcids) {
+        validations._rationMissingPredictions = true;
+      }
     }
 
     const hasRationResult = !!res;
@@ -432,7 +438,7 @@ async function refreshAnalysis(container, profile, state) {
         await refreshAnalysis(container, profile, state);
       });
     });
-    
+
     // Yeni gözlem eklendiğinde/silindiğinde Sürü Geneli Validasyonu'nu anında güncelle
     const allProfiles = await animalProfileGetAll();
     await renderHerdValidation(container, allProfiles);
@@ -679,7 +685,13 @@ function renderAnalysis(a, validations = {}, state, profile, hasRationResult) {
     ${(!hasRationResult) ? `
       <div class="info-box box-info mt-2">
         <i class="ti ti-info-circle"></i>
-        Metan, Rumen pH ve Süt Yağı validasyonlarını görebilmek için önce <b>Rasyon Kurucu</b>'da bu profile ait bir rasyon çözmeniz gereklidir.
+        Metan, Rumen pH ve Süt Yağı validasyonlarını görebilmek için önce <b>Rasyon Kurucu</b>'da bu profile ait bir rasyon çözüp kaydetmeniz gereklidir.
+      </div>
+    ` : (validations._rationMissingPredictions) ? `
+      <div class="info-box box-warning mt-2">
+        <i class="ti ti-alert-triangle"></i>
+        Kayıtlı rasyon sonucunda Metan, Rumen pH ve Süt Yağı tahmin verileri bulunmuyor. Bu rasyon eski bir sürümde kaydedilmiş olabilir.
+        <b>Rasyon Kurucu</b>'da rasyonu tekrar çözüp yeniden kaydedin, ardından bu profil için geçmiş rasyonlardan yeni kaydı seçin.
       </div>
     ` : ((!validations.methane || validations.methane.n === 0) && (!validations.rumenPh || validations.rumenPh.n === 0) && (!validations.milkFat || validations.milkFat.n === 0)) ? `
       <div class="info-box mt-1 text-small text-muted">

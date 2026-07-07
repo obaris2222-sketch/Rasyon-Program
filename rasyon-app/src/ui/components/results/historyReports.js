@@ -81,6 +81,12 @@ export function attachReportHandlers(container, state) {
           diagnostics: result.diagnostics,
           milkFever: result.milkFever ? { score: result.milkFever.score, riskLevel: result.milkFever.riskLevel } : null,
           requirements: { nel: result.requirements?.nel, mp: result.requirements?.mp },
+          // FAZ 25.1: Saha gözlem validasyonu için metan, rumen pH ve süt yağı verilerini kaydet
+          methane: result.methane || null,
+          rumenDynamics: result.rumenDynamics ? { meanPH: result.rumenDynamics.meanPH } : null,
+          fattyAcids: result.fattyAcids ? {
+            milk: result.fattyAcids.milk ? { estimatedMilkFatPct: result.fattyAcids.milk.estimatedMilkFatPct } : null,
+          } : null,
         },
         savedAt: new Date().toISOString(),
       };
