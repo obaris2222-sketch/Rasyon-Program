@@ -584,18 +584,20 @@ export async function generateHerdSummaryPDF(batchResults, meta = {}) {
 
     const tmrRowsList = tmrArray.map(t => [
       str(t.name),
-      `${t.kg.toLocaleString(locale, { maximumFractionDigits: 1 })} kg`
+      `${t.kg.toLocaleString(locale, { maximumFractionDigits: 1 })} kg`,
+      `${(t.kg * 30).toLocaleString(locale, { maximumFractionDigits: 1 })} kg`
     ]);
 
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [[str(L('Yem Adı', 'Feed Name')), str(L('Günlük Toplam (Kg)', 'Daily Total (Kg)'))]],
+      head: [[str(L('Yem Adı', 'Feed Name')), str(L('Günlük Toplam (Kg)', 'Daily Total (Kg)')), str(L('Aylık Toplam (Kg)', 'Monthly Total (Kg)'))]],
       body: tmrRowsList,
       styles: { fontSize: 8, cellPadding: 1.5, ...tblBody },
       headStyles: { fillColor: [71, 85, 105], textColor: 255, fontSize: 8 },
       columnStyles: {
-        1: { halign: 'right', cellWidth: 50 },
+        1: { halign: 'right', cellWidth: 40 },
+        2: { halign: 'right', cellWidth: 40 },
       },
     });
     y = doc.lastAutoTable.finalY + 5;

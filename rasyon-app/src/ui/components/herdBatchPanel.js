@@ -476,6 +476,7 @@ function renderBatchResults(el, results, milkPrice) {
           <tr>
             <td>${escHtml(t.name)}</td>
             <td class="num">${t.kg.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg</td>
+            <td class="num">${(t.kg * 30).toLocaleString(undefined, { maximumFractionDigits: 1 })} kg</td>
           </tr>
         `).join('');
 
@@ -485,13 +486,14 @@ function renderBatchResults(el, results, milkPrice) {
             <i class="ti ti-truck-delivery"></i> Günlük Yükleme (TMR) İhtiyacı
           </div>
           <div class="text-small text-muted" style="margin-bottom:1rem">
-            Tüm hesaplanan grupların günlük toplam karma ihtiyacı (Kg/Gün)
+            Tüm hesaplanan grupların günlük ve aylık toplam karma ihtiyacı
           </div>
-          <table class="diag-table" style="max-width: 500px;">
+          <table class="diag-table" style="max-width: 600px;">
             <thead>
               <tr>
                 <th>Yem Adı</th>
                 <th class="num">Günlük Toplam (Kg)</th>
+                <th class="num">Aylık Toplam (Kg)</th>
               </tr>
             </thead>
             <tbody>
