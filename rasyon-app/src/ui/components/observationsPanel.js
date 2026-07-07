@@ -395,15 +395,17 @@ async function refreshAnalysis(container, profile, state) {
 
     let res = null;
 
-    if (profile.targetRationId) {
+    // 1. Öncelik: Aynı oturumda az önce çözülmüş rasyon sonucu (en taze, tüm alanları var)
+    if (state?.rationResult && state.lastOptimizedAnimal?.id === profile.id) {
+      res = state.rationResult;
+    }
+
+    // 2. Yedek: DB'den kaydedilmiş rasyon (profil ayarlarından seçilmiş targetRationId)
+    if (!res && profile.targetRationId) {
       const savedRation = await rationGetById(profile.targetRationId);
       if (savedRation && savedRation.result) {
         res = savedRation.result;
       }
-    }
-
-    if (!res && state?.rationResult && state.lastOptimizedAnimal?.id === profile.id) {
-      res = state.rationResult;
     }
 
     if (res) {
