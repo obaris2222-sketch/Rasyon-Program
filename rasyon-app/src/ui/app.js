@@ -145,7 +145,7 @@ async function renderTab(tab) {
     case 'prices':  await renderPriceManager(panel, state); break;
     case 'observations': await renderObservationsPanel(panel, state); break;
     case 'ai':      renderAiAssistantPanel(panel); break;
-    case 'settings': renderSettingsPanel(panel, state, { onSettingsChange: handleSettingsChange }); break;
+    case 'settings': await renderSettingsPanel(panel, state, { onSettingsChange: handleSettingsChange }); break;
   }
 }
 

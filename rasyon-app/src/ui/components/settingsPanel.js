@@ -11,7 +11,8 @@
  */
 
 import { getSettings, saveSettings, resetSettings } from '../../data/settings.js';
-import { exportAllData, importAllData, clearAllData } from '../../data/db.js';
+import { exportAllData, importAllData, clearAllData, getActiveFarm, farmPut } from '../../data/db.js';
+import { refreshFarmButton } from './farmSwitcher.js';
 import { resetOnboarding, showOnboarding } from './onboarding.js';
 import { openAuthModal } from './authPanel.js';
 import { getSyncState, onSyncStatus } from '../../data/sync/syncManager.js';
@@ -45,9 +46,11 @@ const SYSTEM_INFO = {
   },
 };
 
-export function renderSettingsPanel(container, state, options = {}) {
+export async function renderSettingsPanel(container, state, options = {}) {
   const onSettingsChange = options.onSettingsChange || (() => {});
   const s = getSettings();
+  const activeFarm = await getActiveFarm();
+  const farmProfile = activeFarm || s.farm;
 
   container.innerHTML = `
     <!-- 📖 Sekme Yardımı -->
@@ -121,26 +124,26 @@ export function renderSettingsPanel(container, state, options = {}) {
           <div class="form-group">
             <label>${t('settings.farm_name')}</label>
             <input type="text" id="set-farm-name" maxlength="80"
-              value="${escHtml(s.farm.name)}" />
+              value="${escHtml(farmProfile.name || '')}" />
           </div>
           <div class="form-group">
             <label>${t('settings.farm_advisor')}</label>
             <input type="text" id="set-farm-advisor" maxlength="80"
-              value="${escHtml(s.farm.advisor)}" />
+              value="${escHtml(farmProfile.advisor || '')}" />
           </div>
           <div class="form-group full-width">
             <label>${t('settings.farm_address')}</label>
             <input type="text" id="set-farm-address" maxlength="160"
-              value="${escHtml(s.farm.address)}" />
+              value="${escHtml(farmProfile.address || '')}" />
           </div>
           <div class="form-group">
             <label>${t('settings.latitude')}</label>
-            <input type="number" id="set-farm-lat" step="0.000001" value="${s.farm.latitude !== null ? s.farm.latitude : ''}" placeholder="39.92077" />
+            <input type="number" id="set-farm-lat" step="0.000001" value="${farmProfile.latitude !== null && farmProfile.latitude !== undefined ? farmProfile.latitude : ''}" placeholder="39.92077" />
           </div>
           <div class="form-group">
             <label>${t('settings.longitude')}</label>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <input type="number" id="set-farm-lon" step="0.000001" value="${s.farm.longitude !== null ? s.farm.longitude : ''}" placeholder="32.85411" style="flex: 1; min-width: 130px;" />
+              <input type="number" id="set-farm-lon" step="0.000001" value="${farmProfile.longitude !== null && farmProfile.longitude !== undefined ? farmProfile.longitude : ''}" placeholder="32.85411" style="flex: 1; min-width: 130px;" />
               <button type="button" id="btn-locate-me" class="btn btn-sm btn-secondary" style="flex-shrink: 0;"><i class="ti ti-map-pin"></i> ${t('settings.locate_me')}</button>
             </div>
             <span class="hint">${t('settings.location_hint')}</span>
@@ -329,7 +332,7 @@ export function renderSettingsPanel(container, state, options = {}) {
   resolvePlaceName();   // ilk render: mevcut koordinatlar varsa yer adını çöz
 
   // ── Kaydet ──
-  container.querySelector('#set-save').addEventListener('click', () => {
+  container.querySelector('#set-save').addEventListener('click', async () => {
     const payload = {
       science: {
         system: systemSelect.value,
@@ -356,6 +359,20 @@ export function renderSettingsPanel(container, state, options = {}) {
       theme: container.querySelector('#set-theme').value,
     };
     const saved = saveSettings(payload);
+
+    const currentActiveFarm = await getActiveFarm();
+    if (currentActiveFarm) {
+       await farmPut({
+         ...currentActiveFarm,
+         name: payload.farm.name || currentActiveFarm.name || 'Varsayılan Çiftlik',
+         advisor: payload.farm.advisor,
+         address: payload.farm.address,
+         latitude: payload.farm.latitude,
+         longitude: payload.farm.longitude
+       });
+       await refreshFarmButton();
+    }
+
     setLanguage(payload.language);
     onSettingsChange(saved);
     showToast(t('settings.saved_toast'), 'success');

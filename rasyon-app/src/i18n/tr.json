@@ -809,7 +809,7 @@
     "calc_mode_cncps": "CNCPS (iteratif, pasaj-bağımlı protein ve enerji)",
     "calc_mode_hint": "Varsayılan NRC tek-geçiştir. CNCPS modu pasaj hızını (tüketim/konsantre oranına bağlı) iteratif hesaplar. Ölçülü yemlerde protein yıkımını ve Enerji-MCP'yi (fermente-CHO tabanlı) buna göre düzeltir (≤5 iterasyon). Opt-in (deneysel).",
     "farm_profile": "🏡 Çiftlik Profili",
-    "farm_profile_hint": "Yeni çiftlikler için varsayılan/yedek profildir. Çok çiftlikli kullanımda her çiftliğin kendi adı/adresi (üst menü) çiftlik düzenleme ekranından ayarlanır ve PDF raporlarda o çiftliğin bilgisi görünür.",
+    "farm_profile_hint": "Aktif çiftliğin profil bilgileridir. Bu veriler PDF raporlarında ve optimizasyon sonuçlarında çiftliğinizi tanımlar. Ayarlar kısmından veya üst menüdeki çiftlik yönetiminden güncelleyebilirsiniz.",
     "farm_name": "Çiftlik / İşletme Adı",
     "farm_advisor": "Danışman / Besleme Uzmanı",
     "farm_address": "Adres",
