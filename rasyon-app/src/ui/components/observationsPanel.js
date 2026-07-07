@@ -416,7 +416,8 @@ async function refreshAnalysis(container, profile, state) {
       }
     }
 
-    analysisEl.innerHTML = renderAnalysis(analysis, validations, state, profile);
+    const hasRationResult = !!res;
+    analysisEl.innerHTML = renderAnalysis(analysis, validations, state, profile, hasRationResult);
     historyEl.innerHTML = renderHistory(observations);
 
     // FAZ 15.6: trend + tahmin-vs-gerçek grafiklerini çiz (innerHTML sonrası)
@@ -484,7 +485,7 @@ async function renderHerdValidation(container, profiles) {
   }
 }
 
-function renderAnalysis(a, validations = {}, state, profile) {
+function renderAnalysis(a, validations = {}, state, profile, hasRationResult) {
   if (a.empty) {
     return `
       <div class="empty-state" style="padding:1.5rem">
@@ -675,9 +676,10 @@ function renderAnalysis(a, validations = {}, state, profile) {
       <div class="text-small text-muted mt-1">${t('obs.validation_note')}</div>
     ` : ''}
 
-    ${(!state?.rationResult || state.lastOptimizedAnimal?.id !== profile?.id) ? `
-      <div class="info-box mt-1 text-small text-muted">
-        <i class="ti ti-info-circle"></i> Metan, Rumen pH ve Süt Yağı validasyonlarını görebilmek için önce <b>Rasyon Kurucu</b>'da bu profile ait bir rasyon çözmeniz gereklidir.
+    ${(!hasRationResult) ? `
+      <div class="info-box box-info mt-2">
+        <i class="ti ti-info-circle"></i>
+        Metan, Rumen pH ve Süt Yağı validasyonlarını görebilmek için önce <b>Rasyon Kurucu</b>'da bu profile ait bir rasyon çözmeniz gereklidir.
       </div>
     ` : ((!validations.methane || validations.methane.n === 0) && (!validations.rumenPh || validations.rumenPh.n === 0) && (!validations.milkFat || validations.milkFat.n === 0)) ? `
       <div class="info-box mt-1 text-small text-muted">
