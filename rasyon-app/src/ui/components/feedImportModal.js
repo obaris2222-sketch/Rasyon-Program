@@ -163,7 +163,7 @@ async function downloadExcelTemplate() {
             fill: { fgColor: { rgb: "FF4CAF50" } }, // Canlı Yeşil
             font: { bold: true, color: { rgb: "FFFFFFFF" } },
             alignment: { horizontal: "center", vertical: "center" },
-            border: { bottom: { style: "medium", color: { rgb: "FF000000" } }, ...borderStyle }
+            border: { ...borderStyle, bottom: { style: "medium", color: { rgb: "FF000000" } } }
           };
         } else {
           // Veri Satırları (Zebra deseni)

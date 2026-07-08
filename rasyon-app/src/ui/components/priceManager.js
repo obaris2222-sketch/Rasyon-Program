@@ -582,7 +582,7 @@ async function exportPriceTemplate() {
             fill: { fgColor: { rgb: "FF4F81BD" } },
             font: { bold: true, color: { rgb: "FFFFFFFF" } },
             alignment: { horizontal: "center", vertical: "center" },
-            border: { bottom: { style: "medium", color: { rgb: "FF000000" } }, ...borderStyle }
+            border: { ...borderStyle, bottom: { style: "medium", color: { rgb: "FF000000" } } }
           };
         } else {
           // Veri Satırları (Zebra deseni)
@@ -595,7 +595,7 @@ async function exportPriceTemplate() {
           };
           
           if (C === 3 && cell.t === 'n') {
-            cell.z = '#,##0.00_"₺"';
+            cell.z = '#,##0.00 "₺"';
           }
         }
       }
