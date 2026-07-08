@@ -260,6 +260,12 @@ export async function renderPriceManager(container, state = null) {
           <button class="btn btn-secondary btn-sm" id="btn-snapshot" title="${t('pm.snapshot_title')}">
             ${t('pm.snapshot')}
           </button>
+          <button class="btn btn-secondary btn-sm" id="btn-export-prices" title="Excel fiyat şablonu indir">
+            <i class="ti ti-file-export"></i> Şablon
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-import-prices" title="Excel'den fiyatları yükle">
+            <i class="ti ti-file-import"></i> Yükle
+          </button>
           <button class="btn btn-secondary btn-sm" id="btn-clear-prices">
             ${t('pm.reset')}
           </button>
@@ -340,6 +346,12 @@ export async function renderPriceManager(container, state = null) {
   });
   container.querySelector('#btn-save-prices').addEventListener('click', async () => {
     await savePrices(container);
+  });
+  container.querySelector('#btn-export-prices').addEventListener('click', () => {
+    exportPriceTemplate();
+  });
+  container.querySelector('#btn-import-prices').addEventListener('click', () => {
+    importPricesExcel(container);
   });
 
   // FAZ 11A: Bölge seçimi → preset uygula + info banner
@@ -527,6 +539,84 @@ async function openHistoryModal(container, feedId, feedName) {
   } catch (err) {
     content.innerHTML = `<div class="warn-box">${t('pm.load_err')}${escHtml(err.message)}</div>`;
   }
+}
+
+// ─── Excel Export/Import ─────────────────────────────────────────────────────
+
+async function exportPriceTemplate() {
+  try {
+    const XLSX = await import('xlsx');
+    const data = _allFeeds.map(f => ({
+      'ID': f.id,
+      'Yem Adı': f.name,
+      'Kategori': catLabel(f.category),
+      'Fiyat (₺/ton)': f.pricePerTon || 0
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    
+    // Sütun genişliklerini ayarla
+    ws['!cols'] = [{wch: 15}, {wch: 35}, {wch: 15}, {wch: 12}];
+    
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Fiyatlar");
+    XLSX.writeFile(wb, "yem_fiyat_sablonu.xlsx");
+    showToast('Şablon indirildi. Fiyatları düzenleyip geri yükleyebilirsiniz.', 'info');
+  } catch (err) {
+    showToast('Dışa aktarma hatası: ' + err.message, 'error');
+  }
+}
+
+async function importPricesExcel(container) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.xlsx, .xls, .csv';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    try {
+      const XLSX = await import('xlsx');
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const wb = XLSX.read(data, { type: 'array' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(ws);
+          
+          let updatedCount = 0;
+          rows.forEach(row => {
+            const id = row['ID'] || row['id'];
+            const price = parseFloat(row['Fiyat (₺/ton)'] || row['Fiyat'] || row['price'] || row['Price']);
+            
+            if (id && !isNaN(price)) {
+              // Yem listede var mı kontrolü
+              const feedExists = _allFeeds.some(f => f.id === id);
+              if (feedExists) {
+                _pendingChanges[id] = price;
+                updatedCount++;
+              }
+            }
+          });
+          
+          if (updatedCount > 0) {
+            showToast(`${updatedCount} yemin fiyatı içeri aktarıldı. Kaydetmeyi unutmayın!`, 'success');
+            container.querySelector('#pm-pending-notice').style.display = 'block';
+            renderTable(container);
+            updateTotalValue(container);
+          } else {
+            showToast('Geçerli fiyat veya eşleşen ID bulunamadı.', 'warn');
+          }
+        } catch (err) {
+          showToast('Dosya okunurken hata oluştu: ' + err.message, 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } catch (err) {
+      showToast('İçe aktarma başlatılamadı: ' + err.message, 'error');
+    }
+  };
+  input.click();
 }
 
 function renderTable(container) {
