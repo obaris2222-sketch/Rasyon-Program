@@ -552,38 +552,68 @@ async function exportPriceTemplate() {
       'Kategori': catLabel(f.category),
       'Fiyat (₺/ton)': f.pricePerTon || 0
     }));
-    const ws = XLSX.utils.json_to_sheet(data);
+    const ws = XLSX.utils.json_to_sheet(data, { origin: "A2" });
     
-    // Sütun genişliklerini ayarla (daha ferah)
+    // Büyük Başlık Ekleme (Merge)
+    XLSX.utils.sheet_add_aoa(ws, [["GÜNCEL YEM FİYATLARI LİSTESİ"]], { origin: "A1" });
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
+    
+    // Sütun genişlikleri
     ws['!cols'] = [{wch: 22}, {wch: 45}, {wch: 25}, {wch: 18}];
     
-    // İlk satırı (başlıkları) sabitle (güvenli format)
-    ws['!views'] = [{ state: 'frozen', ySplit: 1 }];
+    // Tam Sabitleme (Freeze Panes - 2. satır sabit, 3'ten başlar)
+    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 2, topLeftCell: 'A3', activePane: 'bottomLeft' }];
     
-    // Başlıklara filtre ekle
-    ws['!autofilter'] = { ref: ws['!ref'] };
-
     const range = XLSX.utils.decode_range(ws['!ref']);
     
-    // Başlık Satırını Renklendir
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cell = ws[XLSX.utils.encode_cell({c: C, r: 0})];
-      if (cell) {
-        cell.s = {
-          fill: { fgColor: { rgb: "4F81BD" } },
-          font: { bold: true, color: { rgb: "FFFFFF" } },
-          alignment: { horizontal: "center", vertical: "center" },
-          border: { bottom: { style: "medium", color: { rgb: "000000" } } }
+    // Filtreleri yalnızca tablo başlığına (2. satır) uygula
+    ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 1, c: 0 }, e: range.e }) };
+    
+    // Tasarım ve Renklendirme Döngüsü
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellAddress = XLSX.utils.encode_cell({c: C, r: R});
+        const cell = ws[cellAddress];
+        if (!cell) continue;
+        
+        // Kenarlıklar (Tüm hücreler)
+        const borderStyle = {
+          top: { style: "thin", color: { rgb: "BFBFBF" } },
+          bottom: { style: "thin", color: { rgb: "BFBFBF" } },
+          left: { style: "thin", color: { rgb: "BFBFBF" } },
+          right: { style: "thin", color: { rgb: "BFBFBF" } }
         };
-      }
-    }
 
-    // Fiyat sütununa (D sütunu) sayı/para birimi formatı ekle
-    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-      const cellAddress = XLSX.utils.encode_cell({c: 3, r: R});
-      const cell = ws[cellAddress];
-      if (cell && cell.t === 'n') {
-        cell.z = '#,##0.00_"₺"'; // Binlik ayracı ve TL simgesi
+        if (R === 0) {
+          // Ana Başlık
+          cell.s = {
+            fill: { fgColor: { rgb: "1F497D" } },
+            font: { bold: true, color: { rgb: "FFFFFF" }, sz: 16 },
+            alignment: { horizontal: "center", vertical: "center" }
+          };
+        } else if (R === 1) {
+          // Tablo Başlıkları
+          cell.s = {
+            fill: { fgColor: { rgb: "4F81BD" } },
+            font: { bold: true, color: { rgb: "FFFFFF" } },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: { bottom: { style: "medium", color: { rgb: "000000" } }, ...borderStyle }
+          };
+        } else {
+          // Veri Satırları (Zebra deseni)
+          const isEven = (R % 2 === 0);
+          cell.s = {
+            fill: { fgColor: { rgb: isEven ? "F2F2F2" : "FFFFFF" } },
+            font: { color: { rgb: "000000" } },
+            border: borderStyle,
+            alignment: { vertical: "center" }
+          };
+          
+          // Fiyat Sütunu (D sütunu, c=3) Formatı
+          if (C === 3 && cell.t === 'n') {
+            cell.z = '#,##0.00_"₺"';
+          }
+        }
       }
     }
 

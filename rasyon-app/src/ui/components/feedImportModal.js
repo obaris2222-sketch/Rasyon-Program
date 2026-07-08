@@ -134,25 +134,59 @@ async function downloadExcelTemplate() {
     });
     
     const headers = IMPORT_COLUMNS.map(c => c.label);
-    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers, origin: "A2" });
     const wb = XLSX.utils.book_new();
     
-    // Basit bir sığdırma ve filtre (şablon formatı)
-    ws['!cols'] = IMPORT_COLUMNS.map(c => ({ wch: c.field === 'name' || c.field === 'nameEn' || c.field === 'comment' ? 25 : 12 }));
-    ws['!views'] = [{ state: 'frozen', ySplit: 1 }];
-    ws['!autofilter'] = { ref: ws['!ref'] };
+    // Büyük Başlık
+    XLSX.utils.sheet_add_aoa(ws, [["YEM İÇE AKTARMA ŞABLONU - Lütfen verileri alt satırlara giriniz"]], { origin: "A1" });
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
     
-    // Başlık Satırını Renklendir
+    ws['!cols'] = IMPORT_COLUMNS.map(c => ({ wch: c.field === 'name' || c.field === 'nameEn' || c.field === 'comment' ? 25 : 12 }));
+    
+    // Tam Sabitleme (2. satır sabit)
+    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 2, topLeftCell: 'A3', activePane: 'bottomLeft' }];
+    
     const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cell = ws[XLSX.utils.encode_cell({c: C, r: 0})];
-      if (cell) {
-        cell.s = {
-          fill: { fgColor: { rgb: "339966" } }, // Yeşil
-          font: { bold: true, color: { rgb: "FFFFFF" } },
-          alignment: { horizontal: "center", vertical: "center" },
-          border: { bottom: { style: "medium", color: { rgb: "000000" } } }
+    ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 1, c: 0 }, e: range.e }) };
+    
+    // Tasarım Döngüsü
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell = ws[XLSX.utils.encode_cell({c: C, r: R})];
+        if (!cell) continue;
+        
+        const borderStyle = {
+          top: { style: "thin", color: { rgb: "BFBFBF" } },
+          bottom: { style: "thin", color: { rgb: "BFBFBF" } },
+          left: { style: "thin", color: { rgb: "BFBFBF" } },
+          right: { style: "thin", color: { rgb: "BFBFBF" } }
         };
+
+        if (R === 0) {
+          // Ana Başlık
+          cell.s = {
+            fill: { fgColor: { rgb: "2E7D32" } }, // Koyu Yeşil
+            font: { bold: true, color: { rgb: "FFFFFF" }, sz: 14 },
+            alignment: { horizontal: "center", vertical: "center" }
+          };
+        } else if (R === 1) {
+          // Sütun Başlıkları
+          cell.s = {
+            fill: { fgColor: { rgb: "4CAF50" } }, // Canlı Yeşil
+            font: { bold: true, color: { rgb: "FFFFFF" } },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: { bottom: { style: "medium", color: { rgb: "000000" } }, ...borderStyle }
+          };
+        } else {
+          // Veri Satırları (Zebra deseni)
+          const isEven = (R % 2 === 0);
+          cell.s = {
+            fill: { fgColor: { rgb: isEven ? "F1F8E9" : "FFFFFF" } }, // Çok açık yeşilimsi zebra
+            font: { color: { rgb: "000000" } },
+            border: borderStyle,
+            alignment: { vertical: "center" }
+          };
+        }
       }
     }
     
