@@ -1,0 +1,129 @@
+/**
+ * Otomatik Kalibrasyon ve Teşhis Motoru (FAZ 3)
+ * 
+ * Bu modül saha gözlemlerini ve rasyon tahminlerini (R², RMSE, bias) analiz ederek
+ * işletmeye özel veya rasyon/profil bazlı kalibrasyon önerileri üretir.
+ */
+
+import { validatePairs } from './validation.js';
+import { calcDMI } from './dmi.js';
+
+/**
+ * Verilen profil, gözlem geçmişi ve aktif rasyon verilerine dayanarak
+ * bir kalibrasyon/teşhis raporu üretir.
+ * 
+ * @param {object} profile - Hayvan profili
+ * @param {Array} observations - Sahadan girilmiş gözlem geçmişi (zaman sıralı)
+ * @param {object} ration - Optimizasyondan dönen rasyon detayları (tahmini KMT, peNDF vb.)
+ * @returns {object} { diagnostics: [], overrides: {}, R2: number, RMSE: number }
+ */
+export function runDiagnostic(profile, observations, ration) {
+  const diagnostics = [];
+  let overrides = { ...profile.calibrationOverrides };
+  
+  if (!observations || observations.length === 0) {
+    return {
+      diagnostics: [{ type: 'info', message: 'Teşhis için saha gözlem kaydı bulunamadı.' }],
+      overrides,
+      R2: null,
+      RMSE: null
+    };
+  }
+
+  // Gözlemleri temizle ve eşleştir
+  // ration'da dmi_kg yoksa model tahmini kullanılır
+  const predictedDmi = ration.dmi_kg || calcDMI(profile).dmi;
+  const dmiPairs = observations.map(o => ({
+    predicted: predictedDmi,
+    observed: o.dmiActual
+  })).filter(p => p.observed != null && p.observed > 0);
+
+  const milkPairs = observations.map(o => ({
+    predicted: ration.milkYield || profile.milkYield,
+    observed: o.milkYield
+  })).filter(p => p.observed != null && p.observed > 0);
+
+  const dmiValidation = validatePairs(dmiPairs);
+  const milkValidation = validatePairs(milkPairs);
+
+  const R2 = dmiValidation.r2;
+  const RMSE = dmiValidation.rmse;
+  const Bias = dmiValidation.bias; // Pozitifse model fazla tahmin ediyor demektir
+
+  // A. Veri Güvenilirliği (İstatistiksel Filtre)
+  if (dmiValidation.n >= 3) {
+    if ((R2 !== null && R2 < 0.40) || (RMSE !== null && RMSE > 2.5)) {
+      diagnostics.push({
+        type: 'error',
+        cause: 'Veri Tutarsızlığı / TMR Homojenliği',
+        message: `Kuru Madde Tüketimi tutarsız (RMSE: ${RMSE} kg, R²: ${R2}). Yem karma vagonunuzun homojenliğini veya tartımları kontrol edin. Fizyolojik kalibrasyon yapılamaz.`
+      });
+      return { diagnostics, overrides, R2, RMSE, Bias }; // Veri bozuksa fizyolojik teşhise girme
+    }
+
+    // Global DMI Kalibrasyonu (Ölçek/Tartım Hatası)
+    if (Math.abs(Bias) > 1.5 && R2 > 0.70) {
+      const suggestedMultiplier = dmiValidation.meanObserved / dmiValidation.meanPredicted;
+      diagnostics.push({
+        type: 'warning',
+        cause: 'Sistematik Tüketim Sapması',
+        message: `İnekleriniz istikrarlı olarak tahmin edilenden ${Bias > 0 ? 'daha az' : 'daha çok'} yiyor (Sapma: ${Bias} kg). KMT kalibrasyon katsayısı ${suggestedMultiplier.toFixed(2)} olarak ayarlanmalıdır.`,
+        action: 'dmiMultiplier',
+        value: suggestedMultiplier
+      });
+    }
+  }
+
+  // Son Gözlem Verilerini Al (Fizyolojik Karar Matrisi için)
+  const lastObs = observations[0] || {};
+  const actualFat = lastObs.milkFat || profile.milkFat;
+  const actualProtein = lastObs.milkProtein || profile.milkProtein;
+  const manureScore = lastObs.manureScore;
+  const mun = lastObs.mun;
+  const bcs = lastObs.bcs || profile.bcs;
+
+  // B. Geçiş Hızı ve Rumen Sağlığı (peNDF & Nişasta Kalibrasyonu)
+  // Kural: Süt Yağı < %3.4 VE Dışkı Skoru < 2.5 (Cıvık)
+  if (actualFat < 3.4 && manureScore && manureScore < 2.5) {
+    diagnostics.push({
+      type: 'danger',
+      cause: 'Hızlı Rumen Geçişi / SARA Başlangıcı',
+      message: `Süt yağınız düşük (%${actualFat}) ve dışkı cıvık (Skor: ${manureScore}). Rasyon çok hızlı sindiriliyor. peNDF (etkin lif) alt sınırı %2 artırılmalı, Nişasta/Şeker (NFC) üst sınırı %3 düşürülmeli.`,
+      action: 'peNdfAndNfcOffset',
+      peNdfOffset: 2,
+      maxNfcOffset: -3
+    });
+  }
+
+  // C. Rumen Senkronizasyonu (Protein/Karbonhidrat Dengesi)
+  // Kural: Süt Proteini < Beklenen VE MUN > 16 mg/dL
+  if (actualProtein < 3.0 && mun > 16) {
+    diagnostics.push({
+      type: 'warning',
+      cause: 'Rumen Senkronizasyonu Bozukluğu',
+      message: `Süt proteini düşük (%${actualProtein}) ve MUN yüksek (${mun} mg/dL). Rasyondaki protein (RDP) işkembede enerji (NFC) eksikliğinden dolayı yakalanamayıp üreye dönüşüyor. NFC (Karbonhidrat) limitleri gevşetilmeli.`,
+      action: 'maxNfcOffset',
+      maxNfcOffset: 2
+    });
+  }
+  
+  // D. Kaba Yem Sindirilebilirlik / Enerji Eksikliği
+  if (milkValidation.n >= 3 && milkValidation.bias > 2.5 && bcs < 2.75) {
+    diagnostics.push({
+      type: 'warning',
+      cause: 'Gizli Enerji Açığı / Düşük Sindirilebilirlik',
+      message: `İnekler yemlerini tüketmesine rağmen süt verimi sürekli beklenenin ${milkValidation.bias} kg altında kalıyor ve BCS düşük. Kaba yemlerinizin laboratuvar enerji değerleri gerçeği yansıtmıyor olabilir.`
+    });
+  }
+
+  // Eğer hiçbir sorun bulunamadıysa
+  if (diagnostics.length === 0) {
+    diagnostics.push({
+      type: 'success',
+      cause: 'Optimum Performans',
+      message: 'Sahadaki verileriniz ile rasyon tahminleriniz uyumlu. Herhangi bir kalibrasyon değişikliğine gerek yok.'
+    });
+  }
+
+  return { diagnostics, overrides, R2, RMSE, Bias };
+}

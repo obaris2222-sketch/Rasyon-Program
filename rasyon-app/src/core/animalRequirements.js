@@ -283,6 +283,16 @@ function applyDynamicAdjustments(base, stage, animal) {
     }
   }
 
+  // FAZ 2: Profil Bazlı Kalibrasyon Offset'leri (Override)
+  const overrides = animal.calibrationOverrides || {};
+  if (overrides.peNdfOffset && out.peNDF_pct && Number.isFinite(out.peNDF_pct.min)) {
+    out.peNDF_pct.min = round1(out.peNDF_pct.min + overrides.peNdfOffset);
+  }
+  if (overrides.maxNfcOffset && out.nfc_pct && Number.isFinite(out.nfc_pct.max)) {
+    out.nfc_pct.max = round1(out.nfc_pct.max + overrides.maxNfcOffset);
+  }
+
+
   // Tutarlılık
   for (const key of ['ndf_pct', 'nfc_pct', 'forage_pct']) {
     if (out[key]?.min !== undefined && out[key]?.max !== undefined && out[key].min > out[key].max) {

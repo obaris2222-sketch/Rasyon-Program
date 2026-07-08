@@ -193,6 +193,15 @@ export function calcDMI(animal, method = 'NRC2001') {
     dmi = dmiHeatStressAdjust(dmi, thi);
   }
 
+  // FAZ 2: Profil Bazlı Kalibrasyon Override'ı
+  // Saha gözlem modülündeki teşhis motoru, KMT'nin sistematik olarak eksik/fazla 
+  // tartıldığını veya hayvanların beklenenden az yediğini tespit ederse bu katsayıyı belirler.
+  let isCalibrated = false;
+  if (animal.calibrationOverrides && animal.calibrationOverrides.dmiMultiplier) {
+    dmi = dmi * animal.calibrationOverrides.dmiMultiplier;
+    isCalibrated = true;
+  }
+
   return {
     dmi: Math.round(dmi * 100) / 100,
     fcm: Math.round(fcm * 100) / 100,
@@ -201,5 +210,6 @@ export function calcDMI(animal, method = 'NRC2001') {
     heatAdjusted,
     isDryCow,
     thi,
+    isCalibrated,
   };
 }

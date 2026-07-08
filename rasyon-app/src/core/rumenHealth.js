@@ -96,9 +96,10 @@ function fprBands(breed) {
  * Hayvan profiline göre dinamik rumen sağlık hedeflerini hesaplar.
  * @param {string} stage - Laktasyon dönemi (örn: 'early', 'mid', 'late', 'far_off', 'close_up')
  * @param {number} yieldKg - Günlük süt verimi (kg)
+ * @param {object} [overrides={}] - Profil bazlı kalibrasyon offsetleri (FAZ 2)
  * @returns {object} Dinamik hedefler: { minForage, minPeNDF, minNDF, maxNFC }
  */
-export function getDynamicRumenTargets(stage, yieldKg) {
+export function getDynamicRumenTargets(stage, yieldKg, overrides = {}) {
   let targets = {
     minForage: 45,
     minPeNDF: 22,
@@ -121,6 +122,16 @@ export function getDynamicRumenTargets(stage, yieldKg) {
     targets.minPeNDF = 22;
     targets.minNDF = 30;
     targets.maxNFC = 38;
+  }
+
+  // FAZ 2: Profil bazlı teşhis kalibrasyonu (Override)
+  // Saha verilerinden Süt Yağı düşüşü (MFD) veya Dışkı Skoru bozukluğu tespit edilmişse,
+  // Karar Motoru bu offset'leri belirleyerek limitleri daraltır.
+  if (overrides.peNdfOffset) {
+    targets.minPeNDF += overrides.peNdfOffset;
+  }
+  if (overrides.maxNfcOffset) {
+    targets.maxNFC += overrides.maxNfcOffset;
   }
 
   return targets;
@@ -149,8 +160,9 @@ export function assessRumenHealth(ration) {
   const recommendations = [];
   let score = 100; // 0-100 arası rumen sağlık skoru
 
-  // Dinamik hedefleri al
-  const targets = getDynamicRumenTargets(lactationStage, milkYield);
+  // Dinamik sınırların hesaplanması (FAZ 2: Varsa profil bazlı override'ları geçir)
+  const overrides = ration.animal?.calibrationOverrides || {};
+  const targets = getDynamicRumenTargets(lactationStage, milkYield, overrides);
 
   // peNDF kontrolü
   const peNDFStatus = peNDFPct >= targets.minPeNDF ? 'ok' : peNDFPct >= (targets.minPeNDF - 3) ? 'warning' : 'danger';

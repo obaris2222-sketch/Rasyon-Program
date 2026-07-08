@@ -12,6 +12,8 @@ import {
 import { analyzeObservations, performanceGrade } from '../../core/observationAnalysis.js';
 import { resolveDmiMethod } from '../../core/animalRequirements.js';  // FAZ 17.3: tahmini KMT bilim sistemiyle tutarlı
 import { validateDmiForProfile, validateDmiAcrossProfiles, validatePredictionForProfile, VALIDATION_MIN_SAMPLES } from '../../core/validation.js';  // FAZ 19.3 + 22.2: model validasyon (RMSE/bias + çok-profil R²)
+import { runDiagnostic } from '../../core/calibrationEngine.js'; // FAZ 3
+import { showCalibrationModal } from './calibrationModal.js'; // FAZ 4
 import { getSettings } from '../../data/settings.js';
 import { showToast, escHtml } from '../utils.js';
 import { t } from '../i18n.js';
@@ -29,6 +31,8 @@ const OBSERVATION_FIELD_BINDINGS = [
   { name: 'dmiActual', rule: 'obs_dmiActual' },
   { name: 'methane', rule: 'obs_methane' },
   { name: 'rumenPh', rule: 'obs_rumenPh' },
+  { name: 'mun', rule: 'obs_mun' },
+  { name: 'manureScore', rule: 'obs_manureScore' },
 ];
 
 // FAZ 15.6: trend + karşılaştırma grafik örnekleri (yeniden çizimde destroy edilir)
@@ -238,6 +242,14 @@ export async function renderObservationsPanel(container, state) {
             <label>${t('obs.rumen_ph')}</label>
             <input type="number" name="rumenPh" min="4" max="7.5" step="0.01" placeholder="${t('obs.rumen_ph_ph')}" />
           </div>
+          <div class="form-group">
+            <label>${t('obs.mun') || 'MUN (mg/dL)'}</label>
+            <input type="number" name="mun" min="0" max="40" step="0.1" placeholder="10-16" />
+          </div>
+          <div class="form-group">
+            <label>${t('obs.manure_score') || 'Dışkı Skoru'}</label>
+            <input type="number" name="manureScore" min="1" max="5" step="0.25" placeholder="1-5" />
+          </div>
           <div class="form-group full-width">
             <label>${t('obs.notes')}</label>
             <input type="text" name="notes" placeholder="${t('obs.notes_ph')}" />
@@ -252,7 +264,10 @@ export async function renderObservationsPanel(container, state) {
 
     <!-- Analiz + trend -->
     <div class="card mt-2" id="obs-analysis-card">
-      <div class="card-title">${t('obs.perf_analysis')}</div>
+      <div class="card-title" style="display:flex; align-items:center;">
+        ${t('obs.perf_analysis')}
+        <button class="btn btn-sm btn-primary" id="btn-run-calibration" style="margin-left:auto;"><i class="ti ti-stethoscope"></i> Kalibrasyon Teşhisini Başlat</button>
+      </div>
       <div id="obs-analysis-content"><p class="text-muted">${t('obs.loading')}</p></div>
     </div>
 
@@ -405,6 +420,38 @@ export async function renderObservationsPanel(container, state) {
     showToast(t('obs.all_deleted'), 'success');
     await refreshAnalysis(container, activeProfile, state);
   });
+
+  // FAZ 4: Kalibrasyon Teşhis Butonu
+  const btnRunCalib = container.querySelector('#btn-run-calibration');
+  if (btnRunCalib) {
+    btnRunCalib.addEventListener('click', async () => {
+      try {
+        const observations = await observationGetByProfile(activeProfile.id);
+        const rationSelect = container.querySelector('#obs-ration-select');
+        let selectedRation = state.latestResult?.composition || {};
+        
+        if (rationSelect && rationSelect.value !== 'current') {
+          const r = await rationGetById(rationSelect.value);
+          if (r) {
+            selectedRation = {
+              dmi_kg: r.dmi,
+              milkYield: r.milkYield || activeProfile.milkYield,
+              ...r
+            };
+          }
+        }
+        
+        const diagResult = runDiagnostic(activeProfile, observations, selectedRation);
+        showCalibrationModal(diagResult, activeProfile.id, () => {
+          // Modal kapandıktan sonra (veya uygulandıktan sonra) analizi yenile
+          refreshAnalysis(container, activeProfile, state);
+        });
+      } catch (err) {
+        console.error(err);
+        showToast('Teşhis çalıştırılırken bir hata oluştu.', 'error');
+      }
+    });
+  }
 }
 
 async function refreshAnalysis(container, profile, state) {

@@ -97,7 +97,8 @@ export function renderRumenHealthPanel(composition, animal) {
     milkYield:      animal.milkYield,
   });
 
-  const targets = getDynamicRumenTargets(animal.lactationStage, animal.milkYield);
+  const overrides = animal.calibrationOverrides || {};
+  const targets = getDynamicRumenTargets(animal.lactationStage, animal.milkYield, overrides);
 
   const gradeColor = {
     A: 'var(--primary)',

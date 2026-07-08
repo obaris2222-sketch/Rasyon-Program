@@ -1296,6 +1296,8 @@
     "methane_ph": "örn. 450",
     "rumen_ph": "Rumen pH",
     "rumen_ph_ph": "örn: 6.2",
+    "mun": "MUN (Süt Üre Azotu)",
+    "manure_score": "Dışkı Skoru (1-5)",
     "notes": "Notlar (opsiyonel)",
     "notes_ph": "örn. ısı stresi başladı, su soğutma sistemi devreye girdi",
     "dir_down": "Düşüş",

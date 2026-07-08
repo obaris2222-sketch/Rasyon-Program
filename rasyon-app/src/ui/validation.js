@@ -86,6 +86,12 @@ export const FIELD_RULES = {
   obs_rumenPh: {
     label: 'Rumen pH', type: 'number', min: 4.0, max: 7.5, unit: '',
   },
+  obs_mun: {
+    label: 'MUN (Süt Üre Azotu)', type: 'number', min: 0, max: 40, unit: 'mg/dL',
+  },
+  obs_manureScore: {
+    label: 'Dışkı Skoru', type: 'number', min: 1.0, max: 5.0, unit: 'puan',
+  },
 
   // ─── Yem (feedEditor.js) ───────────────────────────────────────────────
   feed_name: {
