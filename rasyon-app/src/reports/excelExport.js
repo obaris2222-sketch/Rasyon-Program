@@ -114,7 +114,7 @@ export function generateRationExcel({ animal, result }) {
   itemsRows.push([L('TOPLAM', 'TOTAL'), '', totalDm, totalAsFed, 100, totalCost]);
   const wsItems = XLSX.utils.aoa_to_sheet([itemsHeader, ...itemsRows]);
   wsItems['!cols'] = [{ wch: 35 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
-  wsItems['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+  wsItems['!views'] = [{ state: 'frozen', ySplit: 1 }];
   wsItems['!autofilter'] = { ref: wsItems['!ref'] };
 
   const rangeItems = XLSX.utils.decode_range(wsItems['!ref']);
@@ -148,7 +148,7 @@ export function generateRationExcel({ animal, result }) {
   ]);
   const wsDiag = XLSX.utils.aoa_to_sheet([diagHeader, ...diagRows]);
   wsDiag['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
-  wsDiag['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+  wsDiag['!views'] = [{ state: 'frozen', ySplit: 1 }];
   wsDiag['!autofilter'] = { ref: wsDiag['!ref'] };
   
   // Başlıkları Renklendir
@@ -198,7 +198,7 @@ export function generateRationExcel({ animal, result }) {
   ];
   const wsProfile = XLSX.utils.aoa_to_sheet(profile);
   wsProfile['!cols'] = [{ wch: 25 }, { wch: 18 }, { wch: 18 }];
-  wsProfile['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+  wsProfile['!views'] = [{ state: 'frozen', ySplit: 1 }];
   wsProfile['!autofilter'] = { ref: wsProfile['!ref'] };
   
   // Başlıkları Renklendir
@@ -266,7 +266,7 @@ export function generateRationExcel({ animal, result }) {
 
     const wsAA = XLSX.utils.aoa_to_sheet(aaData);
     wsAA['!cols'] = [{ wch: 35 }, { wch: 22 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
-    wsAA['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 7 }]; // AA tablosu başlığı 7. satırda (indeks 6)
+    wsAA['!views'] = [{ state: 'frozen', ySplit: 7 }]; // AA tablosu başlığı 7. satırda (indeks 6)
     
     // AA başlığını renklendir (Satır indeksi 6)
     const rangeAA = XLSX.utils.decode_range(wsAA['!ref']);

@@ -441,16 +441,8 @@ export function processImportRows(rows) {
 
 // ─── Şablon üretimi ──────────────────────────────────────────────────────────
 
-/** Şablonda yer alan sütunlar (kanonik adlar → kayıpsız re-import). */
-export const TEMPLATE_COLUMNS = [
-  'id', 'name', 'nameEn', 'category', 'dm',
-  'nel', 'cp', 'rdp', 'rup',
-  'ndf', 'adf', 'lignin', 'nfc', 'starch', 'sugar', 'fat', 'ash',
-  'ca', 'p', 'mg', 'k', 'na', 'cl', 's',
-  'fe', 'zn', 'cu', 'mn', 'se', 'i', 'co',
-  'vitA', 'vitD', 'vitE', 'lys', 'met',
-  'pricePerTon', 'comment',
-];
+/** Şablonda yer alan tüm sütunlar (otomatik olarak tanımlı her alan eklenir) */
+export const TEMPLATE_COLUMNS = IMPORT_COLUMNS.map(c => c.field);
 
 /** Bir CSV hücresini kaçışla (virgül/tırnak/yeni satır varsa tırnakla). */
 function csvCell(v) {
@@ -487,9 +479,10 @@ export function getTemplateObjects() {
  * @returns {string}
  */
 export function buildTemplateCSV() {
-  const lines = [TEMPLATE_COLUMNS.join(',')];
+  const headers = IMPORT_COLUMNS.map(c => c.label);
+  const lines = [headers.map(csvCell).join(',')];
   for (const ex of getTemplateObjects()) {
-    lines.push(TEMPLATE_COLUMNS.map(c => csvCell(ex[c])).join(','));
+    lines.push(IMPORT_COLUMNS.map(c => csvCell(ex[c.field])).join(','));
   }
   return lines.join('\r\n') + '\r\n';
 }

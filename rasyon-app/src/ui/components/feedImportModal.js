@@ -9,7 +9,7 @@
  */
 
 import {
-  parseCSV, processImportRows, buildTemplateCSV, TEMPLATE_COLUMNS, getTemplateObjects
+  parseCSV, processImportRows, buildTemplateCSV, IMPORT_COLUMNS, getTemplateObjects
 } from '../../data/feedImporter.js';
 import { importFeedsFromJSON, CATEGORY_LABELS_TR } from '../../data/feedService.js';
 import { showToast, escHtml, fmt } from '../utils.js';
@@ -129,16 +129,17 @@ async function downloadExcelTemplate() {
     const objects = getTemplateObjects();
     const data = objects.map(ex => {
       const row = {};
-      TEMPLATE_COLUMNS.forEach(col => { row[col] = ex[col] ?? ''; });
+      IMPORT_COLUMNS.forEach(col => { row[col.label] = ex[col.field] ?? ''; });
       return row;
     });
     
-    const ws = XLSX.utils.json_to_sheet(data, { header: TEMPLATE_COLUMNS });
+    const headers = IMPORT_COLUMNS.map(c => c.label);
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
     const wb = XLSX.utils.book_new();
     
     // Basit bir sığdırma ve filtre (şablon formatı)
-    ws['!cols'] = TEMPLATE_COLUMNS.map(c => ({ wch: c === 'name' || c === 'nameEn' || c === 'comment' ? 25 : 12 }));
-    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+    ws['!cols'] = IMPORT_COLUMNS.map(c => ({ wch: c.field === 'name' || c.field === 'nameEn' || c.field === 'comment' ? 25 : 12 }));
+    ws['!views'] = [{ state: 'frozen', ySplit: 1 }];
     ws['!autofilter'] = { ref: ws['!ref'] };
     
     // Başlık Satırını Renklendir

@@ -558,7 +558,7 @@ async function exportPriceTemplate() {
     ws['!cols'] = [{wch: 22}, {wch: 45}, {wch: 25}, {wch: 18}];
     
     // İlk satırı (başlıkları) sabitle (güvenli format)
-    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+    ws['!views'] = [{ state: 'frozen', ySplit: 1 }];
     
     // Başlıklara filtre ekle
     ws['!autofilter'] = { ref: ws['!ref'] };
