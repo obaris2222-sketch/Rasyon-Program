@@ -82,15 +82,15 @@ export function generateRationExcel({ animal, result }) {
       
       // İlk satır ana başlık
       if (R === 0 && C === 0) {
-        cell.s = { font: { bold: true, sz: 14, color: { rgb: "000000" } } };
+        cell.s = { font: { bold: true, sz: 14, color: { rgb: "FF000000" } } };
       }
       
       // Bölüm Başlıkları (Tamamı büyük harf ve altı boşsa genelde başlık olur)
       if (typeof cell.v === 'string' && cell.v === cell.v.toUpperCase() && cell.v.length > 5) {
         cell.s = {
-          fill: { fgColor: { rgb: "D9D9D9" } },
+          fill: { fgColor: { rgb: "FFD9D9D9" } },
           font: { bold: true },
-          border: { bottom: { style: "thin", color: { rgb: "000000" } } }
+          border: { bottom: { style: "thin", color: { rgb: "FF000000" } } }
         };
       }
       
@@ -126,15 +126,15 @@ export function generateRationExcel({ animal, result }) {
       if (!cell) continue;
       
       const borderStyle = {
-        top: { style: "thin", color: { rgb: "BFBFBF" } }, bottom: { style: "thin", color: { rgb: "BFBFBF" } },
-        left: { style: "thin", color: { rgb: "BFBFBF" } }, right: { style: "thin", color: { rgb: "BFBFBF" } }
+        top: { style: "thin", color: { rgb: "FFBFBFBF" } }, bottom: { style: "thin", color: { rgb: "FFBFBFBF" } },
+        left: { style: "thin", color: { rgb: "FFBFBFBF" } }, right: { style: "thin", color: { rgb: "FFBFBFBF" } }
       };
 
       if (R === 0) {
-        cell.s = { fill: { fgColor: { rgb: "4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "000000" } }, ...borderStyle } };
+        cell.s = { fill: { fgColor: { rgb: "FF4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "FF000000" } }, ...borderStyle } };
       } else {
         const isEven = (R % 2 === 0);
-        cell.s = { fill: { fgColor: { rgb: isEven ? "F2F2F2" : "FFFFFF" } }, border: borderStyle, alignment: { vertical: "center" } };
+        cell.s = { fill: { fgColor: { rgb: isEven ? "FFF2F2F2" : "FFFFFFFF" } }, border: borderStyle, alignment: { vertical: "center" } };
         if (C === 5 && cell.t === 'n') cell.z = '#,##0.00_"₺"'; // Fiyat formatı
       }
     }
@@ -163,15 +163,15 @@ export function generateRationExcel({ animal, result }) {
       if (!cell) continue;
       
       const borderStyle = {
-        top: { style: "thin", color: { rgb: "BFBFBF" } }, bottom: { style: "thin", color: { rgb: "BFBFBF" } },
-        left: { style: "thin", color: { rgb: "BFBFBF" } }, right: { style: "thin", color: { rgb: "BFBFBF" } }
+        top: { style: "thin", color: { rgb: "FFBFBFBF" } }, bottom: { style: "thin", color: { rgb: "FFBFBFBF" } },
+        left: { style: "thin", color: { rgb: "FFBFBFBF" } }, right: { style: "thin", color: { rgb: "FFBFBFBF" } }
       };
 
       if (R === 0) {
-        cell.s = { fill: { fgColor: { rgb: "4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "000000" } }, ...borderStyle } };
+        cell.s = { fill: { fgColor: { rgb: "FF4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "FF000000" } }, ...borderStyle } };
       } else {
         const isEven = (R % 2 === 0);
-        cell.s = { fill: { fgColor: { rgb: isEven ? "F2F2F2" : "FFFFFF" } }, border: borderStyle, alignment: { vertical: "center" } };
+        cell.s = { fill: { fgColor: { rgb: isEven ? "FFF2F2F2" : "FFFFFFFF" } }, border: borderStyle, alignment: { vertical: "center" } };
       }
     }
   }
@@ -221,15 +221,15 @@ export function generateRationExcel({ animal, result }) {
       if (!cell) continue;
       
       const borderStyle = {
-        top: { style: "thin", color: { rgb: "BFBFBF" } }, bottom: { style: "thin", color: { rgb: "BFBFBF" } },
-        left: { style: "thin", color: { rgb: "BFBFBF" } }, right: { style: "thin", color: { rgb: "BFBFBF" } }
+        top: { style: "thin", color: { rgb: "FFBFBFBF" } }, bottom: { style: "thin", color: { rgb: "FFBFBFBF" } },
+        left: { style: "thin", color: { rgb: "FFBFBFBF" } }, right: { style: "thin", color: { rgb: "FFBFBFBF" } }
       };
 
       if (R === 0) {
-        cell.s = { fill: { fgColor: { rgb: "4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "000000" } }, ...borderStyle } };
+        cell.s = { fill: { fgColor: { rgb: "FF4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "FF000000" } }, ...borderStyle } };
       } else {
         const isEven = (R % 2 === 0);
-        cell.s = { fill: { fgColor: { rgb: isEven ? "F2F2F2" : "FFFFFF" } }, border: borderStyle, alignment: { vertical: "center" } };
+        cell.s = { fill: { fgColor: { rgb: isEven ? "FFF2F2F2" : "FFFFFFFF" } }, border: borderStyle, alignment: { vertical: "center" } };
       }
     }
   }
@@ -298,11 +298,11 @@ export function generateRationExcel({ animal, result }) {
 
         if (R === 6) {
           // AA Tablosu Ana Başlıkları
-          cell.s = { fill: { fgColor: { rgb: "4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "000000" } } } };
+          cell.s = { fill: { fgColor: { rgb: "FF4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "FF000000" } } } };
         } else if (R > 6 && R < 6 + aaTableRows.length + 1) {
           // AA Tablosu Zebra
           const isEven = (R % 2 === 0);
-          cell.s = { fill: { fgColor: { rgb: isEven ? "F2F2F2" : "FFFFFF" } } };
+          cell.s = { fill: { fgColor: { rgb: isEven ? "FFF2F2F2" : "FFFFFFFF" } } };
         }
       }
     }

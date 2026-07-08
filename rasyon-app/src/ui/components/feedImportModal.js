@@ -151,26 +151,26 @@ async function downloadExcelTemplate() {
         if (!cell) continue;
         
         const borderStyle = {
-          top: { style: "thin", color: { rgb: "BFBFBF" } },
-          bottom: { style: "thin", color: { rgb: "BFBFBF" } },
-          left: { style: "thin", color: { rgb: "BFBFBF" } },
-          right: { style: "thin", color: { rgb: "BFBFBF" } }
+          top: { style: "thin", color: { rgb: "FFBFBFBF" } },
+          bottom: { style: "thin", color: { rgb: "FFBFBFBF" } },
+          left: { style: "thin", color: { rgb: "FFBFBFBF" } },
+          right: { style: "thin", color: { rgb: "FFBFBFBF" } }
         };
 
         if (R === 0) {
           // Sütun Başlıkları
           cell.s = {
-            fill: { fgColor: { rgb: "4CAF50" } }, // Canlı Yeşil
-            font: { bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "FF4CAF50" } }, // Canlı Yeşil
+            font: { bold: true, color: { rgb: "FFFFFFFF" } },
             alignment: { horizontal: "center", vertical: "center" },
-            border: { bottom: { style: "medium", color: { rgb: "000000" } }, ...borderStyle }
+            border: { bottom: { style: "medium", color: { rgb: "FF000000" } }, ...borderStyle }
           };
         } else {
           // Veri Satırları (Zebra deseni)
           const isEven = (R % 2 === 0);
           cell.s = {
-            fill: { fgColor: { rgb: isEven ? "F1F8E9" : "FFFFFF" } }, // Çok açık yeşilimsi zebra
-            font: { color: { rgb: "000000" } },
+            fill: { fgColor: { rgb: isEven ? "FFF1F8E9" : "FFFFFFFF" } }, // Çok açık yeşilimsi zebra
+            font: { color: { rgb: "FF000000" } },
             border: borderStyle,
             alignment: { vertical: "center" }
           };

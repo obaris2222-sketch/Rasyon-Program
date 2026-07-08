@@ -570,26 +570,26 @@ async function exportPriceTemplate() {
         if (!cell) continue;
         
         const borderStyle = {
-          top: { style: "thin", color: { rgb: "BFBFBF" } },
-          bottom: { style: "thin", color: { rgb: "BFBFBF" } },
-          left: { style: "thin", color: { rgb: "BFBFBF" } },
-          right: { style: "thin", color: { rgb: "BFBFBF" } }
+          top: { style: "thin", color: { rgb: "FFBFBFBF" } },
+          bottom: { style: "thin", color: { rgb: "FFBFBFBF" } },
+          left: { style: "thin", color: { rgb: "FFBFBFBF" } },
+          right: { style: "thin", color: { rgb: "FFBFBFBF" } }
         };
 
         if (R === 0) {
           // Tablo Başlıkları
           cell.s = {
-            fill: { fgColor: { rgb: "4F81BD" } },
-            font: { bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "FF4F81BD" } },
+            font: { bold: true, color: { rgb: "FFFFFFFF" } },
             alignment: { horizontal: "center", vertical: "center" },
-            border: { bottom: { style: "medium", color: { rgb: "000000" } }, ...borderStyle }
+            border: { bottom: { style: "medium", color: { rgb: "FF000000" } }, ...borderStyle }
           };
         } else {
           // Veri Satırları (Zebra deseni)
           const isEven = (R % 2 === 0);
           cell.s = {
-            fill: { fgColor: { rgb: isEven ? "F2F2F2" : "FFFFFF" } },
-            font: { color: { rgb: "000000" } },
+            fill: { fgColor: { rgb: isEven ? "FFF2F2F2" : "FFFFFFFF" } },
+            font: { color: { rgb: "FF000000" } },
             border: borderStyle,
             alignment: { vertical: "center" }
           };
