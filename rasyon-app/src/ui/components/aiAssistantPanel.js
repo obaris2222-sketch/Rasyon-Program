@@ -21,8 +21,18 @@ let activeChatId = null;
  * IndexedDB'den güncel verileri çekerek AI'ın kullanacağı zengin bağlam nesnesini oluşturur.
  * Her mesaj gönderiminde çalışır — veriler her zaman güncel kalır.
  */
-async function buildContextData() {
+async function buildContextData(includeData = false) {
   try {
+    if (!includeData) {
+      return {
+        currentSession: null,
+        rationHistory: [],
+        animalProfiles: [],
+        recentObservations: [],
+        farm: {}
+      };
+    }
+
     const [allRations, allProfiles, allObservations, activeFarm] = await Promise.all([
       rationGetAll().catch(() => []),
       animalProfileGetAll().catch(() => []),
@@ -30,9 +40,8 @@ async function buildContextData() {
       getActiveFarm().catch(() => null),
     ]);
 
-    // Son 5 rasyon — hammaddeler ve besin bileşimi dahil tam snapshot
+    // Tüm rasyonlar — hammaddeler ve besin bileşimi dahil tam snapshot
     const rationHistory = allRations
-      .slice(-MAX_RATIONS)
       .map(r => ({
         name:      r.name || 'İsimsiz Rasyon',
         savedAt:   r.savedAt || r.createdAt || r.updatedAt || null,
@@ -99,9 +108,8 @@ async function buildContextData() {
       dim: p.dim || null,
     }));
 
-    // Son 10 gözlem — tarih, süt verimi, BCS, DMI
+    // Tüm gözlemler — tarih, süt verimi, BCS, DMI
     const recentObservations = allObservations
-      .slice(-MAX_OBSERVATIONS)
       .map(o => ({
         date: o.date || null,
         profileId: o.profileId || null,
@@ -210,11 +218,19 @@ export async function renderAiAssistantPanel(container) {
           <!-- Messages will appear here -->
         </div>
         
-        <div class="ai-chat-input-wrapper">
-          <textarea id="aiChatInput" placeholder="${t('ai.placeholder')}" rows="2"></textarea>
-          <button id="aiSendBtn" class="btn btn-primary" title="${t('ai.send')}">
-            <i class="ti ti-send"></i>
-          </button>
+        <div class="ai-chat-input-wrapper" style="flex-direction: column; align-items: stretch;">
+          <div class="mb-2 px-2">
+            <label class="form-check form-switch mb-0 d-flex align-items-center gap-2" style="cursor:pointer;">
+              <input class="form-check-input m-0" type="checkbox" id="aiIncludeDataToggle">
+              <span class="form-check-label" style="font-size: 0.8rem; color: var(--text-secondary);">${t('ai.include_data') || 'Çiftlik Verilerimi Ekle'}</span>
+            </label>
+          </div>
+          <div style="display: flex; gap: 0.5rem; width: 100%;">
+            <textarea id="aiChatInput" placeholder="${t('ai.placeholder')}" rows="2" style="flex:1;"></textarea>
+            <button id="aiSendBtn" class="btn btn-primary" title="${t('ai.send')}">
+              <i class="ti ti-send"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -418,8 +434,9 @@ export async function renderAiAssistantPanel(container) {
     sendBtn.disabled = true;
 
     try {
+      const includeData = document.getElementById('aiIncludeDataToggle')?.checked || false;
       // ── 1. Zengin bağlam verisini async olarak derle ────────────────────
-      const contextData = await buildContextData();
+      const contextData = await buildContextData(includeData);
 
       // ── 2. System prompt'u bağlamla doldur ─────────────────────────────
       const systemPromptTemplate = t('ai.systemPrompt');
