@@ -5,8 +5,7 @@
  * işletmeye özel veya rasyon/profil bazlı kalibrasyon önerileri üretir.
  */
 
-import { validatePairs } from './validation.js';
-import { calcDMI } from './dmi.js';
+import { validatePairs, validateDmiForProfile } from './validation.js';
 
 /**
  * Verilen profil, gözlem geçmişi ve aktif rasyon verilerine dayanarak
@@ -14,10 +13,11 @@ import { calcDMI } from './dmi.js';
  * 
  * @param {object} profile - Hayvan profili
  * @param {Array} observations - Sahadan girilmiş gözlem geçmişi (zaman sıralı)
- * @param {object} ration - Optimizasyondan dönen rasyon detayları (tahmini KMT, peNDF vb.)
+ * @param {object} ration - Optimizasyondan dönen rasyon detayları (süt yağı vs. için)
+ * @param {object} options - Ek ayarlar (örn. dmiMethod)
  * @returns {object} { diagnostics: [], overrides: {}, R2: number, RMSE: number }
  */
-export function runDiagnostic(profile, observations, ration) {
+export function runDiagnostic(profile, observations, ration, options = {}) {
   const diagnostics = [];
   let overrides = { ...profile.calibrationOverrides };
   
@@ -26,24 +26,20 @@ export function runDiagnostic(profile, observations, ration) {
       diagnostics: [{ type: 'info', message: 'Teşhis için saha gözlem kaydı bulunamadı.' }],
       overrides,
       R2: null,
-      RMSE: null
+      RMSE: null,
+      Bias: null
     };
   }
 
-  // Gözlemleri temizle ve eşleştir
-  // ration'da dmi_kg yoksa model tahmini kullanılır
-  const predictedDmi = ration.dmi_kg || calcDMI(profile).dmi;
-  const dmiPairs = observations.map(o => ({
-    predicted: predictedDmi,
-    observed: o.dmiActual
-  })).filter(p => p.observed != null && p.observed > 0);
+  // Model Validasyon Tablosu (UI) ile %100 uyumlu olması için aynı validasyon fonksiyonunu kullanıyoruz.
+  // Rasyonun doluluk (fill) limitinden etkilenmiş geçici DMI'sını değil, teorik modeli (calcDMI) baz alır.
+  const dmiValidation = validateDmiForProfile(observations, profile, { dmiMethod: options.dmiMethod });
 
   const milkPairs = observations.map(o => ({
     predicted: ration.milkYield || profile.milkYield,
     observed: o.milkYield
   })).filter(p => p.observed != null && p.observed > 0);
 
-  const dmiValidation = validatePairs(dmiPairs);
   const milkValidation = validatePairs(milkPairs);
 
   const R2 = dmiValidation.r2;

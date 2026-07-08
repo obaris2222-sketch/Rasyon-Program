@@ -444,7 +444,9 @@ export async function renderObservationsPanel(container, state) {
           }
         }
         
-        const diagResult = runDiagnostic(activeProfile, observations, selectedRation);
+        const sci = getSettings().science || {};
+        const dmiMethod = resolveDmiMethod(sci.dmiMethod, sci.system);
+        const diagResult = runDiagnostic(activeProfile, observations, selectedRation, { dmiMethod });
         showCalibrationModal(diagResult, activeProfile.id, () => {
           // Modal kapandıktan sonra (veya uygulandıktan sonra) analizi yenile
           refreshAnalysis(container, activeProfile, state);
@@ -818,6 +820,8 @@ function renderHistory(observations) {
           <th class="num">${t('obs.col_dmi')}</th>
           <th class="num">${t('obs.col_methane')}</th>
           <th class="num">${t('obs.col_rumen_ph')}</th>
+          <th class="num">${t('obs.col_mun') || 'MUN'}</th>
+          <th class="num">${t('obs.col_manure') || 'DIŞKI'}</th>
           <th>${t('obs.col_notes')}</th>
           <th></th>
         </tr>
@@ -832,6 +836,8 @@ function renderHistory(observations) {
           <td class="num">${o.dmiActual?.toFixed(1) ?? '—'}</td>
           <td class="num">${o.methane?.toFixed(0) ?? '—'}</td>
           <td class="num">${o.rumenPh?.toFixed(2) ?? '—'}</td>
+          <td class="num">${o.mun?.toFixed(1) ?? '—'}</td>
+          <td class="num">${o.manureScore?.toFixed(2) ?? '—'}</td>
           <td class="text-muted text-small">${escHtml(o.notes || '')}</td>
           <td><button class="btn btn-sm btn-danger btn-del-obs" data-id="${o.id}" aria-label="Sil"><i class="ti ti-trash"></i></button></td>
         </tr>`).join('')}
