@@ -552,22 +552,15 @@ async function exportPriceTemplate() {
       'Kategori': catLabel(f.category),
       'Fiyat (₺/ton)': f.pricePerTon || 0
     }));
-    const ws = XLSX.utils.json_to_sheet(data, { origin: "A2" });
-    
-    // Büyük Başlık Ekleme (Merge)
-    XLSX.utils.sheet_add_aoa(ws, [["GÜNCEL YEM FİYATLARI LİSTESİ"]], { origin: "A1" });
-    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
+    const ws = XLSX.utils.json_to_sheet(data);
     
     // Sütun genişlikleri
     ws['!cols'] = [{wch: 22}, {wch: 45}, {wch: 25}, {wch: 18}];
     
-    // Tam Sabitleme (Freeze Panes - 2. satır sabit, 3'ten başlar)
-    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 2, topLeftCell: 'A3', activePane: 'bottomLeft' }];
+    // Tam Sabitleme (1. satır sabit) - Hata vermeyen format
+    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft' }];
     
     const range = XLSX.utils.decode_range(ws['!ref']);
-    
-    // Filtreleri yalnızca tablo başlığına (2. satır) uygula
-    ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 1, c: 0 }, e: range.e }) };
     
     // Tasarım ve Renklendirme Döngüsü
     for (let R = range.s.r; R <= range.e.r; ++R) {
@@ -576,7 +569,6 @@ async function exportPriceTemplate() {
         const cell = ws[cellAddress];
         if (!cell) continue;
         
-        // Kenarlıklar (Tüm hücreler)
         const borderStyle = {
           top: { style: "thin", color: { rgb: "BFBFBF" } },
           bottom: { style: "thin", color: { rgb: "BFBFBF" } },
@@ -585,13 +577,6 @@ async function exportPriceTemplate() {
         };
 
         if (R === 0) {
-          // Ana Başlık
-          cell.s = {
-            fill: { fgColor: { rgb: "1F497D" } },
-            font: { bold: true, color: { rgb: "FFFFFF" }, sz: 16 },
-            alignment: { horizontal: "center", vertical: "center" }
-          };
-        } else if (R === 1) {
           // Tablo Başlıkları
           cell.s = {
             fill: { fgColor: { rgb: "4F81BD" } },
@@ -609,7 +594,6 @@ async function exportPriceTemplate() {
             alignment: { vertical: "center" }
           };
           
-          // Fiyat Sütunu (D sütunu, c=3) Formatı
           if (C === 3 && cell.t === 'n') {
             cell.z = '#,##0.00_"₺"';
           }

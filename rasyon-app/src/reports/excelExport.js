@@ -113,18 +113,12 @@ export function generateRationExcel({ animal, result }) {
   const totalCost = result.items.reduce((s, i) => s + i.costPerDay, 0);
   itemsRows.push([L('TOPLAM', 'TOTAL'), '', totalDm, totalAsFed, 100, totalCost]);
   
-  const wsItems = XLSX.utils.aoa_to_sheet([
-    [L('RASYON BİLEŞENLERİ', 'RATION COMPONENTS')],
-    itemsHeader, 
-    ...itemsRows
-  ]);
+  const wsItems = XLSX.utils.aoa_to_sheet([itemsHeader, ...itemsRows]);
   
-  wsItems['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }];
   wsItems['!cols'] = [{ wch: 35 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
-  wsItems['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 2, topLeftCell: 'A3', activePane: 'bottomLeft' }];
+  wsItems['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft' }];
   
   const rangeItems = XLSX.utils.decode_range(wsItems['!ref']);
-  wsItems['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 1, c: 0 }, e: rangeItems.e }) };
 
   for (let R = rangeItems.s.r; R <= rangeItems.e.r; ++R) {
     for (let C = rangeItems.s.c; C <= rangeItems.e.c; ++C) {
@@ -137,8 +131,6 @@ export function generateRationExcel({ animal, result }) {
       };
 
       if (R === 0) {
-        cell.s = { fill: { fgColor: { rgb: "1F497D" } }, font: { bold: true, color: { rgb: "FFFFFF" }, sz: 14 }, alignment: { horizontal: "center", vertical: "center" } };
-      } else if (R === 1) {
         cell.s = { fill: { fgColor: { rgb: "4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "000000" } }, ...borderStyle } };
       } else {
         const isEven = (R % 2 === 0);
@@ -158,18 +150,12 @@ export function generateRationExcel({ animal, result }) {
     d.max ?? '—',
     statusLabel(d.status),
   ]);
-  const wsDiag = XLSX.utils.aoa_to_sheet([
-    [L('DİAGNOSTİK (KISITLAR)', 'DIAGNOSTICS (CONSTRAINTS)')],
-    diagHeader, 
-    ...diagRows
-  ]);
+  const wsDiag = XLSX.utils.aoa_to_sheet([diagHeader, ...diagRows]);
   
-  wsDiag['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
   wsDiag['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
-  wsDiag['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 2, topLeftCell: 'A3', activePane: 'bottomLeft' }];
+  wsDiag['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft' }];
   
   const rangeDiag = XLSX.utils.decode_range(wsDiag['!ref']);
-  wsDiag['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 1, c: 0 }, e: rangeDiag.e }) };
   
   for (let R = rangeDiag.s.r; R <= rangeDiag.e.r; ++R) {
     for (let C = rangeDiag.s.c; C <= rangeDiag.e.c; ++C) {
@@ -182,8 +168,6 @@ export function generateRationExcel({ animal, result }) {
       };
 
       if (R === 0) {
-        cell.s = { fill: { fgColor: { rgb: "1F497D" } }, font: { bold: true, color: { rgb: "FFFFFF" }, sz: 14 }, alignment: { horizontal: "center", vertical: "center" } };
-      } else if (R === 1) {
         cell.s = { fill: { fgColor: { rgb: "4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "000000" } }, ...borderStyle } };
       } else {
         const isEven = (R % 2 === 0);
@@ -224,17 +208,12 @@ export function generateRationExcel({ animal, result }) {
     ['S',            c.s_g,        UGD],
     ['Cl',           c.cl_g,       UGD],
   ];
-  const wsProfile = XLSX.utils.aoa_to_sheet([
-    [L('TAM BESİN PROFİLİ', 'FULL NUTRIENT PROFILE')],
-    ...profile
-  ]);
+  const wsProfile = XLSX.utils.aoa_to_sheet(profile);
   
-  wsProfile['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }];
   wsProfile['!cols'] = [{ wch: 25 }, { wch: 18 }, { wch: 18 }];
-  wsProfile['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 2, topLeftCell: 'A3', activePane: 'bottomLeft' }];
+  wsProfile['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft' }];
   
   const rangeProf = XLSX.utils.decode_range(wsProfile['!ref']);
-  wsProfile['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 1, c: 0 }, e: rangeProf.e }) };
   
   for (let R = rangeProf.s.r; R <= rangeProf.e.r; ++R) {
     for (let C = rangeProf.s.c; C <= rangeProf.e.c; ++C) {
@@ -247,8 +226,6 @@ export function generateRationExcel({ animal, result }) {
       };
 
       if (R === 0) {
-        cell.s = { fill: { fgColor: { rgb: "1F497D" } }, font: { bold: true, color: { rgb: "FFFFFF" }, sz: 14 }, alignment: { horizontal: "center", vertical: "center" } };
-      } else if (R === 1) {
         cell.s = { fill: { fgColor: { rgb: "4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "000000" } }, ...borderStyle } };
       } else {
         const isEven = (R % 2 === 0);
@@ -308,9 +285,9 @@ export function generateRationExcel({ animal, result }) {
     }
 
     const wsAA = XLSX.utils.aoa_to_sheet(aaData);
-    wsAA['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }];
+    
     wsAA['!cols'] = [{ wch: 35 }, { wch: 22 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
-    wsAA['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 7, topLeftCell: 'A8', activePane: 'bottomLeft' }]; // AA tablosu başlığı 7. satırda (indeks 6)
+    wsAA['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 7, topLeftCell: 'A8', activePane: 'bottomLeft' }];
     
     // Tasarım
     const rangeAA = XLSX.utils.decode_range(wsAA['!ref']);
@@ -319,10 +296,7 @@ export function generateRationExcel({ animal, result }) {
         const cell = wsAA[XLSX.utils.encode_cell({c: C, r: R})];
         if (!cell) continue;
 
-        if (R === 0 && C === 0) {
-          // Ana Başlık
-          cell.s = { fill: { fgColor: { rgb: "1F497D" } }, font: { bold: true, color: { rgb: "FFFFFF" }, sz: 14 }, alignment: { horizontal: "center", vertical: "center" } };
-        } else if (R === 6) {
+        if (R === 6) {
           // AA Tablosu Ana Başlıkları
           cell.s = { fill: { fgColor: { rgb: "4F81BD" } }, font: { bold: true, color: { rgb: "FFFFFF" } }, alignment: { horizontal: "center", vertical: "center" }, border: { bottom: { style: "medium", color: { rgb: "000000" } } } };
         } else if (R > 6 && R < 6 + aaTableRows.length + 1) {

@@ -134,20 +134,15 @@ async function downloadExcelTemplate() {
     });
     
     const headers = IMPORT_COLUMNS.map(c => c.label);
-    const ws = XLSX.utils.json_to_sheet(data, { header: headers, origin: "A2" });
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
     const wb = XLSX.utils.book_new();
-    
-    // Büyük Başlık
-    XLSX.utils.sheet_add_aoa(ws, [["YEM İÇE AKTARMA ŞABLONU - Lütfen verileri alt satırlara giriniz"]], { origin: "A1" });
-    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
     
     ws['!cols'] = IMPORT_COLUMNS.map(c => ({ wch: c.field === 'name' || c.field === 'nameEn' || c.field === 'comment' ? 25 : 12 }));
     
-    // Tam Sabitleme (2. satır sabit)
-    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 2, topLeftCell: 'A3', activePane: 'bottomLeft' }];
+    // Tam Sabitleme (1. satır sabit) - Hata vermeyen format
+    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft' }];
     
     const range = XLSX.utils.decode_range(ws['!ref']);
-    ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 1, c: 0 }, e: range.e }) };
     
     // Tasarım Döngüsü
     for (let R = range.s.r; R <= range.e.r; ++R) {
@@ -163,13 +158,6 @@ async function downloadExcelTemplate() {
         };
 
         if (R === 0) {
-          // Ana Başlık
-          cell.s = {
-            fill: { fgColor: { rgb: "2E7D32" } }, // Koyu Yeşil
-            font: { bold: true, color: { rgb: "FFFFFF" }, sz: 14 },
-            alignment: { horizontal: "center", vertical: "center" }
-          };
-        } else if (R === 1) {
           // Sütun Başlıkları
           cell.s = {
             fill: { fgColor: { rgb: "4CAF50" } }, // Canlı Yeşil
