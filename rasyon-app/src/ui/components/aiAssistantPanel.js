@@ -43,53 +43,53 @@ async function buildContextData(includeData = false) {
     // Tüm rasyonlar — hammaddeler ve besin bileşimi dahil tam snapshot
     const rationHistory = allRations
       .map(r => ({
-        name:      r.name || 'İsimsiz Rasyon',
-        savedAt:   r.savedAt || r.createdAt || r.updatedAt || null,
-        status:    r.result?.statusName ?? null,
+        name: r.name || 'İsimsiz Rasyon',
+        savedAt: r.savedAt || r.createdAt || r.updatedAt || null,
+        status: r.result?.statusName ?? null,
         totalCost: r.result?.totalCost ?? r.result?.cost ?? null,
         // Hayvan profili snapshot'u
         animal: r.animal ? {
-          breed:          r.animal.breed          || null,
-          bw:             r.animal.bw             || null,
-          milkYield:      r.animal.milkYield      || null,
-          milkFat:        r.animal.milkFat        || null,
-          milkProtein:    r.animal.milkProtein    || null,
-          parity:         r.animal.parity         || null,
+          breed: r.animal.breed || null,
+          bw: r.animal.bw || null,
+          milkYield: r.animal.milkYield || null,
+          milkFat: r.animal.milkFat || null,
+          milkProtein: r.animal.milkProtein || null,
+          parity: r.animal.parity || null,
           lactationStage: r.animal.lactationStage || null,
-          dim:            r.animal.dim            || null,
+          dim: r.animal.dim || null,
         } : null,
         // Kullanılan hammaddeler (solver'ın items dizisinden)
         ingredients: (r.result?.items || []).map(item => ({
-          name:       item.name || item.tr_name || item.en_name || null,
-          dmKg:       item.dmKg      ?? null,   // KM kg/gün
-          asFedKg:    item.asFedKg   ?? null,   // Yaş madde kg/gün
-          pctDm:      item.pctDm     ?? null,   // KM içindeki pay %
+          name: item.name || item.tr_name || item.en_name || null,
+          dmKg: item.dmKg ?? null,   // KM kg/gün
+          asFedKg: item.asFedKg ?? null,   // Yaş madde kg/gün
+          pctDm: item.pctDm ?? null,   // KM içindeki pay %
           costPerDay: item.costPerDay ?? null,  // Günlük maliyet
         })),
         // Tam besin madde bileşimi (solver'ın composition nesnesinden)
         composition: r.result?.composition ? {
-          nel_mcal:   r.result.composition.nel_mcal   ?? null,
-          cp_g:       r.result.composition.cp_g       ?? null,
-          cp_pct:     r.result.composition.cp_pct     ?? null,
-          rup_g:      r.result.composition.rup_g      ?? null,
-          rdp_g:      r.result.composition.rdp_g      ?? null,
-          ndf_pct:    r.result.composition.ndf_pct    ?? null,
-          adf_pct:    r.result.composition.adf_pct    ?? null,
-          nfc_pct:    r.result.composition.nfc_pct    ?? null,
+          nel_mcal: r.result.composition.nel_mcal ?? null,
+          cp_g: r.result.composition.cp_g ?? null,
+          cp_pct: r.result.composition.cp_pct ?? null,
+          rup_g: r.result.composition.rup_g ?? null,
+          rdp_g: r.result.composition.rdp_g ?? null,
+          ndf_pct: r.result.composition.ndf_pct ?? null,
+          adf_pct: r.result.composition.adf_pct ?? null,
+          nfc_pct: r.result.composition.nfc_pct ?? null,
           starch_pct: r.result.composition.starch_pct ?? null,
-          fat_pct:    r.result.composition.fat_pct    ?? null,
-          ash_pct:    r.result.composition.ash_pct    ?? null,
-          ca_g:       r.result.composition.ca_g       ?? null,
-          p_g:        r.result.composition.p_g        ?? null,
-          mg_g:       r.result.composition.mg_g       ?? null,
-          k_g:        r.result.composition.k_g        ?? null,
-          na_g:       r.result.composition.na_g       ?? null,
-          dcad_meq:   r.result.composition.dcad_meq   ?? null,
+          fat_pct: r.result.composition.fat_pct ?? null,
+          ash_pct: r.result.composition.ash_pct ?? null,
+          ca_g: r.result.composition.ca_g ?? null,
+          p_g: r.result.composition.p_g ?? null,
+          mg_g: r.result.composition.mg_g ?? null,
+          k_g: r.result.composition.k_g ?? null,
+          na_g: r.result.composition.na_g ?? null,
+          dcad_meq: r.result.composition.dcad_meq ?? null,
         } : null,
         // Hedef gereksinimler
         requirements: r.result?.requirements ? {
           nel: r.result.requirements.nel ?? null,
-          mp:  r.result.requirements.mp  ?? null,
+          mp: r.result.requirements.mp ?? null,
         } : null,
         milkFever: r.result?.milkFever ?? null,
       }));
@@ -193,7 +193,7 @@ export async function renderAiAssistantPanel(container) {
       .custom-toggle-switch input[type="checkbox"] { display: none; }
       .custom-toggle-switch-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #e8e8e8; border-radius: 20px; transition: all 0.3s ease-in-out; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
       .custom-toggle-switch-handle { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background-color: #fff; border-radius: 50%; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); }
-      .custom-toggle-switch input[type="checkbox"]:checked ~ .custom-toggle-switch-bg { background-color: #1c5237; }
+      .custom-toggle-switch input[type="checkbox"]:checked ~ .custom-toggle-switch-bg { background-color: #102e97d2; }
       .custom-toggle-switch input[type="checkbox"]:checked ~ .custom-toggle-switch-bg .custom-toggle-switch-handle { transform: translateX(20px); }
     </style>
     <div class="ai-panel">
@@ -204,7 +204,7 @@ export async function renderAiAssistantPanel(container) {
           <h4 class="m-0 d-flex align-items-center gap-2" style="font-weight: bold;"><i class="ti ti-message-circle-2"></i> Sohbetler</h4>
           <button id="aiCloseSidebarBtn" class="btn btn-icon p-0" style="background: transparent; border:none; color: var(--text-primary);"><i class="ti ti-x" style="font-size: 1.5rem;"></i></button>
         </div>
-        <button id="aiNewChatBtn" class="btn btn-primary w-100 mb-3" style="margin-bottom: 1rem; background-color: #1c5237; border-color: #1c5237; border-radius: 1rem; padding: 0.75rem;">
+        <button id="aiNewChatBtn" class="btn btn-primary w-100 mb-3" style="margin-bottom: 1rem; background-color: #1b0866ff; border-color: #1c5237; border-radius: 1rem; padding: 0.75rem;">
           <i class="ti ti-plus"></i> Yeni Sohbet
         </button>
         <div id="aiChatList" class="ai-chat-list">
@@ -295,12 +295,12 @@ export async function renderAiAssistantPanel(container) {
     chats.forEach(chat => {
       const isActive = chat.id === activeChatId ? 'active' : '';
       const title = chat.title || 'Yeni Sohbet';
-      
+
       let dateHtml = '';
       if (chat.updatedAt) {
         const d = new Date(chat.updatedAt);
-        const dateStr = d.toLocaleDateString([], {day:'2-digit', month:'2-digit', year:'numeric'});
-        const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const dateStr = d.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         dateHtml = `<span style="font-size: 0.7rem; opacity: 0.6; margin-left: 1.5rem; white-space: nowrap;">${dateStr} - ${timeStr}</span>`;
       }
 
@@ -375,7 +375,7 @@ export async function renderAiAssistantPanel(container) {
     messages.forEach(msg => {
       let msgClass = msg.role === 'user' ? 'ai-message-user' : 'ai-message-assistant';
       if (msg.isError) msgClass += ' ai-message-error';
-      
+
       let formattedContent = '';
       if (msg.role === 'assistant') {
         formattedContent = DOMPurify.sanitize(marked.parse(msg.content));
@@ -388,7 +388,7 @@ export async function renderAiAssistantPanel(container) {
       let timeHtml = '';
       if (msg.timestamp) {
         const d = new Date(msg.timestamp);
-        const timeStr = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         timeHtml = `<div style="font-size: 0.7rem; opacity: 0.6; text-align: right; margin-top: 6px;">${timeStr}</div>`;
       }
 
@@ -486,16 +486,16 @@ export async function renderAiAssistantPanel(container) {
       console.error(error);
       const typingEl = document.getElementById(typingId);
       if (typingEl) typingEl.remove();
-      
+
       // Hata mesajını sohbet ekranında göster
       const errorMessage = "⚠️ Sunucu ile iletişim kurulamadı veya bir hata oluştu. Lütfen tekrar deneyin. Detay: " + error.message;
       activeChat.updatedAt = Date.now();
       activeChat.messages.push({ role: 'assistant', content: errorMessage, isError: true, timestamp: Date.now() });
       await saveAiChat(activeChat);
-      
+
       renderSidebar();
       renderHistory();
-      
+
       showToast(t('ai.error') || "Bir hata oluştu", "error");
     } finally {
       sendBtn.disabled = false;
