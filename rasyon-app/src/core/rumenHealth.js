@@ -86,8 +86,10 @@ export function estimateRumenPH(ration) {
  * göreli SARA/ketozis eşiği büyük ölçüde ırk-bağımsızdır (modest düzeltme).
  */
 function fprBands(breed) {
-  if (breed === 'Jersey') return { saraHigh: 1.05, saraMed: 1.25, ketoMed: 1.45, ketoHigh: 1.55 };
-  return { saraHigh: 1.0, saraMed: 1.2, ketoMed: 1.4, ketoHigh: 1.5 };
+  if (breed && breed.toLowerCase() === 'jersey') {
+    return { saraHigh: 1.10, saraMed: 1.20, ketoMed: 1.50, ketoHigh: 1.60 };
+  }
+  return { saraHigh: 1.00, saraMed: 1.10, ketoMed: 1.40, ketoHigh: 1.50 };
 }
 
 /**

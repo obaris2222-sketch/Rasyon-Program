@@ -118,12 +118,28 @@ export function renderRumenHealthPanel(composition, animal) {
   const severityColor = (sev) => sev === 'high' ? 'var(--danger)' : sev === 'medium' ? 'var(--warning)' : 'var(--text-muted)';
 
   // Süt yağı/protein oranı (SARA göstergesi)
-  const fpRatio = animal.milkFat && animal.milkProtein
-    ? (animal.milkFat / animal.milkProtein).toFixed(2)
-    : '—';
-  const fpRatioStatus = animal.milkFat && animal.milkProtein
-    ? (animal.milkFat / animal.milkProtein < 1.0 ? 'above' : animal.milkFat / animal.milkProtein < 1.2 ? 'below' : 'ok')
-    : 'ok';
+  const isJersey = animal.breed && animal.breed.toLowerCase() === 'jersey';
+  const fpMin = isJersey ? 1.20 : 1.10;
+  const fpMax = isJersey ? 1.50 : 1.40;
+  const fpTargetStr = isJersey ? '≥ 1.20 (İdeal: 1.20-1.50)' : '≥ 1.10 (İdeal: 1.10-1.40)';
+
+  const fpRatioValue = animal.milkFat && animal.milkProtein
+    ? (animal.milkFat / animal.milkProtein)
+    : null;
+    
+  const fpRatio = fpRatioValue !== null ? fpRatioValue.toFixed(2) : '—';
+  
+  let fpRatioStatus = 'ok';
+  let fpStatusText = '✓ Sağlıklı (İdeal)';
+  if (fpRatioValue !== null) {
+    if (fpRatioValue < fpMin) {
+      fpRatioStatus = 'below'; 
+      fpStatusText = '↓ SARA (Düşük)';
+    } else if (fpRatioValue > fpMax) {
+      fpRatioStatus = 'above';
+      fpStatusText = '↑ Subklinik Ketozis (Yüksek)';
+    }
+  }
 
   return `
     <div class="res-grid-4">
@@ -176,8 +192,8 @@ export function renderRumenHealthPanel(composition, animal) {
         <tr>
           <td>${t('rumen.fp_ratio')}</td>
           <td class="num">${fpRatio}</td>
-          <td>${t('rumen.fp_target')}</td>
-          <td><span class="status-${fpRatioStatus}">${fpRatioStatus === 'ok' ? t('rumen.fp_normal') : fpRatioStatus === 'below' ? t('rumen.fp_low') : t('rumen.fp_depression')}</span></td>
+          <td>${fpTargetStr}</td>
+          <td><span class="status-${fpRatioStatus}">${fpStatusText}</span></td>
         </tr>
       </tbody>
     </table>
