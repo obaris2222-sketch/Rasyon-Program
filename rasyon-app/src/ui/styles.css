@@ -2759,6 +2759,8 @@ details.acc-panel table.diag-table {
 
   .diag-table, .ration-items-table {
     min-width: auto !important;
+    width: 100% !important;
+    display: table !important;
   }
 
   /* Modal: tam ekrana yakın (küçük ekranda kullanışlı) */
@@ -3345,6 +3347,11 @@ details.acc-panel table.diag-table {
   /* ── 2 sütunlu ızgara (masaüstü gibi) ── */
   #tab-results .results-grid {
     grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Geçmiş Rasyonlar modalı içindeki grid 1 kolon olmalı */
+  #history-modal .results-grid {
+    grid-template-columns: 1fr !important;
   }
 
   /* ── Özet kartları: otomatik tek satır (masaüstü davranışı) ── */
