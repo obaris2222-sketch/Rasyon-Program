@@ -1347,7 +1347,7 @@
     "col_bcs": "BCS",
     "col_methane": "Methane",
     "col_rumen_ph": "pH",
-    "col_mun": "MUN",
+    "col_mun": "MUN (mg/dL)",
     "col_manure": "MANURE",
     "col_notes": "NOTES",
     "hist_empty": "No records added yet.",
