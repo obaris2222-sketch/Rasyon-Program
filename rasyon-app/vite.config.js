@@ -11,8 +11,8 @@ export default defineConfig({
       injectRegister: 'auto',          // register script index.html'e otomatik enjekte
       includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'NutriOpt',
-        short_name: 'NutriOpt',
+        name: 'RasyoMetri',
+        short_name: 'RasyoMetri',
         description: 'NRC 2001 / NASEM 2021 / CNCPS v6.5 tabanlı süt sığırı rasyon optimizasyonu',
         lang: 'tr',
         dir: 'ltr',
