@@ -25,7 +25,27 @@ const UNIT = {
 
 function constraintLabel(p) {
   if (p.feedLimit) return t('sens.feed_limit', { name: feedDisplayName(p.feedLimit) || p.constraint });
-  return LABEL_KEY[p.constraint] ? t(LABEL_KEY[p.constraint]) : p.constraint;
+  
+  const raw = p.constraint;
+  if (raw === 'TMR_ration_moisture_min') return 'TMR Rasyondan Min Nem';
+  if (raw === 'TMR_DM_min') return 'TMR Min Kuru Madde';
+  if (raw === 'TMR_DM_max') return 'TMR Maks Kuru Madde';
+  if (raw === 'n6n3_ratio') return 'ω6:ω3 Oranı';
+  if (raw === 'Cost_max') return 'Maksimum Maliyet';
+  if (raw === 'Ca_P_min') return 'Ca/P Oranı (Min)';
+  if (raw === 'Ca_P_max') return 'Ca/P Oranı (Maks)';
+
+  if (LABEL_KEY[raw]) return t(LABEL_KEY[raw]);
+  
+  // Format generic _min / _max suffixes if present
+  let formatted = raw.replace('_min', ' (Min)').replace('_max', ' (Maks)');
+  
+  // Translate common English nutritional terms
+  formatted = formatted.replace('Starch', 'Nişasta');
+  formatted = formatted.replace('Sugar', 'Şeker');
+  formatted = formatted.replace('Fat', 'Yağ');
+  
+  return formatted;
 }
 function constraintUnit(name) {
   if (name.startsWith('limit_')) return 'TL/kg';
@@ -52,7 +72,7 @@ export function renderSensitivityPanel(sensitivity) {
         ${shadowPrices.map(p => `
           <tr>
             <td><b>${escHtml(constraintLabel(p))}</b></td>
-            <td class="num">${Math.abs(p.dual) >= 0.01 ? Math.abs(p.dual).toFixed(2) : Math.abs(p.dual).toExponential(1)}</td>
+            <td class="num">${Math.abs(p.dual) >= 0.01 ? Math.abs(p.dual).toFixed(2) : Math.abs(p.dual).toFixed(4)}</td>
             <td class="text-small text-muted">${constraintUnit(p.constraint)}</td>
           </tr>`).join('')}
         </tbody>

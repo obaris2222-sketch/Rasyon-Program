@@ -295,7 +295,7 @@ export async function renderRationBuilder(container, state, { onOptimize }) {
               <div class="constraint-row">
                 <label>${t('ration.tmr_target_moisture')} <span class="info-icon" title="${escHtml(t('ration.tmr_target_note'))}">ℹ️</span></label>
                 <div class="constraint-inputs">
-                  <input type="number" step="1" min="0" max="95" class="comp-single" data-key="tmr_target_moisture" value="${compOverride.tmr_target_moisture ?? ''}" placeholder="50" />
+                  <input type="number" step="1" min="0" max="95" class="comp-single ph-computed" data-key="tmr_target_moisture" value="${compOverride.tmr_target_moisture ?? ''}" placeholder="50" title="${escHtml(t('ration.computed_default_hint'))}" />
                   <span>%</span>
                 </div>
               </div>

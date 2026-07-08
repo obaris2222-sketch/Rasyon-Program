@@ -1179,6 +1179,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  justify-content: space-between;
 }
 
 .constraint-row label {
