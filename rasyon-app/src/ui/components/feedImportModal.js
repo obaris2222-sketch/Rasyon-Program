@@ -57,7 +57,7 @@ export function openFeedImportModal(onImported) {
           <b>${t('imp.how_title')}</b> ${t('imp.how_desc')}
           <div class="flex gap-1" style="margin-top:0.5rem">
             <button class="btn btn-sm btn-secondary" id="import-template-btn">
-              ${t('imp.template_btn')} (.csv)
+              ${t('imp.template_btn')}
             </button>
             <button class="btn btn-sm btn-secondary" id="import-template-excel-btn">
               <i class="ti ti-file-spreadsheet"></i> Örnek Şablon İndir (.xlsx)
@@ -138,7 +138,7 @@ async function downloadExcelTemplate() {
     
     // Basit bir sığdırma ve filtre (şablon formatı)
     ws['!cols'] = TEMPLATE_COLUMNS.map(c => ({ wch: c === 'name' || c === 'nameEn' || c === 'comment' ? 25 : 12 }));
-    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, activePane: 'bottomLeft' }];
+    ws['!views'] = [{ state: 'frozen', ySplit: 1 }];
     ws['!autofilter'] = { ref: ws['!ref'] };
     
     XLSX.utils.book_append_sheet(wb, ws, "Yemler");

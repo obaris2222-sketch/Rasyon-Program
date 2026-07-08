@@ -85,7 +85,7 @@ export function generateRationExcel({ animal, result }) {
   itemsRows.push([L('TOPLAM', 'TOTAL'), '', totalDm, totalAsFed, 100, totalCost]);
   const wsItems = XLSX.utils.aoa_to_sheet([itemsHeader, ...itemsRows]);
   wsItems['!cols'] = [{ wch: 35 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
-  wsItems['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, activePane: 'bottomLeft' }];
+  wsItems['!views'] = [{ state: 'frozen', ySplit: 1 }];
   wsItems['!autofilter'] = { ref: wsItems['!ref'] };
 
   // Fiyat/Tutar kolonunu formatla (F sütunu = c: 5)
@@ -107,7 +107,7 @@ export function generateRationExcel({ animal, result }) {
   ]);
   const wsDiag = XLSX.utils.aoa_to_sheet([diagHeader, ...diagRows]);
   wsDiag['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
-  wsDiag['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, activePane: 'bottomLeft' }];
+  wsDiag['!views'] = [{ state: 'frozen', ySplit: 1 }];
   wsDiag['!autofilter'] = { ref: wsDiag['!ref'] };
   XLSX.utils.book_append_sheet(wb, wsDiag, L('Diagnostik', 'Diagnostics'));
 
@@ -142,7 +142,7 @@ export function generateRationExcel({ animal, result }) {
   ];
   const wsProfile = XLSX.utils.aoa_to_sheet(profile);
   wsProfile['!cols'] = [{ wch: 25 }, { wch: 18 }, { wch: 18 }];
-  wsProfile['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, activePane: 'bottomLeft' }];
+  wsProfile['!views'] = [{ state: 'frozen', ySplit: 1 }];
   wsProfile['!autofilter'] = { ref: wsProfile['!ref'] };
   XLSX.utils.book_append_sheet(wb, wsProfile, L('Besin Profili', 'Nutrient Profile'));
 
@@ -196,7 +196,7 @@ export function generateRationExcel({ animal, result }) {
 
     const wsAA = XLSX.utils.aoa_to_sheet(aaData);
     wsAA['!cols'] = [{ wch: 35 }, { wch: 22 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
-    wsAA['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 6, activePane: 'bottomLeft' }]; // AA tablosu başlığı 7. satırda (indeks 6)
+    wsAA['!views'] = [{ state: 'frozen', ySplit: 6 }]; // AA tablosu başlığı 7. satırda (indeks 6)
     
     // Filtre opsiyonel ama karışık yapısı yüzünden bu sayfaya sadece sütun genişliği ve dondurma yeterli
     XLSX.utils.book_append_sheet(wb, wsAA, L('AA Paneli', 'AA Panel'));
