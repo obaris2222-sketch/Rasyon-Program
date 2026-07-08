@@ -50,19 +50,24 @@ export function runDiagnostic(profile, observations, ration) {
   const RMSE = dmiValidation.rmse;
   const Bias = dmiValidation.bias; // Pozitifse model fazla tahmin ediyor demektir
 
-  // A. Veri Güvenilirliği (İstatistiksel Filtre)
+  // A. Veri Güvenilirliği ve KMT Kalibrasyonu
   if (dmiValidation.n >= 3) {
-    if ((R2 !== null && R2 < 0.40) || (RMSE !== null && RMSE > 2.5)) {
+    // Sabit tahmin durumunda R² negatif çıkabilir, bu yüzden sadece varyansa (gürültüye) bakıyoruz.
+    // Toplam Hata (RMSE) = Kök( Rastgele_Hata^2 + Bias^2 )
+    // Rastgele Hata (StdDev) = Kök( RMSE^2 - Bias^2 )
+    const randomError = Math.sqrt(Math.max(0, (RMSE * RMSE) - (Bias * Bias)));
+
+    if (randomError > 2.0) {
       diagnostics.push({
         type: 'error',
         cause: 'Veri Tutarsızlığı / TMR Homojenliği',
-        message: `Kuru Madde Tüketimi tutarsız (RMSE: ${RMSE} kg, R²: ${R2}). Yem karma vagonunuzun homojenliğini veya tartımları kontrol edin. Fizyolojik kalibrasyon yapılamaz.`
+        message: `Kuru Madde Tüketimi tutarsız (Rastgele Dalgalanma: ${randomError.toFixed(2)} kg). Yem karma vagonunuzun homojenliğini veya tartımları kontrol edin. Fizyolojik kalibrasyon yapılamaz.`
       });
-      return { diagnostics, overrides, R2, RMSE, Bias }; // Veri bozuksa fizyolojik teşhise girme
+      return { diagnostics, overrides, R2, RMSE, Bias }; // Veri çok gürültülüyse fizyolojik teşhise girme
     }
 
     // Global DMI Kalibrasyonu (Ölçek/Tartım Hatası)
-    if (Math.abs(Bias) > 1.5 && R2 > 0.70) {
+    if (Math.abs(Bias) > 1.5) {
       const suggestedMultiplier = dmiValidation.meanObserved / dmiValidation.meanPredicted;
       diagnostics.push({
         type: 'warning',

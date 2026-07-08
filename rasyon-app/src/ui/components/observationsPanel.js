@@ -247,7 +247,10 @@ export async function renderObservationsPanel(container, state) {
             <input type="number" name="mun" min="0" max="40" step="0.1" placeholder="10-16" />
           </div>
           <div class="form-group">
-            <label>${t('obs.manure_score') || 'Dışkı Skoru'}</label>
+            <label style="display:flex; align-items:center; gap:0.25rem;">
+              ${t('obs.manure_score') || 'Dışkı Skoru'}
+              <i class="ti ti-info-circle text-primary" style="cursor:pointer;" title="Skor detaylarını görmek için tıklayın" onclick="alert('Dışkı Skoru (1-5)\\n\\n1: Çok cıvık, su gibi (Asidoz/İshal)\\n2: İnce, cıvık, vıcık vıcık (Hızlı rumen geçişi, taze bahar otu)\\n3: İDEAL. Lapa gibi, ortası hafif çukur, yavaşça yayılır (Sağlıklı rumen)\\n4: Koyu ve kuru, üst üste katmanlanır (Geç laktasyon, yüksek kaba yem)\\n5: Çok sert ve kuru topaklar (Susuzluk, tıkanıklık, aşırı düşük kalite kaba yem)')"></i>
+            </label>
             <input type="number" name="manureScore" min="1" max="5" step="0.25" placeholder="1-5" />
           </div>
           <div class="form-group full-width">

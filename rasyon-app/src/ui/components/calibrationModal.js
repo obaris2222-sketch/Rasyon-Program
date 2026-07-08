@@ -59,7 +59,7 @@ export function showCalibrationModal(diagnosticsResult, profileId, onApplyCallba
       const icon = iconMap[diag.type] || 'ti-point';
 
       contentHtml += `
-        <div style="border-left: 4px solid ${color}; padding: 1rem; background: var(--bg-tertiary); margin-bottom: 1rem; border-radius: 4px;">
+        <div style="border-left: 4px solid ${color}; padding: 1rem; background: var(--surface-2); margin-bottom: 1rem; border-radius: 4px;">
           <div style="font-weight:600; font-size:1.1rem; color: ${color}; display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
             <i class="ti ${icon}"></i> ${escHtml(diag.cause || 'Bilgi')}
           </div>
@@ -71,15 +71,15 @@ export function showCalibrationModal(diagnosticsResult, profileId, onApplyCallba
 
   root.innerHTML = `
     <div class="feed-modal-overlay active" style="display: flex; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999;">
-      <div class="feed-modal" style="max-width: 600px; width: 90%; background: var(--bg-primary); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden;">
-        <div class="modal-header" style="padding: 1rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary);">
-          <div class="modal-title" style="font-weight: 600; font-size: 1.1rem;"><i class="ti ti-stethoscope"></i> Kalibrasyon Teşhis Merkezi</div>
+      <div class="feed-modal" style="max-width: 600px; width: 90%; background: var(--surface); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; color: var(--text);">
+        <div class="modal-header" style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-2);">
+          <div class="modal-title" style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;"><i class="ti ti-stethoscope"></i> Kalibrasyon Teşhis Merkezi</div>
           <button class="btn-close" id="calib-btn-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
         <div class="modal-body" style="padding: 1.5rem; overflow-y: auto; max-height: 70vh;">
           ${contentHtml}
         </div>
-        <div class="modal-footer" style="padding: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.5rem; background: var(--bg-secondary);">
+        <div class="modal-footer" style="padding: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.5rem; background: var(--surface-2);">
           <button class="btn btn-secondary" id="calib-btn-cancel">Kapat</button>
           ${diagnostics.some(d => d.action) 
             ? `<button class="btn btn-primary" id="calib-btn-apply"><i class="ti ti-check"></i> Önerilen Kalibrasyonu Uygula</button>` 
