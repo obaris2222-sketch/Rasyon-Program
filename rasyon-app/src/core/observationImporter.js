@@ -16,6 +16,8 @@ const DICTIONARY = {
   dmiActual: /^(dmi|kmt|intake|tüketim|tuketim|kuru(\s|_)?madde|dry(\s|_)?matter(\s|_)?intake|dry(\s|_)?matter|feed(\s|_)?intake)$/i,
   methane: /^(methane|metan|ch4)$/i,
   rumenPh: /^(rumen(\s|_)?ph|ph)$/i,
+  mun: /^(mun|süt(\s|_)?üre(\s|_)?azotu|sut(\s|_)?ure|milk(\s|_)?urea(\s|_)?nitrogen|urea)$/i,
+  manureScore: /^(dışkı(\s|_)?skoru|diski(\s|_)?skoru|manure(\s|_)?score|feces|manure)$/i,
   notes: /^(note|notes|not|notlar|açıklama|aciklama|remark|comment|yorum)$/i
 };
 
@@ -111,7 +113,7 @@ export function parseObservationCSV(csvText) {
     if (!row.date) row.date = new Date().toISOString(); // fallback
 
     // Rakamlı alanlar (virgülü noktaya çevir)
-    const numFields = ['milkYield', 'milkFat', 'milkProtein', 'bcs', 'dmiActual', 'methane', 'rumenPh'];
+    const numFields = ['milkYield', 'milkFat', 'milkProtein', 'bcs', 'dmiActual', 'methane', 'rumenPh', 'mun', 'manureScore'];
     for (const f of numFields) {
       if (colMap[f] !== undefined && vals[colMap[f]]) {
         const parsed = parseFloat(vals[colMap[f]].replace(',', '.'));

@@ -347,6 +347,8 @@ export async function renderObservationsPanel(container, state) {
         dmiActual: !Number.isNaN(parseFloat(fd.get('dmiActual'))) ? parseFloat(fd.get('dmiActual')) : null,
         methane: !Number.isNaN(parseFloat(fd.get('methane'))) ? parseFloat(fd.get('methane')) : null,
         rumenPh: !Number.isNaN(parseFloat(fd.get('rumenPh'))) ? parseFloat(fd.get('rumenPh')) : null,
+        mun: !Number.isNaN(parseFloat(fd.get('mun'))) ? parseFloat(fd.get('mun')) : null,
+        manureScore: !Number.isNaN(parseFloat(fd.get('manureScore'))) ? parseFloat(fd.get('manureScore')) : null,
         notes: fd.get('notes') || '',
       });
       showToast(t('obs.saved'), 'success');
@@ -398,6 +400,8 @@ export async function renderObservationsPanel(container, state) {
               dmiActual: row.dmiActual || null,
               methane: row.methane || null,
               rumenPh: row.rumenPh || null,
+              mun: row.mun || null,
+              manureScore: row.manureScore || null,
               notes: row.notes || 'CSV Import'
             });
             addedCount++;
