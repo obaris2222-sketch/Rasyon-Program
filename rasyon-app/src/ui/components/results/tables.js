@@ -111,6 +111,7 @@ export function renderCompositionTable(c) {
     [`NEL (${md})`,                  c.nel_mcal,   2],
     [`${cp} (${gd})`,                c.cp_g,       1],
     [`${cp} (${dm})`,                c.cp_pct,     2],
+    [`MP (${gd})`,                   c.mp_g,       1],
     [`RUP (${gd})`,                  c.rup_g,      1],
     [`RDP (${gd})`,                  c.rdp_g,      1],
     [`NDF (${dm})`,                  c.ndf_pct,    2],
