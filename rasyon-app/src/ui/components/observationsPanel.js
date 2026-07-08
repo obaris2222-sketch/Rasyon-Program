@@ -718,7 +718,6 @@ function renderAnalysis(a, validations = {}, state, profile, hasRationResult) {
       ` : `
         <div class="info-box mt-1">${t('obs.validation_insufficient', { have: validations.dmi.n, need: VALIDATION_MIN_SAMPLES })}</div>
       `}
-      <div class="text-small text-muted mt-1">${t('obs.validation_note')}</div>
     ` : ''}
 
     ${validations.milkFat && validations.milkFat.n > 0 ? `
@@ -739,7 +738,6 @@ function renderAnalysis(a, validations = {}, state, profile, hasRationResult) {
       ` : `
         <div class="info-box mt-1">${t('obs.validation_insufficient', { have: validations.milkFat.n, need: VALIDATION_MIN_SAMPLES })}</div>
       `}
-      <div class="text-small text-muted mt-1">${t('obs.validation_note')}</div>
     ` : ''}
 
     ${validations.methane && validations.methane.n > 0 ? `
@@ -760,7 +758,6 @@ function renderAnalysis(a, validations = {}, state, profile, hasRationResult) {
       ` : `
         <div class="info-box mt-1">${t('obs.validation_insufficient', { have: validations.methane.n, need: VALIDATION_MIN_SAMPLES })}</div>
       `}
-      <div class="text-small text-muted mt-1">${t('obs.validation_note')}</div>
     ` : ''}
 
     ${validations.rumenPh && validations.rumenPh.n > 0 ? `
@@ -781,7 +778,6 @@ function renderAnalysis(a, validations = {}, state, profile, hasRationResult) {
       ` : `
         <div class="info-box mt-1">${t('obs.validation_insufficient', { have: validations.rumenPh.n, need: VALIDATION_MIN_SAMPLES })}</div>
       `}
-      <div class="text-small text-muted mt-1">${t('obs.validation_note')}</div>
     ` : ''}
 
     ${(!hasRationResult) ? `
@@ -801,6 +797,9 @@ function renderAnalysis(a, validations = {}, state, profile, hasRationResult) {
       </div>
     ` : ''}
 
+    ${(validations.dmi?.n > 0 || validations.milkFat?.n > 0 || validations.methane?.n > 0 || validations.rumenPh?.n > 0) ? `
+      <div class="text-small text-muted mt-2">${t('obs.validation_note')}</div>
+    ` : ''}
     <div class="text-small text-muted mt-1">
       ${t('obs.perf_footer')}
     </div>

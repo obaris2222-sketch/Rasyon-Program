@@ -2757,6 +2757,10 @@ details.acc-panel table.diag-table {
     display: table-cell !important;
   }
 
+  .diag-table, .ration-items-table {
+    min-width: auto !important;
+  }
+
   /* Modal: tam ekrana yakın (küçük ekranda kullanışlı) */
   .feed-modal-overlay {
     padding: 0;
