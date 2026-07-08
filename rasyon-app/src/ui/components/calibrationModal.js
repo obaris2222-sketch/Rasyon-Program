@@ -71,7 +71,7 @@ export function showCalibrationModal(diagnosticsResult, profileId, onApplyCallba
 
   root.innerHTML = `
     <div class="feed-modal-overlay active" style="display: flex; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999;">
-      <div class="feed-modal" style="max-width: 600px; width: 90%; background: var(--surface); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; color: var(--text);">
+      <div class="feed-modal" style="max-width: 600px; width: 90%; height: auto !important; max-height: 90vh; background: var(--surface); border-radius: 12px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; color: var(--text);">
         <div class="modal-header" style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--surface-2);">
           <div class="modal-title" style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;"><i class="ti ti-stethoscope"></i> Kalibrasyon Teşhis Merkezi</div>
           <button class="btn-close" id="calib-btn-close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
