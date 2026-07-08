@@ -98,7 +98,9 @@ export async function renderHerdBatchPanel(container, state) {
             <tbody>
               ${profiles.map(p => {
                 const group = groups.find(g => g.id === p.groupId);
-                const rationOpts = rations.map(r => `<option value="${r.id}" ${p.targetRationId === r.id ? 'selected' : ''}>${escHtml(r.name || r.id)}</option>`).join('');
+                const profileRations = rations.filter(r => r.animal?.id === p.id || r.animal?._profileId === p.id);
+                profileRations.sort((a, b) => new Date(b.savedAt || 0) - new Date(a.savedAt || 0));
+                const rationOpts = profileRations.map(r => `<option value="${r.id}" ${p.targetRationId === r.id ? 'selected' : ''}>${escHtml(r.name || r.id)}</option>`).join('');
                 return `
                   <tr>
                     <td><b>${escHtml(p.name || p.id)}</b></td>

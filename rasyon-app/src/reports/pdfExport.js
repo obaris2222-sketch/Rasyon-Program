@@ -147,6 +147,7 @@ export async function generateRationPDF({ animal, result, title = 'Süt Sığır
     str(`${L('KM', 'DM')}: ${result.dmi.achieved_kg.toFixed(1)} ${L('kg/gün', 'kg/d')}`),
     str(`NEL: ${result.composition.nel_mcal.toFixed(1)} Mcal`),
     str(`${L('HP', 'CP')}: ${result.composition.cp_pct.toFixed(1)}%`),
+    str(`MP: ${(result.composition.mp_g || 0).toFixed(0)} g`),
     str(`NDF: ${result.composition.ndf_pct.toFixed(1)}%`),
     str(`${L('Maliyet', 'Cost')}: ${result.totalCost.toFixed(2)} ${L('TL/gün', 'TL/d')}`),
   ]];

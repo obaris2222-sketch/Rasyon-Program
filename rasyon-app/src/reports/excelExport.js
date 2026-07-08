@@ -66,6 +66,7 @@ export function generateRationExcel({ animal, result }) {
     [L('KMT Yöntemi', 'DMI Method'),         result.dmi.method],
     [L('NEL (Mcal/gün)', 'NEL (Mcal/d)'),      result.composition.nel_mcal],
     [L('HP (%KM)', 'CP (%DM)'),            result.composition.cp_pct],
+    [L('MP (g/gün)', 'MP (g/d)'),          Math.round(result.composition.mp_g || 0)],
     [L('NDF (%KM)', 'NDF (%DM)'),           result.composition.ndf_pct],
     [L('Maliyet (₺/gün)', 'Cost (₺/d)'),     result.totalCost],
   ];
