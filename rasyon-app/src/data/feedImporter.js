@@ -459,12 +459,7 @@ function csvCell(v) {
   return /[",\r\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-/**
- * Standart içe aktarma şablonu CSV'si (başlıklar + 2 örnek satır).
- * Örnekler kanonik kategori + '.' ondalık + ',' ayraç ile kayıpsız.
- * @returns {string}
- */
-export function buildTemplateCSV() {
+export function getTemplateObjects() {
   const ex1 = {
     id: '', name: 'Örnek Yonca Kuru Ot', nameEn: 'Alfalfa Hay', category: 'roughage', dm: 88,
     nel: 1.25, cp: 18, rdp: 75, rup: 25,
@@ -483,8 +478,17 @@ export function buildTemplateCSV() {
     vitA: 0, vitD: 0, vitE: 22, lys: 2.8, met: 2.1,
     pricePerTon: 9000, comment: '',
   };
+  return [ex1, ex2];
+}
+
+/**
+ * Standart içe aktarma şablonu CSV'si (başlıklar + 2 örnek satır).
+ * Örnekler kanonik kategori + '.' ondalık + ',' ayraç ile kayıpsız.
+ * @returns {string}
+ */
+export function buildTemplateCSV() {
   const lines = [TEMPLATE_COLUMNS.join(',')];
-  for (const ex of [ex1, ex2]) {
+  for (const ex of getTemplateObjects()) {
     lines.push(TEMPLATE_COLUMNS.map(c => csvCell(ex[c])).join(','));
   }
   return lines.join('\r\n') + '\r\n';

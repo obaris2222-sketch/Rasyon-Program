@@ -84,7 +84,17 @@ export function generateRationExcel({ animal, result }) {
   const totalCost = result.items.reduce((s, i) => s + i.costPerDay, 0);
   itemsRows.push([L('TOPLAM', 'TOTAL'), '', totalDm, totalAsFed, 100, totalCost]);
   const wsItems = XLSX.utils.aoa_to_sheet([itemsHeader, ...itemsRows]);
-  wsItems['!cols'] = [{ wch: 35 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 10 }, { wch: 10 }];
+  wsItems['!cols'] = [{ wch: 35 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 15 }];
+  wsItems['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, activePane: 'bottomLeft' }];
+  wsItems['!autofilter'] = { ref: wsItems['!ref'] };
+
+  // Fiyat/Tutar kolonunu formatla (F sütunu = c: 5)
+  const rangeItems = XLSX.utils.decode_range(wsItems['!ref']);
+  for (let R = rangeItems.s.r + 1; R <= rangeItems.e.r; ++R) {
+    const cell = wsItems[XLSX.utils.encode_cell({c: 5, r: R})];
+    if (cell && cell.t === 'n') cell.z = '#,##0.00_"₺"';
+  }
+
   XLSX.utils.book_append_sheet(wb, wsItems, L('Rasyon', 'Ration'));
 
   // ─── Sheet 3: Diagnostik ───────────────────────────────────────────────────
@@ -96,7 +106,9 @@ export function generateRationExcel({ animal, result }) {
     statusLabel(d.status),
   ]);
   const wsDiag = XLSX.utils.aoa_to_sheet([diagHeader, ...diagRows]);
-  wsDiag['!cols'] = [{ wch: 25 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 12 }];
+  wsDiag['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
+  wsDiag['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, activePane: 'bottomLeft' }];
+  wsDiag['!autofilter'] = { ref: wsDiag['!ref'] };
   XLSX.utils.book_append_sheet(wb, wsDiag, L('Diagnostik', 'Diagnostics'));
 
   // ─── Sheet 4: Tam Besin Profili ────────────────────────────────────────────
@@ -129,7 +141,9 @@ export function generateRationExcel({ animal, result }) {
     ['Cl',           c.cl_g,       UGD],
   ];
   const wsProfile = XLSX.utils.aoa_to_sheet(profile);
-  wsProfile['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 14 }];
+  wsProfile['!cols'] = [{ wch: 25 }, { wch: 18 }, { wch: 18 }];
+  wsProfile['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, activePane: 'bottomLeft' }];
+  wsProfile['!autofilter'] = { ref: wsProfile['!ref'] };
   XLSX.utils.book_append_sheet(wb, wsProfile, L('Besin Profili', 'Nutrient Profile'));
 
   // ─── Sheet 5: AA Paneli ────────────────────────────────────────────────────
@@ -181,7 +195,10 @@ export function generateRationExcel({ animal, result }) {
     }
 
     const wsAA = XLSX.utils.aoa_to_sheet(aaData);
-    wsAA['!cols'] = [{ wch: 28 }, { wch: 18 }, { wch: 25 }, { wch: 10 }, { wch: 12 }, { wch: 12 }];
+    wsAA['!cols'] = [{ wch: 35 }, { wch: 22 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    wsAA['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 6, activePane: 'bottomLeft' }]; // AA tablosu başlığı 7. satırda (indeks 6)
+    
+    // Filtre opsiyonel ama karışık yapısı yüzünden bu sayfaya sadece sütun genişliği ve dondurma yeterli
     XLSX.utils.book_append_sheet(wb, wsAA, L('AA Paneli', 'AA Panel'));
   }
 

@@ -9,7 +9,7 @@
  */
 
 import {
-  parseCSV, processImportRows, buildTemplateCSV, TEMPLATE_COLUMNS,
+  parseCSV, processImportRows, buildTemplateCSV, TEMPLATE_COLUMNS, getTemplateObjects
 } from '../../data/feedImporter.js';
 import { importFeedsFromJSON, CATEGORY_LABELS_TR } from '../../data/feedService.js';
 import { showToast, escHtml, fmt } from '../utils.js';
@@ -55,9 +55,14 @@ export function openFeedImportModal(onImported) {
       <div class="feed-modal-body">
         <div class="info-box box-info">
           <b>${t('imp.how_title')}</b> ${t('imp.how_desc')}
-          <button class="btn btn-sm btn-secondary" id="import-template-btn" style="margin-top:0.5rem">
-            ${t('imp.template_btn')}
-          </button>
+          <div class="flex gap-1" style="margin-top:0.5rem">
+            <button class="btn btn-sm btn-secondary" id="import-template-btn">
+              ${t('imp.template_btn')} (.csv)
+            </button>
+            <button class="btn btn-sm btn-secondary" id="import-template-excel-btn">
+              <i class="ti ti-file-spreadsheet"></i> Örnek Şablon İndir (.xlsx)
+            </button>
+          </div>
         </div>
 
         <div id="import-dropzone" class="import-dropzone" tabindex="0">
@@ -86,6 +91,7 @@ export function openFeedImportModal(onImported) {
 
   // Şablon indir
   overlay.querySelector('#import-template-btn')?.addEventListener('click', downloadTemplate);
+  overlay.querySelector('#import-template-excel-btn')?.addEventListener('click', downloadExcelTemplate);
 
   // Dosya seçimi
   const dropzone = overlay.querySelector('#import-dropzone');
@@ -115,6 +121,32 @@ function downloadTemplate() {
   const blob = new Blob(['﻿' + buildTemplateCSV()], { type: 'text/csv;charset=utf-8' });
   triggerDownload(blob, 'yem-sablon.csv');
   showToast(t('imp.template_done'), 'info');
+}
+
+async function downloadExcelTemplate() {
+  try {
+    const XLSX = await import('xlsx');
+    const objects = getTemplateObjects();
+    const data = objects.map(ex => {
+      const row = {};
+      TEMPLATE_COLUMNS.forEach(col => { row[col] = ex[col] ?? ''; });
+      return row;
+    });
+    
+    const ws = XLSX.utils.json_to_sheet(data, { header: TEMPLATE_COLUMNS });
+    const wb = XLSX.utils.book_new();
+    
+    // Basit bir sığdırma ve filtre (şablon formatı)
+    ws['!cols'] = TEMPLATE_COLUMNS.map(c => ({ wch: c === 'name' || c === 'nameEn' || c === 'comment' ? 25 : 12 }));
+    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, activePane: 'bottomLeft' }];
+    ws['!autofilter'] = { ref: ws['!ref'] };
+    
+    XLSX.utils.book_append_sheet(wb, ws, "Yemler");
+    XLSX.writeFile(wb, "yem-sablon.xlsx");
+    showToast('Excel şablonu indirildi.', 'info');
+  } catch (err) {
+    showToast('Şablon oluşturulurken hata: ' + err.message, 'error');
+  }
 }
 
 function triggerDownload(blob, filename) {

@@ -554,8 +554,25 @@ async function exportPriceTemplate() {
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     
-    // Sütun genişliklerini ayarla
-    ws['!cols'] = [{wch: 15}, {wch: 35}, {wch: 15}, {wch: 12}];
+    // Sütun genişliklerini ayarla (daha ferah)
+    ws['!cols'] = [{wch: 22}, {wch: 45}, {wch: 25}, {wch: 18}];
+    
+    // İlk satırı (başlıkları) sabitle
+    ws['!views'] = [{ state: 'frozen', xSplit: 0, ySplit: 1, activePane: 'bottomLeft' }];
+    
+    // Başlıklara filtre ekle
+    ws['!autofilter'] = { ref: ws['!ref'] };
+
+    // Fiyat sütununa (D sütunu) sayı/para birimi formatı ekle
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+      const cellAddress = XLSX.utils.encode_cell({c: 3, r: R});
+      const cell = ws[cellAddress];
+      if (cell && cell.t === 'n') {
+        cell.z = '#,##0.00_"₺"'; // Binlik ayracı ve TL simgesi
+      }
+    }
+
     
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Fiyatlar");
