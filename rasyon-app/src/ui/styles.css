@@ -3776,10 +3776,6 @@ details.acc-panel table.diag-table {
 }
 
 @media (max-width: 768px) {
-  #header-sync-btn {
-    display: none !important;
-  }
-  
   .ai-panel {
     flex-direction: column;
     height: calc(100vh - 140px); /* Account for bottom nav in mobile */

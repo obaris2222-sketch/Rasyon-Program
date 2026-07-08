@@ -277,18 +277,6 @@ function updateCloudButton(state) {
   btn.classList.toggle('spin', state.status === 'syncing');
   btn.title = `${t('cloud.header_title')}${state.user?.email ? ' — ' + state.user.email : ''}`;
   btn.classList.toggle('cloud-active', !!state.user);
-  
-  const hdrSyncBtn = document.getElementById('header-sync-btn');
-  if (hdrSyncBtn) {
-    const icon = hdrSyncBtn.querySelector('i');
-    if (state.status === 'syncing') {
-      if (icon) icon.className = 'ti ti-refresh ti-spin';
-      hdrSyncBtn.disabled = true;
-    } else {
-      if (icon) icon.className = 'ti ti-cloud-upload';
-      hdrSyncBtn.disabled = false;
-    }
-  }
 
   // Senkron sonrası çiftlik adı değişmiş olabilir (pull/uzlaştırma) → header'ı tazele
   if (state.status === 'synced') refreshFarmButton();
@@ -308,17 +296,11 @@ async function initCloud() {
   onSyncStatus(updateCloudButton);
   // Oturum değişimi → senkronu başlat/durdur (INITIAL_SESSION ile açılışta da çalışır)
   await onAuthChange(async (event, session) => {
-    const hdrSyncBtn = document.getElementById('header-sync-btn');
     if (session?.user) {
       await startSync(session.user);
-      if (hdrSyncBtn) {
-        hdrSyncBtn.style.display = 'inline-flex';
-        hdrSyncBtn.onclick = () => syncNow();
-      }
       refreshFarmButton(); // Uzlaştırma sonrası arayüzü güncelle
     } else if (event === 'SIGNED_OUT') {
       stopSync();
-      if (hdrSyncBtn) hdrSyncBtn.style.display = 'none';
       refreshFarmButton();
     }
   });

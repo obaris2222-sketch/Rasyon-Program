@@ -11,7 +11,7 @@ import { t } from '../i18n.js';
 const KEY = 'onboarding_done_v1';
 
 // İçerik i18n'den (onboard.s{n}_title/desc/tip) — render anında çözülür
-const STEP_ICONS = ['ti-clipboard-list', 'ti-leaf', 'ti-leaf', 'ti-scale', 'ti-chart-bar', 'ti-cloud'];
+const STEP_ICONS = ['ti-clipboard-list', 'ti-leaf', 'ti-scale', 'ti-chart-bar', 'ti-report-analytics', 'ti-sparkles', 'ti-cloud'];
 
 export function shouldShowOnboarding() {
   try {
