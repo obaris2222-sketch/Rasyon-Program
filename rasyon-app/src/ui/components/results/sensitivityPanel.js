@@ -45,6 +45,29 @@ function constraintLabel(p) {
   formatted = formatted.replace('Sugar', 'Şeker');
   formatted = formatted.replace('Fat', 'Yağ');
   
+  // Clean up trace minerals and vitamins
+  formatted = formatted.replace('trace_se', 'Se (Selenyum)');
+  formatted = formatted.replace('trace_cu', 'Cu (Bakır)');
+  formatted = formatted.replace('trace_zn', 'Zn (Çinko)');
+  formatted = formatted.replace('trace_mn', 'Mn (Mangan)');
+  formatted = formatted.replace('trace_co', 'Co (Kobalt)');
+  formatted = formatted.replace('trace_i', 'I (İyot)');
+  formatted = formatted.replace('vit_vitA', 'Vitamin A');
+  formatted = formatted.replace('vit_vitD', 'Vitamin D');
+  formatted = formatted.replace('vit_vitE', 'Vitamin E');
+  
+  // Clean up amino acids
+  formatted = formatted.replace('Lys', 'Lizin');
+  formatted = formatted.replace('Met', 'Metiyonin');
+  formatted = formatted.replace('His', 'Histidin');
+  formatted = formatted.replace('Arg', 'Arjinin');
+  formatted = formatted.replace('Thr', 'Treonin');
+  formatted = formatted.replace('Ile', 'İzolösin');
+  formatted = formatted.replace('Leu', 'Lösin');
+  formatted = formatted.replace('Val', 'Valin');
+  formatted = formatted.replace('Phe', 'Fenilalanin');
+  formatted = formatted.replace('Trp', 'Triptofan');
+  
   return formatted;
 }
 function constraintUnit(name) {
