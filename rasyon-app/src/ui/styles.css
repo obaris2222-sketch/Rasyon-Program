@@ -3318,8 +3318,7 @@ details.acc-panel table.diag-table {
 }
 
 /* SONUÇLAR SEKMESİ — Mobil scroll pano */
-/* body[data-active-tab] hook'u body:has()'den daha geniş tarayıcı desteği sunar */
-@media (max-width: 768px) {
+@media (max-width: 768px), ((max-width: 992px) or (max-height: 500px)) and (orientation: landscape) {
 
   /* ── Scroll konteyneri: YALNIZCA .tab-content ── */
   body[data-active-tab="results"] .tab-content,
