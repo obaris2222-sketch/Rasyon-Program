@@ -3337,7 +3337,7 @@ details.acc-panel table.diag-table {
     flex-direction: column;
     min-width: 1100px;
     padding: 0.85rem;
-    padding-bottom: 3rem;
+    padding-bottom: 2.25rem;
     box-sizing: border-box;
     /* Tarayıcının varsayılan pinch-zoom davranışını bloke et */
     touch-action: pan-x pan-y;
@@ -3803,6 +3803,14 @@ details.acc-panel table.diag-table {
 
   .ai-panel {
     height: 100vh !important;
+  }
+  
+  /* Sonuçlar paneli: Yatay ekranda alt boşluğu tamamen kaldır */
+  #tab-results.active {
+    padding-bottom: 0.85rem !important;
+  }
+  body:has(#tab-results.active) .tab-content {
+    padding-bottom: 0 !important;
   }
   
   .ai-chat-input-wrapper {
