@@ -3801,6 +3801,47 @@ details.acc-panel table.diag-table {
   .ai-panel {
     height: calc(100vh - 80px) !important;
   }
+  
+  .ai-chat-input-wrapper {
+    flex-direction: row !important;
+    align-items: center !important;
+    padding: 0.5rem 0.75rem !important;
+    gap: 0.5rem !important;
+  }
+
+  .ai-chat-input-wrapper > div.mb-2 {
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+  }
+
+  .ai-chat-input-wrapper > div.mb-2 label span {
+    display: none !important;
+  }
+
+  .ai-chat-input-wrapper textarea {
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .ai-chat-input-wrapper button {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .ai-mobile-header {
+    padding: 0.5rem !important;
+  }
+
+  .ai-disclaimer, .ai-context-info {
+    padding: 0.5rem !important;
+    margin: 0.5rem !important;
+  }
+  
+  .ai-chat-history {
+    padding: 0.5rem 0.75rem !important;
+    gap: 0.75rem !important;
+  }
 }
 
 @media (max-width: 992px), (max-height: 500px) {
