@@ -83,28 +83,57 @@ export function runDiagnostic(profile, observations, ration, options = {}) {
   const mun = lastObs.mun;
   const bcs = lastObs.bcs || profile.bcs;
 
-  // B. Geçiş Hızı ve Rumen Sağlığı (peNDF & Nişasta Kalibrasyonu)
-  // Kural: Süt Yağı < %3.4 VE Dışkı Skoru < 2.5 (Cıvık)
-  if (actualFat < 3.4 && manureScore && manureScore < 2.5) {
+  // B. Geçiş Hızı ve Rumen Sağlığı (peNDF & Nişasta Kalibrasyonu - Fuzzy Logic)
+  // Süt Yağı ve Dışkı Skoru üzerinden ağırlıklı risk skoru
+  const targetFat = 3.5;
+  const fatDeficit = Math.max(0, targetFat - actualFat);
+  const manureDeficit = manureScore ? Math.max(0, 3.0 - manureScore) : 0;
+  
+  // Eğer yağda belirgin düşüş (>0.1) ve dışkıda cıvıklaşma (>0.2) varsa risk skoru hesapla
+  if (fatDeficit > 0.1 && manureDeficit > 0.2) {
+    const riskScore = (fatDeficit * 2) + manureDeficit; // Maksimum ~1.5 - 2.5
+    
+    let peNdfOff = 0;
+    let nfcOff = 0;
+    let severity = 'Hafif Hızlı Rumen Geçişi';
+    let msgType = 'warning';
+    
+    if (riskScore > 1.5) {
+      peNdfOff = 3; nfcOff = -4; severity = 'Şiddetli Hızlı Rumen Geçişi / SARA Riski'; msgType = 'danger';
+    } else if (riskScore > 0.8) {
+      peNdfOff = 2; nfcOff = -3; severity = 'Orta Şiddetli Hızlı Rumen Geçişi';
+    } else {
+      peNdfOff = 1; nfcOff = -2;
+    }
+
     diagnostics.push({
-      type: 'danger',
-      cause: 'Hızlı Rumen Geçişi / SARA Başlangıcı',
-      message: `Süt yağınız düşük (%${actualFat}) ve dışkı cıvık (Skor: ${manureScore}). Rasyon çok hızlı sindiriliyor. peNDF (etkin lif) alt sınırı %2 artırılmalı, Nişasta/Şeker (NFC) üst sınırı %3 düşürülmeli.`,
+      type: msgType,
+      cause: severity,
+      message: `Süt yağınız hedefin altında (%${actualFat}) ve dışkı cıvık (Skor: ${manureScore}). Rasyon çok hızlı sindiriliyor. peNDF alt sınırı %${peNdfOff} artırılmalı, Nişasta/Şeker (NFC) üst sınırı %${Math.abs(nfcOff)} düşürülmeli.`,
       action: 'peNdfAndNfcOffset',
-      peNdfOffset: 2,
-      maxNfcOffset: -3
+      peNdfOffset: peNdfOff,
+      maxNfcOffset: nfcOff
     });
   }
 
-  // C. Rumen Senkronizasyonu (Protein/Karbonhidrat Dengesi)
-  // Kural: Süt Proteini < Beklenen VE MUN > 16 mg/dL
-  if (actualProtein < 3.0 && mun > 16) {
+  // C. Rumen Senkronizasyonu (Protein/Karbonhidrat Dengesi - Fuzzy Logic)
+  const targetProtein = 3.2;
+  const proteinDeficit = Math.max(0, targetProtein - actualProtein);
+  const munExcess = mun ? Math.max(0, mun - 14) : 0;
+  
+  if (proteinDeficit > 0.1 && munExcess > 1) {
+    const syncRisk = proteinDeficit + (munExcess * 0.1);
+    
+    let nfcIncrease = 1;
+    if (syncRisk > 0.6) nfcIncrease = 3;
+    else if (syncRisk > 0.3) nfcIncrease = 2;
+
     diagnostics.push({
       type: 'warning',
       cause: 'Rumen Senkronizasyonu Bozukluğu',
-      message: `Süt proteini düşük (%${actualProtein}) ve MUN yüksek (${mun} mg/dL). Rasyondaki protein (RDP) işkembede enerji (NFC) eksikliğinden dolayı yakalanamayıp üreye dönüşüyor. NFC (Karbonhidrat) limitleri gevşetilmeli.`,
+      message: `Süt proteini düşük (%${actualProtein}) ve MUN yüksek (${mun} mg/dL). İşkembedeki RDP, enerji (NFC) eksikliğinden dolayı yakalanamıyor. NFC limitleri %${nfcIncrease} esnetilmeli.`,
       action: 'maxNfcOffset',
-      maxNfcOffset: 2
+      maxNfcOffset: nfcIncrease
     });
   }
   

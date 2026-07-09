@@ -1,9 +1,9 @@
 /**
- * AI Service for Groq API Integration (LLaMA 3)
+ * AI Service for DeepSeek API Integration
  */
 
 /**
- * Sends a full conversation to the Groq API.
+ * Sends a full conversation to the DeepSeek API.
  * Supports multi-turn chat history for context-aware responses.
  *
  * @param {Array<{role: string, content: string}>} messages - Full conversation history

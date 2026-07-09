@@ -40,8 +40,10 @@ async function buildContextData(includeData = false) {
       getActiveFarm().catch(() => null),
     ]);
 
-    // Tüm rasyonlar — hammaddeler ve besin bileşimi dahil tam snapshot
+    // Tüm rasyonlar — son 5 rasyon ile sınırla, hammaddeler, besin bileşimi ve IIS/Relaxation dahil
     const rationHistory = allRations
+      .sort((a, b) => new Date(b.savedAt || b.createdAt || 0) - new Date(a.savedAt || a.createdAt || 0))
+      .slice(0, 5)
       .map(r => ({
         name: r.name || 'İsimsiz Rasyon',
         savedAt: r.savedAt || r.createdAt || r.updatedAt || null,
@@ -93,6 +95,8 @@ async function buildContextData(includeData = false) {
           mp: r.result.requirements.mp ?? null,
         } : null,
         milkFever: r.result?.milkFever ?? null,
+        infeasibilityDiagnosis: r.result?.infeasibilityDiagnosis ?? null,
+        relaxation: r.result?.relaxation ?? null,
       }));
 
 
@@ -161,6 +165,8 @@ async function buildContextData(includeData = false) {
           nel: state.rationResult.requirements.nel ?? null,
           mp: state.rationResult.requirements.mp ?? null,
         } : null,
+        infeasibilityDiagnosis: state.rationResult.infeasibilityDiagnosis ?? null,
+        relaxation: state.rationResult.relaxation ?? null,
       } : null,
     };
 
