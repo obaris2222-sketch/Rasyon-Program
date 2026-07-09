@@ -3798,8 +3798,13 @@ details.acc-panel table.diag-table {
 }
 
 @media ((max-width: 992px) or (max-height: 500px)) and (orientation: landscape) {
+  #tab-ai {
+    padding: 0 !important;
+  }
+
   .ai-panel {
-    height: calc(100vh - 80px) !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
   }
   
   .ai-chat-input-wrapper {
