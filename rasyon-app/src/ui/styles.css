@@ -3804,7 +3804,6 @@ details.acc-panel table.diag-table {
 
   .ai-panel {
     height: 100vh !important;
-    border-radius: 0 !important;
   }
   
   .ai-chat-input-wrapper {
