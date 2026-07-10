@@ -259,14 +259,14 @@ export async function renderAiAssistantPanel(container) {
         
         <div class="ai-chat-input-wrapper" style="flex-direction: column; align-items: stretch;">
           <div class="mb-2 px-2">
-            <label class="m-0 d-flex align-items-center gap-2" style="cursor: pointer; user-select: none;" title="${t('ai.include_data') || '${t('ai.add_farm_data').split(' ')[0] + ' ' + t('ai.add_farm_data').split(' ')[1]}'}">
+            <label class="m-0 d-flex align-items-center gap-2" style="cursor: pointer; user-select: none;" title="${t('ai.add_farm_data')}">
               <div class="custom-toggle-switch">
                 <input type="checkbox" id="aiIncludeDataToggle">
                 <div class="custom-toggle-switch-bg">
                   <div class="custom-toggle-switch-handle"></div>
                 </div>
               </div>
-              <span style="font-size: 0.85rem; color: var(--text-secondary); padding-top: 2px;">${t('ai.include_data') || '${t('ai.add_farm_data')} </span>
+              <span style="font-size: 0.85rem; color: var(--text-secondary); padding-top: 2px;">${t('ai.add_farm_data')}</span>
             </label>
           </div>
           <div style="display: flex; gap: 0.5rem; width: 100%;">
