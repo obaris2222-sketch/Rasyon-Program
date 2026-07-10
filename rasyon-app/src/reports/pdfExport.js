@@ -364,7 +364,7 @@ export async function generateRationPDF({ animal, result, title = 'Süt Sığır
     doc.setFontSize(7);
     doc.setTextColor(120);
     doc.text(
-      str(L(`Süt Sığırı Rasyon Programı — Sayfa ${p}/${pageCount}`, `Dairy Cattle Ration Program — Page ${p}/${pageCount}`)),
+      str(L(`RasyoMetri — Sayfa ${p}/${pageCount}`, `RasyoMetri — Page ${p}/${pageCount}`)),
       pageWidth / 2,
       doc.internal.pageSize.getHeight() - 8,
       { align: 'center' }
@@ -610,7 +610,7 @@ export async function generateHerdSummaryPDF(batchResults, meta = {}) {
     doc.setPage(p);
     doc.setFontSize(7);
     doc.setTextColor(120);
-    doc.text(L(`Süt Sığırı Rasyon Programı — Sayfa ${p} / ${pageCount}`, `Dairy Cattle Ration Program — Page ${p} / ${pageCount}`),
+    doc.text(L(`RasyoMetri — Sayfa ${p} / ${pageCount}`, `RasyoMetri — Page ${p} / ${pageCount}`),
       pageWidth / 2, doc.internal.pageSize.getHeight() - 7, { align: 'center' });
   }
 
@@ -723,7 +723,7 @@ export async function downloadTmrPDF(batchResults, filename) {
     doc.setPage(p);
     doc.setFontSize(8);
     doc.setTextColor(120);
-    doc.text(L(`Süt Sığırı Rasyon Programı — Sayfa ${p} / ${pageCount}`, `Dairy Cattle Ration Program — Page ${p} / ${pageCount}`),
+    doc.text(L(`RasyoMetri — Sayfa ${p} / ${pageCount}`, `RasyoMetri — Page ${p} / ${pageCount}`),
       pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
   }
 
@@ -813,7 +813,7 @@ export async function downloadStockReportPDF(stockData, filename) {
     doc.setPage(p);
     doc.setFontSize(8);
     doc.setTextColor(120);
-    doc.text(str(L(`Süt Sığırı Rasyon Programı — Sayfa ${p} / ${pageCount}`, `Dairy Cattle Ration Program — Page ${p} / ${pageCount}`)),
+    doc.text(str(L(`RasyoMetri — Sayfa ${p} / ${pageCount}`, `RasyoMetri — Page ${p} / ${pageCount}`)),
       pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
   }
 

@@ -67,6 +67,7 @@ export async function renderHerdBatchPanel(container, state) {
         <b>🚜 Çiftlik Yönetim ve TMR Paneli</b> — Çiftliğinizdeki tüm grupların yem yönetimini tek ekrandan yapmanızı sağlar.<br>
         • <b>Rasyon Atama:</b> Kuru dönem, sağmal veya düveleriniz için hazırladığınız kayıtlı rasyonları ilgili gruplara atayın.<br>
         • <b>Günlük TMR İhtiyacı:</b> Tüm grupların hayvan sayıları ve reçeteleri üzerinden çiftliğinizin günlük toplam karma yem (TMR) tonajını otomatik hesaplar.<br>
+        • <b>Stok Takibi:</b> Sürünüzün TMR ihtiyacına göre mevcut yem stoklarınızın kaç gün yeteceğini hesaplar.<br>
         • <b>Maliyet Takibi:</b> Güncel fiyatlar üzerinden tüm çiftliğin makro karlılığını gösterir.
       </div>
     </details>
@@ -79,7 +80,7 @@ export async function renderHerdBatchPanel(container, state) {
       </div>
 
       <div class="info-box">
-        Bu panelde çiftliğinizdeki tüm hayvan gruplarına <b>kayıtlı rasyonlarınızı</b> atayabilir, güncel maliyetler ve hammadde fiyatları üzerinden çiftliğinizin makro özetini ve <b>Günlük TMR (Yem) İhtiyacını</b> hesaplayabilirsiniz. Sağmallar, kuru dönem veya düveler için hazırladığınız özel reçeteleri kendi gruplarına bağlayarak tek ekrandan tüm çiftlik yükleme tablosunu görebilirsiniz.
+        Bu panelde çiftliğinizdeki tüm hayvan gruplarına <b>kayıtlı rasyonlarınızı</b> atayabilir, güncel maliyetler ve hammadde fiyatları üzerinden çiftliğinizin makro özetini, <b>Günlük TMR (Yem) İhtiyacını</b> ve <b>Stok Durumunu</b> hesaplayabilirsiniz. Sağmallar, kuru dönem veya düveler için hazırladığınız özel reçeteleri kendi gruplarına bağlayarak tek ekrandan tüm çiftlik yükleme tablosunu görebilirsiniz.
       </div>
 
       <div class="card mb-2" style="border-left: 4px solid var(--primary); padding-bottom: 1rem;">
@@ -171,7 +172,17 @@ export async function renderHerdBatchPanel(container, state) {
 
   container.querySelector('#btn-batch-clear').addEventListener('click', () => {
     container.querySelector('#batch-results').innerHTML = '';
+    _lastBatchResults = null; // Temizlendiğinde state'i sıfırla
   });
+
+  // Eğer programda daha önce hesaplama yapıldıysa tabloyu geri getir
+  if (_lastBatchResults && _lastBatchResults.length > 0) {
+    const resultsEl = container.querySelector('#batch-results');
+    renderBatchResults(resultsEl, _lastBatchResults, _lastMilkPrice).then(() => {
+      attachBatchPDFHandler(container);
+      attachStockHandlers(container);
+    });
+  }
 }
 
 // ─── FAZ 20.2: Sürü-Geneli Eşzamanlı Optimizasyon (ortak yem stoğu) ──────────
@@ -496,8 +507,8 @@ async function renderBatchResults(el, results, milkPrice) {
               <i class="ti ti-truck-delivery"></i> Günlük Yükleme (TMR) İhtiyacı
             </div>
             <div class="flex gap-1 no-print">
-              <button class="btn btn-sm btn-outline" id="btn-tmr-pdf" title="TMR İhtiyacını PDF Olarak İndir" style="border-color:var(--danger); color:var(--danger)"><i class="ti ti-file-type-pdf"></i> PDF İndir</button>
-              <button class="btn btn-sm btn-outline" id="btn-tmr-excel" title="TMR İhtiyacını Excel Olarak İndir" style="border-color:var(--success); color:var(--success)"><i class="ti ti-file-spreadsheet"></i> Excel İndir</button>
+              <button class="btn btn-sm btn-outline" id="btn-tmr-pdf" title="TMR İhtiyacını PDF Olarak İndir" style="border-color:var(--danger); color:var(--danger); padding:0.4rem 0.6rem;"><i class="ti ti-file-type-pdf"></i></button>
+              <button class="btn btn-sm btn-outline" id="btn-tmr-excel" title="TMR İhtiyacını Excel Olarak İndir" style="border-color:var(--success); color:var(--success); padding:0.4rem 0.6rem;"><i class="ti ti-file-spreadsheet"></i></button>
             </div>
           </div>
           <div class="text-small text-muted" style="margin-bottom:1rem">
@@ -531,30 +542,33 @@ async function renderBatchResults(el, results, milkPrice) {
             const planQty = stock.planQty || '';
             const planUnit = stock.planUnit || 'gun';
             
+            const inputStyle = 'width:70px; padding:0.3rem 0.4rem; border:1px solid var(--border); border-radius:4px; background:var(--bg-main); color:var(--text); outline:none; text-align:center;';
+            const selectStyle = 'padding:0.3rem 1.2rem 0.3rem 0.4rem; border:1px solid var(--border); border-radius:4px; background:var(--bg-main); color:var(--text); outline:none; appearance:auto;';
+
             return `
               <tr class="stock-row" data-feed-id="${escHtml(feedId)}" data-daily-kg="${t.kg}">
                 <td>${escHtml(t.name)}</td>
                 <td class="num">${t.kg.toLocaleString(undefined, { maximumFractionDigits: 1 })}</td>
                 <td>
-                  <div class="flex gap-1">
-                    <input type="number" class="stock-qty-input" style="width: 70px" value="${stockQty}" min="0">
-                    <select class="stock-unit-input">
+                  <div class="flex gap-1" style="justify-content:center">
+                    <input type="number" class="stock-qty-input" style="${inputStyle}" value="${stockQty}" min="0">
+                    <select class="stock-unit-input" style="${selectStyle}">
                       <option value="kg" ${stockUnit === 'kg' ? 'selected' : ''}>kg</option>
                       <option value="ton" ${stockUnit === 'ton' ? 'selected' : ''}>ton</option>
                     </select>
                   </div>
                 </td>
                 <td>
-                  <div class="flex gap-1">
-                    <input type="number" class="plan-qty-input" style="width: 70px" value="${planQty}" min="0">
-                    <select class="plan-unit-input">
+                  <div class="flex gap-1" style="justify-content:center">
+                    <input type="number" class="plan-qty-input" style="${inputStyle}" value="${planQty}" min="0">
+                    <select class="plan-unit-input" style="${selectStyle}">
                       <option value="gun" ${planUnit === 'gun' ? 'selected' : ''}>Gün</option>
                       <option value="hafta" ${planUnit === 'hafta' ? 'selected' : ''}>Hafta</option>
                       <option value="ay" ${planUnit === 'ay' ? 'selected' : ''}>Ay</option>
                     </select>
                   </div>
                 </td>
-                <td class="stock-status-cell" style="font-weight:bold;"></td>
+                <td class="stock-status-cell" style="font-weight:bold; white-space:nowrap; text-align:right; width:120px;"></td>
               </tr>
             `;
           }).join('');
@@ -577,14 +591,14 @@ async function renderBatchResults(el, results, milkPrice) {
             Günlük TMR ihtiyacına göre stoklarınızın ne kadar süre yeteceğini hesaplayın.
           </div>
           <div class="feed-table-wrap">
-            <table class="diag-table" id="stock-tracking-table" style="min-width: 600px;">
+            <table class="diag-table" id="stock-tracking-table" style="min-width: 650px; table-layout: fixed; width: 100%;">
               <thead>
                 <tr>
-                  <th>Yem Adı</th>
-                  <th class="num">Günlük İhtiyaç (kg)</th>
-                  <th>Stok Miktarı</th>
-                  <th>Planlanan Zaman</th>
-                  <th>Durum</th>
+                  <th style="width:30%">Yem Adı</th>
+                  <th class="num" style="width:15%">Günlük İhtiyaç (kg)</th>
+                  <th style="width:20%; text-align:center">Stok Miktarı</th>
+                  <th style="width:20%; text-align:center">Planlanan Zaman</th>
+                  <th style="width:15%; text-align:right">Durum</th>
                 </tr>
               </thead>
               <tbody>
