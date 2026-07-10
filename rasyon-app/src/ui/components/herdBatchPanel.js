@@ -542,8 +542,8 @@ async function renderBatchResults(el, results, milkPrice) {
             const planQty = stock.planQty || '';
             const planUnit = stock.planUnit || 'gun';
             
-            const inputStyle = 'width:55px; text-align:center; padding:0.35rem; border:1px solid var(--border, #d1d5db); border-radius:12px; background:var(--bg-main, #f9fafb); color:var(--text, #111827); font-size:0.8rem; outline:none; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:border-color 0.2s;';
-            const selectStyle = 'min-width:60px; padding:0.35rem 1rem 0.35rem 0.5rem; border:1px solid var(--border, #d1d5db); border-radius:12px; background:var(--bg-main, #f9fafb); color:var(--text, #111827); font-size:0.8rem; outline:none; box-shadow:0 1px 2px rgba(0,0,0,0.05); cursor:pointer; transition:border-color 0.2s; appearance:auto;';
+            const inputStyle = 'width:75px; text-align:center; padding:0.35rem; border:1px solid var(--border, #d1d5db); border-radius:12px; background:var(--bg-main, #f9fafb); color:var(--text, #111827); font-size:0.85rem; outline:none; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:border-color 0.2s;';
+            const selectStyle = 'min-width:85px; padding:0.35rem 1rem 0.35rem 0.5rem; border:1px solid var(--border, #d1d5db); border-radius:12px; background:var(--bg-main, #f9fafb); color:var(--text, #111827); font-size:0.85rem; outline:none; box-shadow:0 1px 2px rgba(0,0,0,0.05); cursor:pointer; transition:border-color 0.2s; appearance:auto;';
 
             return `
               <tr class="stock-row" data-feed-id="${escHtml(feedId)}" data-daily-kg="${t.kg}">
@@ -568,7 +568,7 @@ async function renderBatchResults(el, results, milkPrice) {
                     </select>
                   </div>
                 </td>
-                <td class="stock-status-cell" style="font-weight:bold; white-space:nowrap; text-align:right; width:120px;"></td>
+                <td class="stock-status-cell" style="font-weight:bold; white-space:nowrap; text-align:right; width:140px; min-width:140px; max-width:140px; box-sizing:border-box;"></td>
               </tr>
             `;
           }).join('');
@@ -591,14 +591,14 @@ async function renderBatchResults(el, results, milkPrice) {
             Günlük TMR ihtiyacına göre stoklarınızın ne kadar süre yeteceğini hesaplayın.
           </div>
           <div class="feed-table-wrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch; width:100%">
-            <table class="diag-table" id="stock-tracking-table" style="min-width: 550px; width:100%; table-layout:fixed; font-size:0.8rem">
+            <table class="diag-table" id="stock-tracking-table" style="min-width: 750px; font-size:0.85rem">
               <thead>
                 <tr>
-                  <th style="width: 25%">Yem Adı</th>
-                  <th class="num" style="width: 12%">İhtiyaç(kg)</th>
-                  <th style="text-align:center; width: 25%">Stok Miktarı</th>
-                  <th style="text-align:center; width: 20%">Planlanan Zaman</th>
-                  <th style="text-align:right; width: 18%">Durum</th>
+                  <th>Yem Adı</th>
+                  <th class="num">İhtiyaç (kg)</th>
+                  <th style="text-align:center">Stok Miktarı</th>
+                  <th style="text-align:center">Planlanan Zaman</th>
+                  <th style="text-align:right; width:140px; min-width:140px; max-width:140px; box-sizing:border-box;">Durum</th>
                 </tr>
               </thead>
               <tbody>
