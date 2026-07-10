@@ -838,6 +838,8 @@ function attachStockHandlers(container) {
         rows.forEach(row => {
           const feedId = row.dataset.feedId;
           farm.stockTracking[feedId] = {
+            feedName: row.cells[0].textContent.trim(),
+            dailyKg: parseFloat(row.dataset.dailyKg) || 0,
             stockQty: parseFloat(row.querySelector('.stock-qty-input').value) || '',
             stockUnit: row.querySelector('.stock-unit-input').value,
             planQty: parseFloat(row.querySelector('.plan-qty-input').value) || '',

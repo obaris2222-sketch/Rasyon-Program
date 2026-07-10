@@ -540,6 +540,38 @@ function buildReminders({ lastResult, observations, profiles, animal = {}, stock
     });
   }
 
+  // Stok Takibi uyarıları
+  if (stockTracking) {
+    Object.keys(stockTracking).forEach(feedId => {
+      const stock = stockTracking[feedId];
+      // Eğer eski kayıtsa (dailyKg yoksa) veya stok verisi girilmemişse atla
+      if (!stock || !stock.stockQty || !stock.planQty || !stock.dailyKg) return;
+
+      let stockKg = parseFloat(stock.stockQty);
+      if (stock.stockUnit === 'ton') stockKg *= 1000;
+
+      let planDays = parseFloat(stock.planQty);
+      if (stock.planUnit === 'hafta') planDays *= 7;
+      else if (stock.planUnit === 'ay') planDays *= 30;
+
+      const requiredKg = stock.dailyKg * planDays;
+      if (stockKg < requiredKg) {
+        const missingKg = requiredKg - stockKg;
+        let missingText = missingKg >= 1000 
+          ? (missingKg / 1000).toLocaleString(undefined, {maximumFractionDigits:1}) + ' ton eksik'
+          : missingKg.toLocaleString(undefined, {maximumFractionDigits:1}) + ' kg eksik';
+        
+        reminders.push({
+          level: 'danger',
+          icon: 'ti-packages',
+          title: 'Yetersiz Yem Stoğu',
+          text: `${stock.feedName || 'Yem'} stoğu yetersiz (${missingText}). Plan: ${stock.planQty} ${stock.planUnit}.`,
+          nav: 'herd',
+        });
+      }
+    });
+  }
+
   return reminders;
 }
 
