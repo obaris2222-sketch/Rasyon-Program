@@ -542,14 +542,17 @@ async function renderBatchResults(el, results, milkPrice) {
             const planQty = stock.planQty || '';
             const planUnit = stock.planUnit || 'gun';
             
+            const inputStyle = 'width:55px; text-align:center; padding:0.35rem; border:1px solid var(--border, #d1d5db); border-radius:12px; background:var(--bg-main, #f9fafb); color:var(--text, #111827); font-size:0.8rem; outline:none; box-shadow:0 1px 2px rgba(0,0,0,0.05); transition:border-color 0.2s;';
+            const selectStyle = 'min-width:60px; padding:0.35rem 1rem 0.35rem 0.5rem; border:1px solid var(--border, #d1d5db); border-radius:12px; background:var(--bg-main, #f9fafb); color:var(--text, #111827); font-size:0.8rem; outline:none; box-shadow:0 1px 2px rgba(0,0,0,0.05); cursor:pointer; transition:border-color 0.2s; appearance:auto;';
+
             return `
               <tr class="stock-row" data-feed-id="${escHtml(feedId)}" data-daily-kg="${t.kg}">
                 <td>${escHtml(t.name)}</td>
                 <td class="num">${t.kg.toLocaleString(undefined, { maximumFractionDigits: 1 })}</td>
                 <td>
                   <div class="flex gap-1" style="justify-content:center">
-                    <input type="number" class="stock-qty-input" style="width:65px; text-align:center" value="${stockQty}" min="0">
-                    <select class="stock-unit-input" style="min-width:65px">
+                    <input type="number" class="stock-qty-input" style="${inputStyle}" value="${stockQty}" min="0">
+                    <select class="stock-unit-input" style="${selectStyle}">
                       <option value="kg" ${stockUnit === 'kg' ? 'selected' : ''}>kg</option>
                       <option value="ton" ${stockUnit === 'ton' ? 'selected' : ''}>ton</option>
                     </select>
@@ -557,8 +560,8 @@ async function renderBatchResults(el, results, milkPrice) {
                 </td>
                 <td>
                   <div class="flex gap-1" style="justify-content:center">
-                    <input type="number" class="plan-qty-input" style="width:65px; text-align:center" value="${planQty}" min="0">
-                    <select class="plan-unit-input" style="min-width:70px">
+                    <input type="number" class="plan-qty-input" style="${inputStyle}" value="${planQty}" min="0">
+                    <select class="plan-unit-input" style="${selectStyle}">
                       <option value="gun" ${planUnit === 'gun' ? 'selected' : ''}>Gün</option>
                       <option value="hafta" ${planUnit === 'hafta' ? 'selected' : ''}>Hafta</option>
                       <option value="ay" ${planUnit === 'ay' ? 'selected' : ''}>Ay</option>
@@ -588,14 +591,14 @@ async function renderBatchResults(el, results, milkPrice) {
             Günlük TMR ihtiyacına göre stoklarınızın ne kadar süre yeteceğini hesaplayın.
           </div>
           <div class="feed-table-wrap" style="overflow-x:auto; -webkit-overflow-scrolling:touch; width:100%">
-            <table class="diag-table" id="stock-tracking-table" style="min-width: 500px; font-size:0.85rem">
+            <table class="diag-table" id="stock-tracking-table" style="min-width: 550px; width:100%; table-layout:fixed; font-size:0.8rem">
               <thead>
                 <tr>
-                  <th>Yem Adı</th>
-                  <th class="num">Günlük İhtiyaç (kg)</th>
-                  <th style="text-align:center">Stok Miktarı</th>
-                  <th style="text-align:center">Planlanan Zaman</th>
-                  <th style="text-align:right">Durum</th>
+                  <th style="width: 25%">Yem Adı</th>
+                  <th class="num" style="width: 12%">İhtiyaç(kg)</th>
+                  <th style="text-align:center; width: 25%">Stok Miktarı</th>
+                  <th style="text-align:center; width: 20%">Planlanan Zaman</th>
+                  <th style="text-align:right; width: 18%">Durum</th>
                 </tr>
               </thead>
               <tbody>
