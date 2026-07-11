@@ -151,7 +151,7 @@ export function calcNELRequirements(animal) {
   const {
     bw, milkYield, milkFat, milkProtein, milkLactose,
     pregnant, gestDays, pregnancyMonth, dailyWalkKm, bcs, targetBcs,
-    thi,
+    thi, lactationStage,
   } = animal;
 
   // Gebelik günü: UI'da ay olarak girilir, gestDays yoksa aydan türet
@@ -184,6 +184,10 @@ export function calcNELRequirements(animal) {
     mobilization: Math.round(mobilization * 100) / 100,
     total: Math.round(total * 100) / 100,
     heatAdjusted,
+    // C3: targetBcs girilmemişse ve erken laktasyondaysa mobilizasyon modellenemiyor uyarısı.
+    // Early laktasyonda inekler daima vücut rezervi mobilize eder (NEB beklenir);
+    // targetBcs olmadan bu katkı hesaba katılmaz → enerji gereksinimi olduğundan yüksek görünebilir.
+    mobilizationWarning: !Number.isFinite(targetBcs) && ['early', 'mid'].includes(lactationStage),
   };
 }
 
@@ -263,13 +267,27 @@ export function mpLactation(milkYield, milkProtein) {
 /**
  * Metabolize Edilebilir Protein Gebelik Gereksinimi
  * NRC 2001 Eq. 3-8
- * @param {number} gestDays - Gebelik günü
+ *
+ * Formül: MP_preg = (0.69 × gestDays − 69.2) × (calfBW / 45) / 0.33
+ *
+ * (0.69 × t − 69.2): konseptustaki günlük ham protein (g CP/gün) birikimi.
+ *   Bu değer zaten g CP/gün cinsinden çıkar — g N DEĞİL.
+ *   Bu nedenle 6.25 ile BÖLMEK YANLIŞTIR (protein→azot dönüşümü yapar).
+ *   /6.25 olsaydı sonuç ~6.25× eksik hesaplanırdı.
+ * 0.33: MP'nin gebelik için kullanım verimliliği (NRC 2001 Tablo 3-2).
+ *
+ * Doğrulama: Day 250, calfBW=45 → (172.5−69.2)/0.33 ≈ 313 g/gün MP
+ *   (Kaynak: NRC 2001 Eq. 3-8; web örneği 313 g/gün sonucunu doğrular)
+ *
+ * @param {number} gestDays - Gebelik günü (190–279 arası anlamlı)
  * @param {number} calfBW   - Beklenen buzağı ağırlığı (kg, varsayılan 45)
  * @returns {number} MP_gebelik (g/gün)
  */
 export function mpPregnancy(gestDays, calfBW = 45) {
   if (gestDays < 190) return 0;
-  const up = (0.69 * gestDays - 69.2) * (calfBW / 45) / 0.33 / 6.25;
+  // Düzeltme: /6.25 kaldırıldı — (0.69t−69.2) zaten g CP/gün cinsinden.
+  // Eski kod 6.25× eksik tahmin ediyordu (gebe ineklerde ciddi protein açığı).
+  const up = (0.69 * gestDays - 69.2) * (calfBW / 45) / 0.33;
   return Math.max(up, 0);
 }
 

@@ -193,6 +193,11 @@ export async function optimizeRation(input) {
     ...(tmrTargetValid ? { tmr_target_moisture: tmrTarget } : {}),  // PROBLEMLER #3: hedef TMR nemi (su hesabı)
     ...((tmrTargetValid && tmrMinRation > 0) ? { tmr_min_ration_moisture: { min: tmrMinRation, target: tmrTarget } } : {}),  // PROBLEMLER #3: rasyondan min nem (LP)
     ...(userHasCpOverride ? { cp_pct: composition.cp_pct } : {}),
+    // C2: INRA 2018 UEL doluluk kapasitesi — system='INRA2018' ve reqs.inra mevcut ise LP'ye ilet
+    // calcUELCapacity(animal) → hayvanın günlük rumen doluluk sınırı (UEL/gün)
+    ...(usedSystem === 'INRA2018' && reqs.inra?.uelCapacity?.total > 0
+      ? { uel_capacity: reqs.inra.uelCapacity.total }
+      : {}),
   };
 
   // FAZ 19.1c: CNCPS hesap modu — iteratif motor (Sequential LP / sabit-nokta) per-feed

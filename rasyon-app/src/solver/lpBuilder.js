@@ -24,6 +24,7 @@ import {
 import { feedIntakeDiscountFactor } from '../core/nrc2001.js';
 import { MICROBIAL_AA, EAA_LIST, RUP_AA_DEFAULTS } from '../core/aminoAcids.js';  // FAZ 14.4 + Tam EAA: mikrobiyal AA + RUP varsayılanları
 import { faCoefPerKgDM } from '../core/fattyAcids.js';  // FAZ 14.10: PUFA/ω6/ω3 katsayıları
+import { calcUEL } from '../core/inra2018.js';  // C2: INRA 2018 UEL doluluk kısıtı (system='INRA2018')
 
 // glpk.js sabitlerinin kendi kopyası — Worker / Node bağımsız test için
 export const GLP = {
@@ -517,7 +518,8 @@ export function buildRationLP(input) {
       name: 'peNDF_min',
       vars: feeds.map((f, i) => ({
         name: varNames[i],
-        coef: num(f.ndf) * pef(f.category),
+        // C1: yem-spesifik pef alanı varsa kullan (Penn State analizi), yoksa kategori fallback
+        coef: num(f.ndf) * pef(f),
       })),
       lb: requirements.peNDF_pct.min * dmi_kg,
     });
@@ -527,7 +529,7 @@ export function buildRationLP(input) {
       name: 'peNDF_max',
       vars: feeds.map((f, i) => ({
         name: varNames[i],
-        coef: num(f.ndf) * pef(f.category),
+        coef: num(f.ndf) * pef(f),
       })),
       ub: requirements.peNDF_pct.max * dmi_kg,
     });
@@ -608,6 +610,30 @@ export function buildRationLP(input) {
       })),
       lb: min !== undefined ? min * dmi_kg : undefined,
       ub: max !== undefined ? max * dmi_kg : undefined,
+    });
+  }
+
+  // 11b. INRA 2018 UEL doluluk kapasitesi kısıtı — C2 (system='INRA2018')
+  //
+  // INRA sisteminin NRC/NASEM'den temel farkı: rumen doluluk (fill) kısıtı.
+  // UEL (Unité d'Encombrement Lait): her yem için Mcal/kg yerine "doluluk birimi".
+  // İnek günde en fazla `uel_capacity` UEL tüketebilir (rumen kapasitesi sınırı).
+  // Kısıt: Σ(xi[kg KM] × uel_i[UEL/kg KM]) ≤ uel_capacity[UEL/gün]
+  //
+  // Bu kısıt olmadan "INRA seçili" ama LP yalnız NASEM parametreleriyle çalışır
+  // → kullanıcı yanıltılırdı (eski durum). Artık INRA'nın doluluk yönetimi aktif.
+  //
+  // requirements.uel_capacity: calcAllRequirements → calcUELCapacity(animal) tarafından
+  // hesaplanır ve rationOptimizer'da requirements nesnesine eklenir.
+  // calcUEL(f): yem-spesifik inraUEL varsa kullan, yoksa NDF/kategori-bazlı yaklaşım.
+  if (system === 'INRA2018' && requirements.uel_capacity != null && requirements.uel_capacity > 0) {
+    pushConstraint(subjectTo, {
+      name: 'UEL_capacity',
+      vars: feeds.map((f, i) => ({
+        name: varNames[i],
+        coef: calcUEL(f),  // UEL/kg KM — yem-spesifik veya NDF-bazlı
+      })),
+      ub: requirements.uel_capacity,
     });
   }
 
@@ -883,8 +909,32 @@ function sanitizeId(id) {
   return String(id).replace(/[^a-zA-Z0-9_]/g, '_');
 }
 
-function pef(category) {
-  // Fiziksel etkinlik faktörü — Mertens 1997
+/**
+ * Fiziksel Etkinlik Faktörü (PEF) — Mertens 1997
+ *
+ * Öncelik sırası:
+ *   1. Yem-spesifik `feed.pef` (Penn State Particle Separator ölçümü, 0-100 aralığı).
+ *      Gerçek parçacık boyutu analizi olan yemlerde (kaba yem, silaj) yem-spesifik
+ *      değer kategori varsayılanından çok daha doğrudur.
+ *   2. Kategori varsayılanı (yem-spesifik değer yoksa fallback).
+ *
+ * @param {object|string} feedOrCategory - Yem nesnesi (f) veya geriye-uyumlu kategori string'i
+ * @returns {number} PEF (0-1 arası; 1 = tam etkin)
+ */
+function pef(feedOrCategory) {
+  // Geriye uyumluluk: string geçilirse kategori-bazlı varsayılan kullan
+  const category = typeof feedOrCategory === 'string' ? feedOrCategory : feedOrCategory?.category;
+  const feed = typeof feedOrCategory === 'object' ? feedOrCategory : null;
+
+  // 1. Yem-spesifik PEF (Penn State Particle Separator; % → 0-1)
+  if (feed) {
+    const pefVal = Number(feed.pef);
+    if (Number.isFinite(pefVal) && pefVal > 0) {
+      return Math.min(1.0, pefVal / 100);  // % → 0-1 fraction
+    }
+  }
+
+  // 2. Kategori fallback — Mertens 1997
   switch (category) {
     case 'roughage': return 1.00;
     case 'byproduct': return 0.50;
@@ -941,17 +991,27 @@ function objectiveCoef(feed, type, system = 'NASEM2021') {
 
 /**
  * Kategori-bazlı RUP intestinal sindirilebilirlik varsayılan (FAZ 10H)
- * NRC 2001 Tablo 15-2b: yem-spesifik rupIntD yoksa kullanılır
+ * NRC 2001 Tablo 15-2b: yem-spesifik rupIntD yoksa kullanılır.
+ *
+ * Değerler konservatif kategori ortalamasını yansıtır:
+ *   protein:   75 (soya 88-92, kanola 70-75, pamuk 50-55, DDGS 60-65 → karışık ort.)
+ *   grain:     85 (mısır 90, buğday 85, arpa 80 → tipik orta)
+ *   byproduct: 70 (şeker pancarı posası 75, mısır gluten unu 85, bira posası 55)
+ *   roughage:  60 (CNCPS v6.5 referans; alfalfa 65, çayır otu 55, mısır silajı 60)
+ *   fat/mineral: 0 (protein içermez)
+ *
+ * UYARI: Yüksek varsayılan (eski: protein=88) MP arzını abartır. Yem-spesifik
+ * `rupIntD` değeri girilirse bu fonksiyon hiç çağrılmaz (öncelikli).
  */
 function rupIntDByCategory(category) {
   switch (category) {
-    case 'protein': return 88;   // Soya 92, kanola 75 — yüksek IntD
+    case 'protein': return 75;   // konservatif kategori ortalaması (eski: 88 — soya-bias)
     case 'grain': return 85;
     case 'byproduct': return 70;
-    case 'roughage': return 65;
+    case 'roughage': return 60;  // CNCPS v6.5 referans (eski: 65)
     case 'fat':
     case 'mineral': return 0;
-    default: return 80;
+    default: return 75;          // bilinmeyen kategori → protein varsayılanıyla aynı
   }
 }
 

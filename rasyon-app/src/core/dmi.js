@@ -142,6 +142,13 @@ export function adjustDMIForFill(dmi, rationNDF_pct, bw, options = {}) {
 /**
  * Kuru dönem inek KMT tahmini
  * NRC 2001 Eq. 1-3
+ *
+ * Far-off (doğuma >21 gün): 0.0185 × BW (sabit oran)
+ * Close-up (son 21 gün): Üstel iştah baskılanması (Grummer 1995; NRC 2001 gözlemsel)
+ *   KMT = 0.0185 × BW × e^(−0.0075 × (21 − DTC))
+ *   Doğumda (DTC=0): ~%85.5 → %14.5 düşüş (eski lineer: yalnız %5)
+ *   NRC 2001 ve NASEM 2021 gözlemsel verileri ~%10-20 düşüş öngörür.
+ *
  * @param {number} bw         - Canlı ağırlık (kg)
  * @param {number} daysToCalv - Doğuma kalan gün
  * @returns {number} KMT (kg/gün)
@@ -151,8 +158,10 @@ export function dmiDryCow(bw, daysToCalv) {
     // Far-off dry
     return 0.0185 * bw;
   } else {
-    // Close-up (son 3 hafta) - iştah baskılanması
-    return 0.0185 * bw * (1 - 0.05 * (21 - daysToCalv) / 21);
+    // Close-up (son 3 hafta) — üstel iştah baskılanması
+    // Eski lineer model (1 - 0.05 × (21-DTC)/21) yalnız ~%5 düşüş veriyordu.
+    // Üstel model doğuma yaklaşırken artan iştahsızlığı doğru yakalar.
+    return 0.0185 * bw * Math.exp(-0.0075 * (21 - daysToCalv));
   }
 }
 

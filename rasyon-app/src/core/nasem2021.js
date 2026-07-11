@@ -56,7 +56,7 @@ export function calcNELRequirementsNASEM(animal) {
   const {
     bw, milkYield, milkFat, milkProtein, milkLactose,
     pregnant, gestDays, pregnancyMonth, dailyWalkKm, bcs, targetBcs,
-    thi,
+    thi, lactationStage,
   } = animal;
 
   // Gebelik günü: UI'da ay olarak girilir, gestDays yoksa aydan türet
@@ -90,6 +90,8 @@ export function calcNELRequirementsNASEM(animal) {
     total: Math.round(total * 100) / 100,
     heatAdjusted,
     source: 'NASEM2021',
+    // C3: targetBcs girilmemişse mobilizasyon modellenemiyor (NRC ile aynı flag)
+    mobilizationWarning: !Number.isFinite(targetBcs) && ['early', 'mid'].includes(lactationStage),
   };
 }
 
@@ -160,7 +162,9 @@ export function calcMPRequirementsNASEM(animal) {
 
   const maintenance = mpMaintenanceNASEM(bw);
   const lactation = mpLactationNASEM(milkYield, milkProtein);
-  // Gebelik MP: NASEM 2021 NRC ile aynı formülü kullanır
+  // Gebelik MP: NASEM 2021, NRC 2001 Eq. 3-8 formülünü (kalfBW/45 ölçeklenmesi dahil) aynen kullanır.
+  // Doğru formül: (0.69×t − 69.2) × (CBW/45) / 0.33  [g CP/gün]
+  // NOT: Buradaki mpPregnancy, nrc2001.js'teki düzeltilmiş versiyondur (artık /6.25 yok).
   const pregnancy = pregnant ? mpPregnancy(effectiveGestDays) : 0;
   const total = maintenance + lactation + pregnancy;
 
