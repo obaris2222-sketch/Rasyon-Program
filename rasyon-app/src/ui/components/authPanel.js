@@ -67,12 +67,23 @@ export async function openAuthModal() {
     return;
   }
 
+  // Önce sync state'ten anlık kullanıcı bilgisini kontrol et (hızlı yol)
+  const syncUser = getSyncState().user;
+
+  // getSyncState().user varsa → zaten giriş yapılmış; ama tam auth nesnesi için yine de çekiyoruz
   let user = null;
   try {
-    user = await getCurrentUser();
+    const withTimeout = (p, ms) => Promise.race([
+      p,
+      new Promise((_, r) => setTimeout(() => r(new Error('auth timeout')), ms)),
+    ]);
+    user = await withTimeout(getCurrentUser(), 5000);
   } catch (err) {
-    console.warn('[auth] getCurrentUser hatası:', err);
+    console.warn('[auth] getCurrentUser hatası/zaman aşımı:', err);
+    // Yedek: syncState'ten kullanıcı bilgisi al
+    if (syncUser) user = { email: syncUser.email, id: syncUser.id };
   }
+
   if (user) renderAccountView(body, user);
   else renderAuthForms(body);
 }

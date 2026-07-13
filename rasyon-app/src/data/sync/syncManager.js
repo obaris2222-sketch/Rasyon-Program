@@ -131,7 +131,12 @@ export async function syncNow() {
   _syncing = true;
   setStatus('syncing', { error: null });
   try {
-    const res = await syncAll(_adapter);
+    // 20 saniye içinde tamamlanmazsa timeout hatası ver
+    const TIMEOUT_MS = 20000;
+    const timeoutP = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Senkronizasyon zaman aşımı (20s)')), TIMEOUT_MS)
+    );
+    const res = await Promise.race([syncAll(_adapter), timeoutP]);
     _state.lastSyncAt = res.at;
     _state.pending = await countPendingChanges();
     setStatus(_state.pending > 0 ? 'pending' : 'synced');
