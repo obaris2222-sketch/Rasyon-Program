@@ -817,6 +817,8 @@
     "dmi_migrated_toast": "KMT (kuru madde tüketimi) yöntemi ayarınız, bilim sistemiyle tutarlı olması için 'Otomatik'e güncellendi (NASEM/INRA → de Souza 2019). Ayarlar'dan değiştirebilirsiniz.",
     "energy_discount": "Otomatik enerji iskontosu (tüketim düzeyi)",
     "energy_discount_hint": "NRC 2001: yüksek tüketimde (idamenin katı) yemin TDN/NEL sindirilebilirliği düşer (~%4/kat). Açıkken yüksek verimli ineklerde enerji ~%6-8 iskonto edilir (gerçekçi enerji açığı görünür); kuru/idame ineklerde ~0. Önerilir (açık).",
+    "fill_correction": "KMT Doluluk Düzeltmesi (NDF Sınırı)",
+    "fill_correction_hint": "Rasyonun fiziksel doluluk etkisine (NDF konsantrasyonu) bağlı olarak tahmini kuru madde tüketimini (KMT) otomatik olarak azaltır. Düşük kaliteli kaba yemlerde gerçekçi KMT tahmini sağlar.",
     "calc_mode": "Hesap Modu",
     "calc_mode_nrc": "NRC 2001 (hızlı, tek-geçiş) — varsayılan",
     "calc_mode_cncps": "CNCPS (iteratif, pasaj-bağımlı protein ve enerji)",

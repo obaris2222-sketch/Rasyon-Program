@@ -817,6 +817,8 @@
     "dmi_migrated_toast": "Your DMI (dry matter intake) method setting was updated to 'Auto' for consistency with the science system (NASEM/INRA → de Souza 2019). You can change it in Settings.",
     "energy_discount": "Automatic energy discount (intake level)",
     "energy_discount_hint": "NRC 2001: at high intake (multiples of maintenance) feed TDN/NEL digestibility drops (~4%/multiple). When on, energy is discounted ~6-8% for high-yield cows (realistic energy gap becomes visible); ~0 for dry/maintenance cows. Recommended (on).",
+    "fill_correction": "DMI Fill Correction (NDF Limit)",
+    "fill_correction_hint": "Automatically limits estimated dry matter intake (DMI) based on the physical fill effect (NDF concentration) of the ration. Provides realistic DMI estimates with low-quality forages.",
     "calc_mode": "Calculation Mode",
     "calc_mode_nrc": "NRC 2001 (fast, single-pass) — default",
     "calc_mode_cncps": "CNCPS (iterative, passage-dependent protein)",

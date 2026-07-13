@@ -108,6 +108,13 @@ export async function renderSettingsPanel(container, state, options = {}) {
             </div>
             <div class="hint" style="margin-top:0.4rem">${t('settings.energy_discount_hint')}</div>
           </div>
+          <div class="form-group full-width">
+            <div class="checkbox-group">
+              <input type="checkbox" id="set-fill-correction" ${s.science.enableFillCorrection !== false ? 'checked' : ''} />
+              <label for="set-fill-correction">${t('settings.fill_correction')}</label>
+            </div>
+            <div class="hint" style="margin-top:0.4rem">${t('settings.fill_correction_hint')}</div>
+          </div>
         </div>
         <div id="system-desc" class="system-desc-box"></div>
       </div>
@@ -334,6 +341,7 @@ export async function renderSettingsPanel(container, state, options = {}) {
         system: systemSelect.value,
         dmiMethod: container.querySelector('#set-dmi-method').value,
         autoEnergyDiscount: container.querySelector('#set-energy-discount').checked,  // FAZ 18.4
+        enableFillCorrection: container.querySelector('#set-fill-correction').checked,
         calcMode: container.querySelector('#set-calc-mode').value,  // FAZ 19.1: nrc | cncps
       },
       farm: {

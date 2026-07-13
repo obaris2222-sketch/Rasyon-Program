@@ -74,6 +74,7 @@ export async function optimizeRation(input) {
     relaxPriority,              // FAZ 22.1: kullanıcı gevşetme öncelik sırası (opsiyonel; verilmezse RELAX_PRIORITY default)
     autoEnergyDiscount = false, // FAZ 18.4: tüketim-düzeyi enerji iskontosu (UI'da varsayılan açık; solver'da opt-in → mevcut testler bozulmaz)
     calcMode = 'nrc',           // FAZ 19.1c: 'nrc' (tek-geçiş, varsayılan) | 'cncps' (iteratif mekanistik motor — pasaj-bağımlı MP arzı)
+    enableFillCorrection = true, // FAZ 18.2: NDF doluluk düzeltmesi
     _returnPrep = false,        // FAZ 20.2 (dahili): true → çözmeden hazırlanan LP+gereksinimleri döndür (sürü-geneli birleşik LP için)
     _dmiOverride,               // FAZ 18.2 (dahili): doluluk-düzeltmeli KMT (2. geçiş); dışarıdan verilmez
   } = input;
@@ -288,7 +289,7 @@ export async function optimizeRation(input) {
   // bir rasyon elde edildiyse, çözüm rasyonunun NDF konsantrasyonundan doluluk-sınırlı
   // KMT'yi hesapla; KMT eşikten (>%3) fazla düşüyorsa düzeltilmiş KMT ile BİR KEZ yeniden
   // çöz (recursive — 2. geçiş _dmiOverride taşıdığından fill kontrolünü atlar → sonsuz döngü yok).
-  if (_dmiOverride === undefined && (solution.optimal || relaxation?.applied === true)) {
+  if (enableFillCorrection && _dmiOverride === undefined && (solution.optimal || relaxation?.applied === true)) {
     const ndfConc = rationNDFConcentration(solution, lp, feeds);  // % KM
     const fillDmi = adjustDMIForFill(dmi_kg, ndfConc, animal.bw);
     if (Number.isFinite(fillDmi) && fillDmi < dmi_kg * (1 - FILL_RESOLVE_THRESHOLD)) {

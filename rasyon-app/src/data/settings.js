@@ -26,6 +26,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
     system: 'NASEM2021',      // 'NRC2001' | 'NASEM2021' | 'INRA2018' — gereksinim sistemi
     dmiMethod: 'auto',        // FAZ 17.3: 'auto' → bilim sistemine göre (NASEM/INRA→deSouza2019, NRC→NRC2001); 'NRC2001'/'deSouza2019' açık seçim
     autoEnergyDiscount: true, // FAZ 18.4: tüketim-düzeyi enerji iskontosu (NRC 2001 — yüksek tüketimde TDN/NEL düşer); varsayılan açık
+    enableFillCorrection: true, // FAZ 18.2: NDF doluluk düzeltmesi (KMT tüketim-duyarlı) - varsayılan açık
     calcMode: 'nrc',          // FAZ 19.1: 'nrc' (tek-geçiş, varsayılan) | 'cncps' (iteratif — pasaj-bağımlı protein yıkımı)
   },
   farm: {

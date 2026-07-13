@@ -348,6 +348,10 @@ async function handleOptimize(optimizeInput) {
     if (optimizeInput.autoEnergyDiscount === undefined) {
       optimizeInput.autoEnergyDiscount = getSettings().science.autoEnergyDiscount !== false;
     }
+    // FAZ 18.2: NDF doluluk düzeltmesi (Ayarlar; varsayılan açık) — solver'da opt-in.
+    if (optimizeInput.enableFillCorrection === undefined) {
+      optimizeInput.enableFillCorrection = getSettings().science.enableFillCorrection !== false;
+    }
     // FAZ 19.1: hesap modu (Ayarlar; varsayılan 'nrc' tek-geçiş) — 'cncps' iteratif motor.
     if (optimizeInput.calcMode === undefined) {
       optimizeInput.calcMode = getSettings().science.calcMode || 'nrc';
