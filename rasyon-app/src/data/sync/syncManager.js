@@ -64,9 +64,15 @@ function setStatus(status, extra = {}) {
  */
 export async function startSync(user) {
   if (!user?.id) return;
-  // Zaten bu kullanıcı için aktifse tekrar başlatma (TOKEN_REFRESHED/INITIAL_SESSION
-  // tekrarlı tetiklenir → çift senkron/çift dinleyici önlenir).
-  if (_state.user?.id === user.id && _adapter) return;
+  // Zaten bu kullanıcı için adapter aktifse:
+  if (_state.user?.id === user.id && _adapter) {
+    // Son senkron hata ile bittiyse (ör: TOKEN_REFRESHED → yeni token → tekrar dene)
+    if (_state.status === 'error') {
+      await syncNow();
+    }
+    // Listener zaten bağlı → erken dön (çift listener önlenir)
+    return;
+  }
   _state.user = { id: user.id, email: user.email || '' };
 
   // Hesap değişikliği kontrolü (paylaşılan cihaz güvenliği)
