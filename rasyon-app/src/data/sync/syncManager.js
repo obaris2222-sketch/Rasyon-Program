@@ -29,6 +29,8 @@ const _state = {
 const _listeners = new Set();
 let _adapter = null;
 let _syncing = false;
+let _debounceTimer = null;
+let _autoSyncAttached = false;
 
 // ─── Durum yayını ─────────────────────────────────────────────────────────────
 
@@ -81,13 +83,28 @@ export async function startSync(user) {
   _adapter = createSupabaseAdapter(client, user.id);
 
   // İlk tam senkron + aktif çiftlik uzlaştırma
-  if (isNewLogin) {
+  const settings = getSettings();
+  if (isNewLogin || settings.cloud?.autoSync !== false) {
     await syncNow();
   } else {
     // Sadece manuel eşitleme istendiği için sayfa yenilemede senkron kapatıldı
     setStatus('synced');
   }
   await reconcileActiveFarm(isNewLogin);
+
+  // Otomatik senkronizasyon dinleyicisi
+  if (typeof window !== 'undefined' && !_autoSyncAttached) {
+    const handleLocalChange = () => {
+      const s = getSettings();
+      if (s.cloud?.autoSync !== false && _adapter && !_syncing) {
+        clearTimeout(_debounceTimer);
+        _debounceTimer = setTimeout(() => syncNow(), 3000);
+      }
+    };
+    window.addEventListener('rasyon:local-change', handleLocalChange);
+    window.addEventListener('rasyon:settings-changed', handleLocalChange);
+    _autoSyncAttached = true;
+  }
 }
 
 /** Senkronu durdur (çıkışta). Yerel veri KORUNUR. */

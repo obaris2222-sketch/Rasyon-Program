@@ -22,6 +22,7 @@
 
 import { openDB } from 'idb';
 import { newId } from './uuid.js';
+import { getSettings, clearSettingsDirty, applyRemoteSettings } from './settings.js';
 
 // ─── Sabitler ───────────────────────────────────────────────────────────────
 
@@ -698,6 +699,10 @@ export async function observationDeleteByProfile(profileId) {
  * @returns {Promise<object[]>}
  */
 export async function getDirtyRecords(storeName) {
+  if (storeName === 'userSettings') {
+    const s = getSettings();
+    return s._dirty ? [{ id: 'singleton', ...s }] : [];
+  }
   const db = await getDB();
   if (storeName === 'userFeeds') {
     // Sanal store: yalnızca kullanıcı yemleri (seed kütüphanesi senkronlanmaz)
@@ -714,6 +719,10 @@ export async function getDirtyRecords(storeName) {
  * @param {Array<{id:string, updatedAt:string}>} pushed
  */
 export async function markRecordsSynced(storeName, pushed) {
+  if (storeName === 'userSettings') {
+    clearSettingsDirty();
+    return pushed.length;
+  }
   const db = await getDB();
   const tx = db.transaction(physStore(storeName), 'readwrite');
   for (const { id, updatedAt } of pushed) {
@@ -737,6 +746,9 @@ export async function markRecordsSynced(storeName, pushed) {
  */
 export async function applyRemoteRecord(storeName, remote) {
   if (!remote || !remote.id) return false;
+  if (storeName === 'userSettings') {
+    return applyRemoteSettings(remote);
+  }
   const db = await getDB();
   const phys = physStore(storeName);
   const local = await db.get(phys, remote.id);

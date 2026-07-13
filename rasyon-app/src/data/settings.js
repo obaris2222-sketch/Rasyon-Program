@@ -142,7 +142,11 @@ export function saveSettings(partial) {
   const current = getSettings();
   const merged = deepMerge(current, partial || {});
   merged.updatedAt = new Date().toISOString();
+  merged._dirty = true;
   writeRaw(JSON.stringify(merged));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('rasyon:settings-changed'));
+  }
   return merged;
 }
 
@@ -194,6 +198,35 @@ export function migrateDmiMethodToAuto() {
 export function resetSettings() {
   removeRaw();
   return deepMerge(DEFAULT_SETTINGS, {});
+}
+
+/**
+ * Senkronizasyon başarılı olduğunda dirty bayrağını temizler.
+ */
+export function clearSettingsDirty() {
+  const current = getSettings();
+  if (current._dirty) {
+    current._dirty = false;
+    writeRaw(JSON.stringify(current));
+  }
+}
+
+/**
+ * Uzaktan gelen ayarları yerele uygular (LWW).
+ */
+export function applyRemoteSettings(remote) {
+  if (!remote) return false;
+  const local = getSettings();
+  const remoteTs = remote.updatedAt || '';
+  const localTs = local.updatedAt || '';
+  
+  if (!local.updatedAt || remoteTs > localTs) {
+    const merged = deepMerge(local, remote);
+    merged._dirty = false;
+    writeRaw(JSON.stringify(merged));
+    return true;
+  }
+  return false;
 }
 
 /**

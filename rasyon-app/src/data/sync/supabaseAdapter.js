@@ -13,6 +13,7 @@
 
 /** IndexedDB store → Supabase tablo adı. */
 export const TABLE_MAP = {
+  userSettings: 'user_settings', // FAZ 16.11: kullanıcı ayarları
   animalProfiles: 'animal_profiles',
   rations: 'rations',
   herdGroups: 'herd_groups',
@@ -23,8 +24,8 @@ export const TABLE_MAP = {
   aiChats: 'ai_chats',       // FAZ 4 — AI Sohbet Geçmişi
 };
 
-/** Sahip-kapsamlı (farm_id taşımayan) store'lar: çiftlikler + kullanıcı yemleri. */
-const OWNER_SCOPED = new Set(['farms', 'userFeeds']);
+/** Sahip-kapsamlı (farm_id taşımayan) store'lar: çiftlikler + kullanıcı yemleri + ayarlar. */
+const OWNER_SCOPED = new Set(['farms', 'userFeeds', 'userSettings']);
 
 /** Yerel-yalnız alanları (_dirty) temizleyip data payload'u üretir. */
 function toData(rec) {

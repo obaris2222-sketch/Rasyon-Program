@@ -21,6 +21,7 @@ import {
 
 /** Senkronlanan tüm store'lar (Hiyerarşik sıralı: önce bağımsızlar, sonra bağımlılar) */
 export const SYNCABLE_STORES = [
+  'userSettings',      // FAZ 16.11: kullanıcı ayarları
   'farms',             // Hiçbir şeye bağımlı değil
   'userFeeds',         // Hiçbir şeye bağımlı değil
   'rations',           // farms'a bağımlı

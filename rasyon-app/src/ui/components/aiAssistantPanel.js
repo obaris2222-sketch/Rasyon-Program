@@ -5,12 +5,13 @@ import { showToast } from '../utils.js';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { newId } from '../../data/uuid.js';
-import { getAiChats, saveAiChat, deleteAiChat, rationGetAll, animalProfileGetAll, observationGetAll, getActiveFarm } from '../../data/db.js';
+import { getAiChats, saveAiChat, deleteAiChat, rationGetAll, animalProfileGetAll, observationGetAll, getActiveFarm, feedGetAll, herdGroupGetAll, priceHistoryGetAll } from '../../data/db.js';
+import { getSettings } from '../../data/settings.js';
 
 // ─── Sabit Limitler ───────────────────────────────────────────────────────────
 const MAX_HISTORY_MESSAGES = 10; // API'ya gönderilecek maksimum önceki mesaj sayısı
 const MAX_RATIONS = 5;           // Bağlama dahil edilecek son rasyon sayısı
-const MAX_OBSERVATIONS = 5;      // Bağlama dahil edilecek son gözlem sayısı
+const MAX_OBSERVATIONS_PER_PROFILE = 3; // Her profil için maksimum son gözlem sayısı
 
 let chats = [];
 let activeChatId = null;
@@ -33,12 +34,17 @@ async function buildContextData(includeData = false) {
       };
     }
 
-    const [allRations, allProfiles, allObservations, activeFarm] = await Promise.all([
+    const [allRations, allProfiles, allObservations, activeFarm, allFeeds, allHerdGroups, allPrices] = await Promise.all([
       rationGetAll().catch(() => []),
       animalProfileGetAll().catch(() => []),
       observationGetAll().catch(() => []),
       getActiveFarm().catch(() => null),
+      feedGetAll().catch(() => []),
+      herdGroupGetAll().catch(() => []),
+      priceHistoryGetAll().catch(() => []),
     ]);
+
+    const settings = getSettings();
 
     // Tüm rasyonlar — son 5 rasyon ile sınırla, hammaddeler, besin bileşimi ve IIS/Relaxation dahil
     const rationHistory = allRations
@@ -113,9 +119,51 @@ async function buildContextData(includeData = false) {
       dim: p.dim || null,
     }));
 
-    // Tüm gözlemler — tarih, süt verimi, BCS, DMI
-    const recentObservations = allObservations
-      .map(o => ({
+    // Sürü Grupları
+    const herdGroups = allHerdGroups.map(g => ({
+      name: g.name || 'İsimsiz Grup',
+      headCount: g.headCount || 0,
+      profileId: g.profileId || null,
+      notes: g.notes || null,
+    }));
+
+    // Özel (Kullanıcı) Yemleri
+    const userFeeds = allFeeds.filter(f => f.source === 'user' || /^(user_|custom_)/.test(f.id || '')).map(f => {
+      // Yalnızca anlamlı değerleri tut (gereksiz null'ları temizle)
+      const feedData = { name: f.name, category: f.category };
+      for (const key in f) {
+        if (key !== 'id' && key !== 'name' && key !== 'category' && key !== 'source' && key !== 'farmId' && key !== 'updatedAt' && key !== 'deletedAt' && key !== '_dirty' && f[key] !== null && f[key] !== undefined && f[key] !== 0 && f[key] !== '') {
+          feedData[key] = f[key];
+        }
+      }
+      return feedData;
+    });
+
+    // En Güncel Fiyatlar (Sadece Son Fiyatları Alır)
+    const latestPricesMap = new Map();
+    allPrices.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0)); // Eskiden yeniye sırala
+    for (const p of allPrices) {
+      if (p.feedId) {
+        latestPricesMap.set(p.feedId, {
+          feedName: p.feedName || 'Bilinmeyen Yem',
+          price: p.price,
+          date: p.date,
+        });
+      }
+    }
+    const currentPrices = Array.from(latestPricesMap.values());
+
+    // Saha Gözlemleri — Her profil için son 3 gözlem
+    const obsByProfile = {};
+    for (const o of allObservations) {
+      const pid = o.profileId || 'unknown';
+      if (!obsByProfile[pid]) obsByProfile[pid] = [];
+      obsByProfile[pid].push(o);
+    }
+    const recentObservations = [];
+    for (const pid in obsByProfile) {
+      const sorted = obsByProfile[pid].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+      recentObservations.push(...sorted.slice(0, MAX_OBSERVATIONS_PER_PROFILE).map(o => ({
         date: o.date || null,
         profileId: o.profileId || null,
         milkYield: o.milkYield ?? null,
@@ -124,7 +172,8 @@ async function buildContextData(includeData = false) {
         bcs: o.bcs ?? null,
         dmiActual: o.dmiActual ?? null,
         notes: o.notes || null,
-      }));
+      })));
+    }
 
     // Anlık oturum verisi
     const currentSession = {
@@ -174,11 +223,21 @@ async function buildContextData(includeData = false) {
       currentSession,
       rationHistory,
       animalProfiles,
+      herdGroups,
+      userFeeds,
+      currentPrices,
       recentObservations,
+      settings: {
+        scienceSystem: settings.science?.system || null,
+        dmiMethod: settings.science?.dmiMethod || null,
+        calcMode: settings.science?.calcMode || null,
+        units: settings.units || null,
+        defaults: settings.defaults || null,
+      },
       farm: {
-        name: activeFarm?.name || null,
-        address: activeFarm?.address || null,
-        advisor: activeFarm?.advisor || null,
+        name: activeFarm?.name || settings.farm?.name || null,
+        address: activeFarm?.address || settings.farm?.address || null,
+        advisor: activeFarm?.advisor || settings.farm?.advisor || null,
         herdSize: state.economics?.herdSize || null,
       },
     };
