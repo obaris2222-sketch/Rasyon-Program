@@ -15,6 +15,7 @@ const MAX_OBSERVATIONS_PER_PROFILE = 3; // Her profil için maksimum son gözlem
 
 let chats = [];
 let activeChatId = null;
+let aiIncludeDataState = false; // FAZ: Sekme değişimlerinde durumu korumak için
 
 // ─── Zengin Bağlam Verisi Oluşturucu ─────────────────────────────────────────
 
@@ -51,6 +52,7 @@ async function buildContextData(includeData = false) {
       .sort((a, b) => new Date(b.savedAt || b.createdAt || 0) - new Date(a.savedAt || a.createdAt || 0))
       .slice(0, 5)
       .map(r => ({
+        id: r.id || null,
         name: r.name || 'İsimsiz Rasyon',
         savedAt: r.savedAt || r.createdAt || r.updatedAt || null,
         status: r.result?.statusName ?? null,
@@ -108,6 +110,7 @@ async function buildContextData(includeData = false) {
 
     // Tüm hayvan profilleri — özet alanlar
     const animalProfiles = allProfiles.map(p => ({
+      id: p.id || null,
       name: p.name || 'İsimsiz Profil',
       breed: p.breed || null,
       bw: p.bw || null,
@@ -117,10 +120,13 @@ async function buildContextData(includeData = false) {
       parity: p.parity || null,
       lactationStage: p.lactationStage || null,
       dim: p.dim || null,
+      groupId: p.groupId || null,
+      targetRationId: p.targetRationId || null,
     }));
 
     // Sürü Grupları
     const herdGroups = allHerdGroups.map(g => ({
+      id: g.id || null,
       name: g.name || 'İsimsiz Grup',
       headCount: g.headCount || 0,
       profileId: g.profileId || null,
@@ -239,6 +245,7 @@ async function buildContextData(includeData = false) {
         address: activeFarm?.address || settings.farm?.address || null,
         advisor: activeFarm?.advisor || settings.farm?.advisor || null,
         herdSize: state.economics?.herdSize || null,
+        stockTracking: activeFarm?.stockTracking || null,
       },
     };
   } catch (err) {
@@ -344,6 +351,14 @@ export async function renderAiAssistantPanel(container) {
   const chatInput = document.getElementById('aiChatInput');
   const sendBtn = document.getElementById('aiSendBtn');
   const newChatBtn = document.getElementById('aiNewChatBtn');
+  const includeDataToggle = document.getElementById('aiIncludeDataToggle');
+
+  if (includeDataToggle) {
+    includeDataToggle.checked = aiIncludeDataState;
+    includeDataToggle.addEventListener('change', (e) => {
+      aiIncludeDataState = e.target.checked;
+    });
+  }
 
   // Mobile specific elements
   const menuBtn = document.getElementById('aiMenuBtn');
