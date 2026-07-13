@@ -749,6 +749,16 @@ export function buildRationLP(input) {
   const binaries = [];
   const generals = [];
 
+  // ─── Değişken sınırları (bounds) — FAZ 13.4 ──────────────────────────
+  // glpk.js varsayılan olarak değişkenleri GLP_FR (serbest, −∞..+∞) kabul eder.
+  // Negatif katılımı imkânsız kılıyoruz.
+  const bounds = varNames.map(name => ({
+    name,
+    type: GLP.LO,   // alt sınır: lb sonlu, ub = +∞ (yok sayılır)
+    lb: 0,
+    ub: 0,
+  }));
+
   feeds.forEach((f, i) => {
     const lim = feedLimits[f.id];
     if (!lim) return;
@@ -844,23 +854,6 @@ export function buildRationLP(input) {
       ub: hasMax ? max : undefined,
     });
   }
-
-  // ─── Değişken sınırları (bounds) — FAZ 13.4 ──────────────────────────
-  // glpk.js varsayılan olarak değişkenleri GLP_FR (serbest, −∞..+∞) kabul eder.
-  // Bu durumda matematiksel olarak NEGATİF yem miktarı geçerli sayılır
-  // (yapısal güvenlik açığı). Her yem değişkenine alt sınır 0 ekleyerek
-  // (GLP_LO) negatif katılımı imkânsız kılıyoruz.
-  //
-  // ÖNEMLİ (kritik teknik not #1): per-feed ÜST sınır bounds[]'a KONMAZ —
-  // feedLimits.max hâlâ subjectTo'da tek-değişkenli kısıt olarak uygulanır.
-  // glpk.js bazı sürümlerde bounds[] üst sınırıyla presolve'da hatalı sonuç
-  // veriyor; yalnızca lb=0 (GLP_LO) güvenli ve pozitiflik garantisi için yeterli.
-  const bounds = varNames.map(name => ({
-    name,
-    type: GLP.LO,   // alt sınır: lb sonlu, ub = +∞ (yok sayılır)
-    lb: 0,
-    ub: 0,
-  }));
 
   const lp = {
     name: 'RationLP',
