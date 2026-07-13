@@ -138,13 +138,13 @@ export function getSettings() {
  * @param {object} partial — değişen alanlar (kısmi nesne kabul edilir)
  * @returns {object} kaydedilen tam ayar nesnesi
  */
-export function saveSettings(partial) {
+export function saveSettings(partial, { silent = false } = {}) {
   const current = getSettings();
   const merged = deepMerge(current, partial || {});
   merged.updatedAt = new Date().toISOString();
-  merged._dirty = true;
+  if (!silent) merged._dirty = true;
   writeRaw(JSON.stringify(merged));
-  if (typeof window !== 'undefined') {
+  if (!silent && typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('rasyon:settings-changed'));
   }
   return merged;

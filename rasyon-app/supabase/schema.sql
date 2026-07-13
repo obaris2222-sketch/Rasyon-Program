@@ -122,3 +122,27 @@ begin
 end $$;
 
 -- ✅ Tamamlandı. "Success. No rows returned" görmelisiniz.
+
+create or replace function public.delete_user()
+returns void
+language plpgsql
+security definer
+as $$
+begin
+  delete from auth.users where id = auth.uid();
+end;
+$$;
+
+create table if not exists public.user_settings (
+  id          uuid primary key default auth.uid(), -- Her kullanıcının 1 ayar kaydı olur
+  owner_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  updated_at  timestamptz not null default now(),
+  deleted_at  timestamptz,
+  data        jsonb not null default '{}'::jsonb
+);
+create index if not exists idx_user_settings_owner_upd on public.user_settings (owner_id, updated_at);
+alter table public.user_settings enable row level security;
+create policy own_rows_select on public.user_settings for select using (owner_id = auth.uid());
+create policy own_rows_insert on public.user_settings for insert with check (owner_id = auth.uid());
+create policy own_rows_update on public.user_settings for update using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+create policy own_rows_delete on public.user_settings for delete using (owner_id = auth.uid());

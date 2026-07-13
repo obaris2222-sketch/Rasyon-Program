@@ -48,7 +48,8 @@ export function createSupabaseAdapter(client, userId) {
       const ownerScoped = OWNER_SCOPED.has(storeName);
       const rows = records.map((r) => {
         const row = {
-          id: r.id,
+          // userSettings: id sütunu uuid → 'singleton' yerine userId kullan (her kullanıcı 1 satır)
+          id: storeName === 'userSettings' ? userId : r.id,
           owner_id: userId,
           updated_at: r.updatedAt || new Date().toISOString(),
           deleted_at: r.deletedAt ?? null,

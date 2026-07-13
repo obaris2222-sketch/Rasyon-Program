@@ -246,13 +246,13 @@ async function initActiveFarm() {
     if (!farm) {
       // FAZ 16.11/2.3: varsayılan çiftliği kullanıcının genel çiftlik adıyla tohumla
       farm = await ensureDefaultFarm(settings.farm?.name);
-      saveSettings({ activeFarmId: farm.id });
+      saveSettings({ activeFarmId: farm.id }, { silent: true });
     }
     setActiveFarmId(farm.id);
 
     if (!settings.cloud?.farmBackfillDone) {
       await backfillFarmId(farm.id);
-      saveSettings({ cloud: { farmBackfillDone: true } });
+      saveSettings({ cloud: { farmBackfillDone: true } }, { silent: true });
     }
 
     // FAZ 16.11/2.3: eski genel çiftlik profilini (ad/adres/danışman) aktif çiftliğe bir kez taşı
@@ -266,7 +266,7 @@ async function initActiveFarm() {
           advisor: farm.advisor || gf.advisor || '',
         });
       }
-      saveSettings({ cloud: { farmProfileMigrated: true } });
+      saveSettings({ cloud: { farmProfileMigrated: true } }, { silent: true });
     }
   } catch (err) {
     console.warn('Aktif çiftlik hazırlama hatası:', err);

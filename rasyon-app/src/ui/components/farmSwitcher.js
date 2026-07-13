@@ -41,7 +41,7 @@ async function switchFarm(farmId) {
   const f = await farmGetById(farmId);
   if (!f) return;
   setActiveFarmId(farmId);
-  saveSettings({ activeFarmId: farmId });
+  saveSettings({ activeFarmId: farmId }, { silent: true });
   await refreshFarmButton();
   closeFarmModal();
   showToast(t('farm.switched', { name: f.name }), 'info');
@@ -159,7 +159,7 @@ async function deleteFarm(id) {
   // Aktif çiftlik silindiyse kalan ilk çiftliğe geç
   if (getActiveFarmId() === id) {
     const remaining = (await farmGetAll())[0];
-    if (remaining) { setActiveFarmId(remaining.id); saveSettings({ activeFarmId: remaining.id }); }
+    if (remaining) { setActiveFarmId(remaining.id); saveSettings({ activeFarmId: remaining.id }, { silent: true }); }
   }
   showToast(t('farm.deleted'), 'info');
   await refreshFarmButton();

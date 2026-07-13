@@ -172,7 +172,7 @@ async function reconcileActiveFarm(isNewLogin = false) {
       active = farms[0] || await ensureDefaultFarm();
     }
     
-    saveSettings({ activeFarmId: active.id });
+    saveSettings({ activeFarmId: active.id }, { silent: true });
     setActiveFarmId(active.id);
   } catch (err) {
     console.warn('[cloud] Aktif çiftlik uzlaştırma hatası:', err);

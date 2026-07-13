@@ -67,7 +67,12 @@ export async function openAuthModal() {
     return;
   }
 
-  const user = await getCurrentUser();
+  let user = null;
+  try {
+    user = await getCurrentUser();
+  } catch (err) {
+    console.warn('[auth] getCurrentUser hatası:', err);
+  }
   if (user) renderAccountView(body, user);
   else renderAuthForms(body);
 }

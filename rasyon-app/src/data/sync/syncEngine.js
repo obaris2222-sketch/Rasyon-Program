@@ -21,7 +21,7 @@ import {
 
 /** Senkronlanan tüm store'lar (Hiyerarşik sıralı: önce bağımsızlar, sonra bağımlılar) */
 export const SYNCABLE_STORES = [
-  'userSettings',      // FAZ 16.11: kullanıcı ayarları
+  'userSettings',      // FAZ 16.11: kullanıcı ayarları (user_settings tablosu aktif)
   'farms',             // Hiçbir şeye bağımlı değil
   'userFeeds',         // Hiçbir şeye bağımlı değil
   'rations',           // farms'a bağımlı
@@ -114,12 +114,21 @@ export async function syncStore(adapter, storeName) {
  */
 export async function syncAll(adapter, { stores = SYNCABLE_STORES } = {}) {
   const results = [];
+  let totalPushed = 0;
+  let totalApplied = 0;
   for (const s of stores) {
-    results.push(await syncStore(adapter, s));
+    try {
+      const r = await syncStore(adapter, s);
+      results.push(r);
+      totalPushed  += r.pushed  || 0;
+      totalApplied += r.applied || 0;
+    } catch (err) {
+      // Tek bir store'un hatası diğerlerini durdurmasın.
+      console.warn(`[cloud] ${s} senkron hatası (atlandı):`, err.message);
+      results.push({ store: s, pushed: 0, applied: 0, error: err.message });
+    }
   }
-  const pushed = results.reduce((n, r) => n + (r.pushed || 0), 0);
-  const applied = results.reduce((n, r) => n + (r.applied || 0), 0);
-  return { ok: true, results, pushed, applied, at: new Date().toISOString() };
+  return { ok: true, results, pushed: totalPushed, applied: totalApplied, at: new Date().toISOString() };
 }
 
 /**
