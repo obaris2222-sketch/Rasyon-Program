@@ -2633,7 +2633,7 @@ details.acc-panel table.diag-table {
     font-size: 14px;
   }
 
-  /* Header (mobil): lacivert + scroll ile yukarı kayar — alt-nav ile uyumlu sandviç */
+  /* Header (mobil): lacivert + scroll ile yukarı kayar (sticky iptal edildi) */
   .app-header {
     position: static;
     padding: 0.6rem 0.9rem;
@@ -2672,9 +2672,22 @@ details.acc-panel table.diag-table {
   }
 
   /* FAZ 21: kenar menü gizli — mobilde alt navigasyon (bottom-nav) kullanılır */
+  body {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
   #app {
     display: flex;
     flex-direction: column;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .app-body {
+    overflow: visible;
   }
 
   .app-sidebar {
